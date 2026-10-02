@@ -12,7 +12,7 @@ import {
 import {
   discoverOnvifCameras,
   type DiscoveredCamera,
-} from "@/lib/onvif-discovery";
+} from "@/onvif-discovery";
 
 export default function HomeScreen() {
   const [cameras, setCameras] = useState<DiscoveredCamera[]>([]);
