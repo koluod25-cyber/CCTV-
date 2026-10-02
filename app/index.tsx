@@ -6,53 +6,188 @@ import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { VideoView, useVideoPlayer } from "expo-video";
+
 import { CCTV_VENDORS, makeRtspUrl } from "@/cctv";
 import {
   getEndpointDetails,
   testCameraConnection,
   type CameraNetworkConfig,
 } from "@/camera-connection";
-import { discoverOnvifCameras, type DiscoveredCamera } from "@/onvif-discovery";
+import {
+  discoverOnvifCameras,
+  type DiscoveredCamera,
+} from "@/onvif-discovery";
+
+type TabName = "live" | "cctv" | "history" | "settings";
+
+type HistoryItem = {
+  id: string;
+  url: string;
+  action: "connected" | "disconnected" | "error";
+  message: string;
+  time: string;
+};
+
+function formatTime(date = new Date()) {
+  return date.toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+function isSupportedCameraUrl(url: string) {
+  return /^(rtsp|rtsps|http|https):\/\//i.test(url.trim());
+}
+
+function getCameraUrl(camera: DiscoveredCamera) {
+  const xaddr = camera.xaddrs?.find((item) =>
+    /^https?:\/\//i.test(item)
+  );
+
+  return xaddr ?? "";
+}
+
+function CameraVideo({ url }: { url: string }) {
+  const player = useVideoPlayer(url || null, (instance) => {
+    instance.loop = false;
+  });
+
+  const [videoError, setVideoError] = useState<string | null>(null);
+
+  if (!url) {
+    return (
+      <View style={styles.videoEmpty}>
+        <Text style={styles.videoEmptyIcon}>📹</Text>
+        <Text style={styles.videoEmptyTitle}>Belum ada kamera aktif</Text>
+        <Text style={styles.videoEmptyText}>
+          Pilih CCTV dari daftar atau masukkan URL RTSP/HTTP/HTTPS.
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.videoWrapper}>
+      <VideoView
+        style={styles.video}
+        player={player}
+        nativeControls
+        contentFit="contain"
+        allowsFullscreen
+        allowsPictureInPicture
+        onFirstFrameRender={() => {
+          setVideoError(null);
+        }}
+      />
+
+      {videoError ? (
+        <View style={styles.videoErrorOverlay}>
+          <Text style={styles.videoErrorTitle}>Video tidak dapat diputar</Text>
+          <Text style={styles.videoErrorText}>{videoError}</Text>
+        </View>
+      ) : null}
+    </View>
+  );
+}
 
 export default function HomeScreen() {
+  const [activeTab, setActiveTab] = useState<TabName>("live");
+
   const [cameras, setCameras] = useState<DiscoveredCamera[]>([]);
-  const [manualUrl, setManualUrl] = useState("rtsp://192.168.1.20:554/stream1");
-  const [vendor, setVendor] = useState<(typeof CCTV_VENDORS)[number]>("Generic / ONVIF");
+  const [selectedCamera, setSelectedCamera] =
+    useState<DiscoveredCamera | null>(null);
+
+  const [manualUrl, setManualUrl] = useState(
+    "rtsp://192.168.1.20:554/stream1"
+  );
+
+  const [activeStream, setActiveStream] = useState("");
+  const [vendor, setVendor] =
+    useState<(typeof CCTV_VENDORS)[number]>("Generic / ONVIF");
+
   const [searching, setSearching] = useState(false);
   const [testing, setTesting] = useState(false);
   const [statusText, setStatusText] = useState<string | null>(null);
 
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+
+  const [autoReconnect, setAutoReconnect] = useState(true);
+  const [showCameraInfo, setShowCameraInfo] = useState(true);
+  const [hardwareControls, setHardwareControls] = useState(true);
+
   const suggestedUrl = useMemo(
-    () => makeRtspUrl(vendor, "192.168.1.20", 554, 1, false),
+    () =>
+      makeRtspUrl(
+        vendor,
+        "192.168.1.20",
+        554,
+        1,
+        false
+      ),
     [vendor]
   );
+
+  const addHistory = (
+    action: HistoryItem["action"],
+    url: string,
+    message: string
+  ) => {
+    const item: HistoryItem = {
+      id: `${Date.now()}-${Math.random()}`,
+      url,
+      action,
+      message,
+      time: formatTime(),
+    };
+
+    setHistory((current) => [item, ...current].slice(0, 50));
+  };
 
   const searchCameras = async () => {
     if (searching) return;
 
     setSearching(true);
     setCameras([]);
+    setSelectedCamera(null);
     setStatusText(null);
 
     try {
       const found = await discoverOnvifCameras(7000);
+
       setCameras(found);
 
-      if (found.length === 0) {
+      if (found.length > 0) {
+        setStatusText(
+          `${found.length} kamera ditemukan melalui ONVIF.`
+        );
+
+        setActiveTab("cctv");
+      } else {
+        setStatusText(
+          "Tidak ada kamera ONVIF yang ditemukan."
+        );
+
         Alert.alert(
           "CCTV tidak ditemukan",
-          "Pastikan HP dan kamera berada pada Wi‑Fi/LAN yang sama dan ONVIF/WS‑Discovery aktif pada kamera."
+          "Pastikan HP dan kamera berada pada Wi-Fi/LAN yang sama dan ONVIF/WS-Discovery aktif pada kamera."
         );
       }
     } catch (error) {
-      Alert.alert(
-        "Pencarian gagal",
-        error instanceof Error ? error.message : "Terjadi kesalahan saat mencari CCTV."
-      );
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Terjadi kesalahan saat mencari CCTV.";
+
+      setStatusText(message);
+
+      Alert.alert("Pencarian gagal", message);
     } finally {
       setSearching(false);
     }
@@ -60,16 +195,29 @@ export default function HomeScreen() {
 
   const runManualCheck = async () => {
     const trimmedUrl = manualUrl.trim();
+
     if (!trimmedUrl) {
-      Alert.alert("URL kosong", "Masukkan URL kamera terlebih dahulu.");
+      Alert.alert(
+        "URL kosong",
+        "Masukkan URL kamera terlebih dahulu."
+      );
+      return;
+    }
+
+    if (!isSupportedCameraUrl(trimmedUrl)) {
+      Alert.alert(
+        "URL tidak valid",
+        "Gunakan rtsp://, rtsps://, http:// atau https://."
+      );
       return;
     }
 
     const endpoint = getEndpointDetails(trimmedUrl);
+
     if (!endpoint) {
       Alert.alert(
         "URL tidak valid",
-        "Format URL kamera tidak valid. Gunakan contoh rtsp://ip:port/stream1"
+        "Format URL kamera tidak dapat dikenali."
       );
       return;
     }
@@ -85,278 +233,570 @@ export default function HomeScreen() {
         vendor,
       } as CameraNetworkConfig);
 
-      setStatusText(
-        `${result.status.toUpperCase()} · ${result.message}${result.latencyMs ? ` · ${result.latencyMs}ms` : ""}`
+      const resultText =
+        `${result.status.toUpperCase()} · ${result.message}` +
+        (result.latencyMs
+          ? ` · ${result.latencyMs}ms`
+          : "");
+
+      setStatusText(resultText);
+
+      addHistory(
+        result.status === "ok" ? "connected" : "error",
+        trimmedUrl,
+        result.message
       );
     } catch (error) {
-      Alert.alert(
-        "Tes gagal",
-        error instanceof Error ? error.message : "Tes koneksi gagal."
-      );
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Tes koneksi gagal.";
+
+      setStatusText(message);
+
+      addHistory("error", trimmedUrl, message);
+
+      Alert.alert("Tes gagal", message);
     } finally {
       setTesting(false);
     }
   };
 
-  return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>CCTV Universal Monitor</Text>
-        <Text style={styles.subtitle}>
-          Temukan dan uji kamera ONVIF serta RTSP di jaringan lokal.
+  const connectManualCamera = () => {
+    const url = manualUrl.trim();
+
+    if (!url) {
+      Alert.alert(
+        "URL kosong",
+        "Masukkan URL CCTV terlebih dahulu."
+      );
+      return;
+    }
+
+    if (!isSupportedCameraUrl(url)) {
+      Alert.alert(
+        "URL tidak valid",
+        "Gunakan rtsp://, rtsps://, http:// atau https://."
+      );
+      return;
+    }
+
+    setSelectedCamera(null);
+    setActiveStream(url);
+    setStatusText(`Mencoba membuka ${url}`);
+
+    addHistory(
+      "connected",
+      url,
+      "Stream CCTV dibuka dari URL manual."
+    );
+
+    setActiveTab("live");
+  };
+
+  const connectDiscoveredCamera = (camera: DiscoveredCamera) => {
+    const url = getCameraUrl(camera);
+
+    setSelectedCamera(camera);
+
+    if (!url) {
+      Alert.alert(
+        "URL video belum tersedia",
+        "Kamera berhasil ditemukan melalui ONVIF, tetapi XAddrs yang tersedia belum merupakan URL stream video RTSP/HTTP."
+      );
+
+      setStatusText(
+        "Kamera ditemukan, tetapi URL stream perlu dikonfigurasi manual."
+      );
+
+      setActiveTab("cctv");
+      return;
+    }
+
+    setActiveStream(url);
+    setManualUrl(url);
+    setStatusText(`Membuka ${url}`);
+
+    addHistory(
+      "connected",
+      url,
+      `Kamera ${camera.host} dipilih dari ONVIF.`
+    );
+
+    setActiveTab("live");
+  };
+
+  const disconnectCamera = () => {
+    const oldStream = activeStream;
+
+    setActiveStream("");
+    setSelectedCamera(null);
+    setStatusText("CCTV telah diputus.");
+
+    if (oldStream) {
+      addHistory(
+        "disconnected",
+        oldStream,
+        "Stream CCTV dihentikan."
+      );
+    }
+  };
+
+  const clearHistory = () => {
+    Alert.alert(
+      "Hapus riwayat",
+      "Hapus semua riwayat koneksi CCTV?",
+      [
+        {
+          text: "Batal",
+          style: "cancel",
+        },
+        {
+          text: "Hapus",
+          style: "destructive",
+          onPress: () => setHistory([]),
+        },
+      ]
+    );
+  };
+
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <View style={styles.headerTop}>
+        <View style={styles.logoCircle}>
+          <Text style={styles.logoText}>C</Text>
+        </View>
+
+        <View style={styles.headerTitleWrap}>
+          <Text style={styles.title}>CCTV Universal</Text>
+          <Text style={styles.subtitle}>
+            Monitor CCTV • ONVIF • RTSP
+          </Text>
+        </View>
+
+        <View
+          style={[
+            styles.connectionDot,
+            activeStream
+              ? styles.connectionOnline
+              : styles.connectionOffline,
+          ]}
+        />
+      </View>
+
+      {activeStream ? (
+        <View style={styles.activeInfo}>
+          <View style={styles.liveDot} />
+          <Text style={styles.activeInfoText}>
+            LIVE
+          </Text>
+          <Text
+            style={styles.activeUrl}
+            numberOfLines={1}
+          >
+            {activeStream}
+          </Text>
+        </View>
+      ) : null}
+    </View>
+  );
+
+  const renderLive = () => (
+    <>
+      <View style={styles.sectionHeader}>
+        <View>
+          <Text style={styles.sectionTitle}>
+            Live CCTV
+          </Text>
+          <Text style={styles.sectionSubtitle}>
+            Pantau kamera secara langsung
+          </Text>
+        </View>
+
+        {activeStream ? (
+          <Pressable
+            onPress={disconnectCamera}
+            style={styles.dangerButton}
+          >
+            <Text style={styles.dangerButtonText}>
+              Putus
+            </Text>
+          </Pressable>
+        ) : null}
+      </View>
+
+      <CameraVideo url={activeStream} />
+
+      {showCameraInfo && selectedCamera ? (
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>
+            Kamera Aktif
+          </Text>
+
+          <Text style={styles.infoText}>
+            Host: {selectedCamera.host}
+          </Text>
+
+          <Text style={styles.infoText}>
+            Port: {selectedCamera.port}
+          </Text>
+
+          {selectedCamera.types ? (
+            <Text style={styles.infoText}>
+              ONVIF: {selectedCamera.types}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
+
+      <View style={styles.panel}>
+        <Text style={styles.panelTitle}>
+          Hubungkan CCTV
+        </Text>
+
+        <Text style={styles.label}>
+          URL RTSP / HTTP / HTTPS
+        </Text>
+
+        <TextInput
+          value={manualUrl}
+          onChangeText={setManualUrl}
+          placeholder="rtsp://192.168.1.20:554/stream1"
+          placeholderTextColor="#64748b"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="url"
+          style={styles.input}
+        />
+
+        <Text style={styles.helper}>
+          Contoh: {suggestedUrl}
         </Text>
 
         <Pressable
-          accessibilityRole="button"
+          onPress={connectManualCamera}
+          style={({ pressed }) => [
+            styles.primaryButton,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Text style={styles.primaryButtonText}>
+            ▶  Hubungkan & Tampilkan
+          </Text>
+        </Pressable>
+
+        <Pressable
+          disabled={testing}
+          onPress={runManualCheck}
+          style={({ pressed }) => [
+            styles.secondaryButton,
+            pressed && styles.buttonPressed,
+            testing && styles.buttonDisabled,
+          ]}
+        >
+          {testing ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.primaryButtonText}>
+              Uji Koneksi
+            </Text>
+          )}
+        </Pressable>
+
+        {statusText ? (
+          <View style={styles.statusBox}>
+            <Text style={styles.statusText}>
+              {statusText}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+    </>
+  );
+
+  const renderCameras = () => (
+    <>
+      <View style={styles.sectionHeader}>
+        <View>
+          <Text style={styles.sectionTitle}>
+            Daftar CCTV
+          </Text>
+          <Text style={styles.sectionSubtitle}>
+            Kamera yang ditemukan melalui ONVIF
+          </Text>
+        </View>
+
+        <Pressable
           disabled={searching}
           onPress={searchCameras}
           style={({ pressed }) => [
-            styles.button,
+            styles.searchButton,
             pressed && styles.buttonPressed,
             searching && styles.buttonDisabled,
           ]}
         >
           {searching ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#fff" size="small" />
           ) : (
-            <Text style={styles.buttonText}>Cari CCTV</Text>
+            <Text style={styles.searchButtonText}>
+              Cari
+            </Text>
           )}
         </Pressable>
+      </View>
 
-        <View style={styles.panel}>
-          <Text style={styles.panelTitle}>Uji koneksi manual</Text>
-          <TextInput
-            value={manualUrl}
-            onChangeText={setManualUrl}
-            placeholder="rtsp://192.168.1.20:554/stream1"
-            placeholderTextColor="#6b7280"
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={styles.input}
-          />
-
-          <Text style={styles.label}>Vendor</Text>
-          <View style={styles.pillRow}>
-            {CCTV_VENDORS.map((item) => (
-              <Pressable
-                key={item}
-                onPress={() => setVendor(item)}
-                style={[styles.pill, vendor === item && styles.pillActive]}
-              >
-                <Text style={[styles.pillText, vendor === item && styles.pillTextActive]}>
-                  {item}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <Text style={styles.helper}>URL contoh: {suggestedUrl}</Text>
+      {cameras.length === 0 && !searching ? (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyIcon}>📡</Text>
+          <Text style={styles.emptyTitle}>
+            Belum ada CCTV
+          </Text>
+          <Text style={styles.emptyText}>
+            Tekan tombol "Cari" untuk mencari kamera
+            ONVIF pada jaringan lokal.
+          </Text>
 
           <Pressable
-            accessibilityRole="button"
-            disabled={testing}
-            onPress={runManualCheck}
-            style={({ pressed }) => [
-              styles.secondaryButton,
-              pressed && styles.buttonPressed,
-              testing && styles.buttonDisabled,
+            onPress={searchCameras}
+            style={styles.primaryButton}
+          >
+            <Text style={styles.primaryButtonText}>
+              Cari CCTV Sekarang
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      {searching ? (
+        <View style={styles.searchingCard}>
+          <ActivityIndicator size="large" />
+          <Text style={styles.searchingTitle}>
+            Mencari CCTV...
+          </Text>
+          <Text style={styles.searchingText}>
+            Proses ONVIF WS-Discovery sedang berjalan.
+          </Text>
+        </View>
+      ) : null}
+
+      {cameras.map((camera, index) => {
+        const url = getCameraUrl(camera);
+        const isActive =
+          selectedCamera?.host === camera.host &&
+          activeStream.length > 0;
+
+        return (
+          <View
+            key={`${camera.host}:${camera.port}:${index}`}
+            style={[
+              styles.cameraCard,
+              isActive && styles.cameraCardActive,
             ]}
           >
-            {testing ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Tes Koneksi</Text>
-            )}
-          </Pressable>
+            <View style={styles.cameraCardHeader}>
+              <View style={styles.cameraNumber}>
+                <Text style={styles.cameraNumberText}>
+                  {index + 1}
+                </Text>
+              </View>
 
-          {statusText ? <Text style={styles.status}>{statusText}</Text> : null}
+              <View style={styles.cameraNameWrap}>
+                <Text style={styles.cameraTitle}>
+                  CCTV {index + 1}
+                </Text>
+                <Text style={styles.cameraHost}>
+                  {camera.host}
+                </Text>
+              </View>
+
+              {isActive ? (
+                <View style={styles.liveBadge}>
+                  <Text style={styles.liveBadgeText}>
+                    LIVE
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+
+            <View style={styles.cameraDetails}>
+              <Text style={styles.detail}>
+                Port: {camera.port}
+              </Text>
+
+              {camera.types ? (
+                <Text style={styles.detail}>
+                  Type: {camera.types}
+                </Text>
+              ) : null}
+
+              {camera.scopes ? (
+                <Text
+                  style={styles.detail}
+                  numberOfLines={2}
+                >
+                  Scope: {camera.scopes}
+                </Text>
+              ) : null}
+
+              {url ? (
+                <Text
+                  style={styles.url}
+                  numberOfLines={2}
+                >
+                  Endpoint: {url}
+                </Text>
+              ) : (
+                <Text style={styles.warningText}>
+                  Endpoint video belum tersedia
+                </Text>
+              )}
+            </View>
+
+            <View style={styles.cameraActions}>
+              <Pressable
+                onPress={() =>
+                  connectDiscoveredCamera(camera)
+                }
+                style={styles.smallPrimaryButton}
+              >
+                <Text style={styles.smallButtonText}>
+                  ▶ Live
+                </Text>
+              </Pressable>
+
+              {url ? (
+                <Pressable
+                  onPress={() => {
+                    setManualUrl(url);
+                    setActiveTab("live");
+                  }}
+                  style={styles.smallSecondaryButton}
+                >
+                  <Text style={styles.smallSecondaryText}>
+                    Gunakan URL
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
+          </View>
+        );
+      )}
+    </>
+  );
+
+  const renderHistory = () => (
+    <>
+      <View style={styles.sectionHeader}>
+        <View>
+          <Text style={styles.sectionTitle}>
+            Riwayat
+          </Text>
+          <Text style={styles.sectionSubtitle}>
+            Aktivitas koneksi CCTV
+          </Text>
         </View>
 
-        <Text style={styles.sectionTitle}>Kamera ditemukan: {cameras.length}</Text>
-
-        {cameras.length === 0 && !searching ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>Belum ada kamera</Text>
-            <Text style={styles.emptyText}>
-              Tekan “Cari CCTV” untuk menjalankan ONVIF WS-Discovery.
+        {history.length > 0 ? (
+          <Pressable
+            onPress={clearHistory}
+            style={styles.dangerButton}
+          >
+            <Text style={styles.dangerButtonText}>
+              Hapus
             </Text>
-          </View>
+          </Pressable>
         ) : null}
+      </View>
 
-        {cameras.map((camera, index) => (
-          <View key={`${camera.host}:${camera.port}:${index}`} style={styles.card}>
-            <Text style={styles.cameraTitle}>CCTV {index + 1} — {camera.host}</Text>
-            <Text style={styles.detail}>Port: {camera.port}</Text>
-            {camera.xaddrs.length > 0 ? (
-              <>
-                <Text style={styles.label}>XAddrs:</Text>
-                {camera.xaddrs.map((url) => (
-                  <Text key={url} style={styles.url}>{url}</Text>
-                ))}
-              </>
-            ) : null}
-            {camera.types ? <Text style={styles.detail}>Types: {camera.types}</Text> : null}
-            {camera.scopes ? <Text style={styles.detail}>Scopes: {camera.scopes}</Text> : null}
+      {history.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyIcon}>🕘</Text>
+          <Text style={styles.emptyTitle}>
+            Belum ada riwayat
+          </Text>
+          <Text style={styles.emptyText}>
+            Aktivitas koneksi CCTV akan muncul di sini.
+          </Text>
+        </View>
+      ) : (
+        history.map((item) => (
+          <View
+            key={item.id}
+            style={styles.historyCard}
+          >
+            <View
+              style={[
+                styles.historyIcon,
+                item.action === "error"
+                  ? styles.historyError
+                  : item.action === "disconnected"
+                  ? styles.historyDisconnected
+                  : styles.historyConnected,
+              ]}
+            >
+              <Text style={styles.historyIconText}>
+                {item.action === "error"
+                  ? "!"
+                  : item.action === "disconnected"
+                  ? "×"
+                  : "✓"}
+              </Text>
+            </View>
+
+            <View style={styles.historyContent}>
+              <View style={styles.historyTop}>
+                <Text style={styles.historyAction}>
+                  {item.action === "connected"
+                    ? "Terhubung"
+                    : item.action === "disconnected"
+                    ? "Diputus"
+                    : "Error"}
+                </Text>
+
+                <Text style={styles.historyTime}>
+                  {item.time}
+                </Text>
+              </View>
+
+              <Text
+                style={styles.historyUrl}
+                numberOfLines={2}
+              >
+                {item.url}
+              </Text>
+
+              <Text style={styles.historyMessage}>
+                {item.message}
+              </Text>
+            </View>
           </View>
-        ))}
-      </ScrollView>
-    </SafeAreaView>
+        ))
+      )}
+    </>
   );
-}
 
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: "#0b1220",
-  },
-  container: {
-    padding: 20,
-    gap: 14,
-    paddingBottom: 48,
-  },
-  title: {
-    color: "#fff",
-    fontSize: 28,
-    fontWeight: "800",
-  },
-  subtitle: {
-    color: "#aab4c5",
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  button: {
-    minHeight: 52,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#2563eb",
-    marginTop: 8,
-  },
-  secondaryButton: {
-    minHeight: 48,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#0f766e",
-    marginTop: 10,
-  },
-  buttonPressed: {
-    opacity: 0.8,
-  },
-  buttonDisabled: {
-    opacity: 0.55,
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 17,
-    fontWeight: "700",
-  },
-  panel: {
-    backgroundColor: "#111827",
-    borderWidth: 1,
-    borderColor: "#263247",
-    borderRadius: 12,
-    padding: 16,
-    gap: 8,
-  },
-  panelTitle: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  input: {
-    backgroundColor: "#0f172a",
-    color: "#fff",
-    borderWidth: 1,
-    borderColor: "#334155",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  label: {
-    color: "#94a3b8",
-    fontSize: 12,
-    fontWeight: "700",
-    marginTop: 4,
-  },
-  helper: {
-    color: "#cbd5e1",
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  pillRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  pill: {
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "#334155",
-    backgroundColor: "#0f172a",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  pillActive: {
-    backgroundColor: "#1d4ed8",
-    borderColor: "#60a5fa",
-  },
-  pillText: {
-    color: "#e2e8f0",
-    fontSize: 11,
-  },
-  pillTextActive: {
-    color: "#fff",
-    fontWeight: "700",
-  },
-  status: {
-    color: "#bfdbfe",
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  sectionTitle: {
-    color: "#ffffff",
-    fontSize: 18,
-    fontWeight: "700",
-    marginTop: 10,
-  },
-  empty: {
-    borderWidth: 1,
-    borderColor: "#263247",
-    borderRadius: 12,
-    padding: 18,
-  },
-  emptyTitle: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  emptyText: {
-    color: "#aab4c5",
-    marginTop: 6,
-    lineHeight: 20,
-  },
-  card: {
-    borderWidth: 1,
-    borderColor: "#334155",
-    borderRadius: 12,
-    padding: 16,
-    backgroundColor: "#111827",
-    gap: 6,
-  },
-  cameraTitle: {
-    color: "#ffffff",
-    fontSize: 17,
-    fontWeight: "700",
-  },
-  detail: {
-    color: "#cbd5e1",
-    fontSize: 13,
-    lineHeight: 19,
-  },
-  url: {
-    color: "#60a5fa",
-    fontSize: 12,
-    lineHeight: 18,
-  },
-});
+  const renderSettings = () => (
+    <>
+      <View style={styles.sectionHeader}>
+        <View>
+          <Text style={styles.sectionTitle}>
+            Pengaturan
+          </Text>
+          <Text style={styles.sectionSubtitle}>
+            Konfigurasi monitor CCTV
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.settingsCard}>
+        <Text style={styles.settingsTitle}>
+          Koneksi
+        </Text>
+
+        <View style={styles.settingRow}>
+          <View style={styles.settingTextWrap}>
+            <Text style={styles.settingTitle}>
+              Auto Reconnect
+            </Text>
+            <Text style={styles.settingDescription}>
+              Mencoba menya
