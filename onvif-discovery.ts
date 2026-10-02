@@ -128,14 +128,22 @@ export async function discoverOnvifCameras(
 
     try {
       subscription = socket.addListener("message", (event: any) => {
-        const data =
-          typeof event?.data === "string"
-            ? event.data
-            : typeof event?.message === "string"
-              ? event.message
-              : "";
+       const raw = event?.data ?? event?.message;
+if (raw == null) return;
 
-        if (!data) return;
+let data: string;
+
+if (typeof raw === "string") {
+  data = raw;
+} else if (raw instanceof Uint8Array) {
+  data = new TextDecoder().decode(raw);
+} else if (raw instanceof ArrayBuffer) {
+  data = new TextDecoder().decode(new Uint8Array(raw));
+} else {
+  return;
+}
+
+if (!data) return;
 
         const camera = parseProbeMatch(
           data,
