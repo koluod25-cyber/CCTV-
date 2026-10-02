@@ -10,9 +10,9 @@
     }
   },
   "include": [
-    "index.tsx",
+    "app/index.tsx",
+    "app/_layout.tsx",
     "onvif-discovery.ts",
-    "_layout.tsx",
     "expo-env.d.ts"
   ]
 }
