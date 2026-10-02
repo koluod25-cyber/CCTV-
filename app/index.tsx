@@ -566,4 +566,4 @@ const styles = StyleSheet.create({
   primary: { minHeight: 46, borderRadius: 10, backgroundColor: "#2563eb", alignItems: "center", justifyContent: "center", marginTop: 10, paddingHorizontal: 12 },
   secondary: { minHeight: 46, borderRadius: 10, backgroundColor: "#334155", alignItems: "center", justifyContent: "center", marginTop: 8 },
   primaryText: { color: "#fff", fontWeight: "800" },
-}):
+});
