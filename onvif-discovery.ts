@@ -1,4 +1,4 @@
-import { createSocket, type UDPSocket } from "@isvend/expo-udp";
+import { createSocket } from "@isvend/expo-udp";
 
 const WS_DISCOVERY_ADDRESS = "239.255.255.250";
 const WS_DISCOVERY_PORT = 3702;
@@ -94,7 +94,7 @@ function parseProbeMatch(
 export async function discoverOnvifCameras(
   timeoutMs = 7000
 ): Promise<DiscoveredCamera[]> {
-  const socket: UDPSocket = await createSocket({
+  const socket = await createSocket({
     type: "udp4",
     reuseAddress: true,
   });
