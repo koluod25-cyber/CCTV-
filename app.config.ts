@@ -1,4 +1,3 @@
-import "./scripts/load-env.js";
 import type { ExpoConfig } from "expo/config";
 const rawBundleId = "space.manus.cctv.universal.monitor.t20260903114227";
 const bundleId = rawBundleId.toLowerCase();
