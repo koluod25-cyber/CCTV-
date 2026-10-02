@@ -38,7 +38,7 @@ jobs:
         run: pnpm check
 
       - name: Generate Android project
-        run: npx expo prebuild --platform android --clean --non-interactive
+        run: CI=1 npx expo prebuild --platform android --clean
 
       - name: Build release APK
         working-directory: android
