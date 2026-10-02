@@ -29,16 +29,9 @@ import {
   type OnvifMediaProfile,
 } from "@/onvif-media";
 
-type TabName =
-  | "live"
-  | "cctv"
-  | "history"
-  | "settings";
+type TabName = "live" | "cctv" | "history" | "settings";
 
-type HistoryAction =
-  | "connected"
-  | "disconnected"
-  | "error";
+type HistoryAction = "connected" | "disconnected" | "error";
 
 type HistoryItem = {
   id: string;
@@ -57,9 +50,7 @@ function formatTime(date = new Date()) {
 }
 
 function isSupportedCameraUrl(url: string) {
-  return /^(rtsp|rtsps|http|https):\/\//i.test(
-    url.trim()
-  );
+  return /^(rtsp|rtsps|http|https):\/\/\S+$/i.test(url.trim());
 }
 
 function buildAuthenticatedUrl(
@@ -67,14 +58,12 @@ function buildAuthenticatedUrl(
   username: string,
   password: string
 ) {
-  const url = rawUrl.trim();
-
   if (!username && !password) {
-    return url;
+    return rawUrl.trim();
   }
 
   try {
-    const parsed = new URL(url);
+    const parsed = new URL(rawUrl.trim());
 
     if (username) {
       parsed.username = username;
@@ -86,31 +75,25 @@ function buildAuthenticatedUrl(
 
     return parsed.toString();
   } catch {
-    return url;
+    return rawUrl.trim();
   }
-}
-
-function getOnvifEndpoint(
-  camera: DiscoveredCamera
-) {
-  return (
-    camera.xaddrs?.find((item) =>
-      /^https?:\/\//i.test(item)
-    ) ?? ""
-  );
 }
 
 function hideCredentialsFromUrl(url: string) {
   try {
     const parsed = new URL(url);
-
     parsed.username = "";
     parsed.password = "";
-
     return parsed.toString();
   } catch {
     return url;
   }
+}
+
+function getOnvifEndpoint(camera: DiscoveredCamera) {
+  return (
+    camera.xaddrs?.find((item) => /^https?:\/\//i.test(item)) ?? ""
+  );
 }
 
 function CameraVideo({
@@ -124,14 +107,10 @@ function CameraVideo({
     instance.loop = false;
   });
 
-  const { status, error } = useEvent(
-    player,
-    "statusChange",
-    {
-      status: player.status,
-      error: player.error,
-    }
-  );
+  const { status, error } = useEvent(player, "statusChange", {
+    status: player.status,
+    error: player.error,
+  });
 
   useEffect(() => {
     if (!url) {
@@ -140,7 +119,6 @@ function CameraVideo({
       } catch {
         // Ignore.
       }
-
       return;
     }
 
@@ -148,24 +126,20 @@ function CameraVideo({
       player.replace(url);
       player.play();
     } catch {
-      // Native player akan mengirim status error.
+      // Error akan dilaporkan oleh player.
     }
   }, [player, url]);
 
   if (!url) {
     return (
       <View style={styles.videoEmpty}>
-        <Text style={styles.videoEmptyIcon}>
-          📹
-        </Text>
-
+        <Text style={styles.videoEmptyIcon}>📹</Text>
         <Text style={styles.videoEmptyTitle}>
           Belum ada kamera aktif
         </Text>
-
         <Text style={styles.videoEmptyText}>
-          Pilih kamera dari daftar atau masukkan
-          URL RTSP/HTTP/HTTPS secara manual.
+          Pilih kamera dari daftar atau masukkan URL RTSP, HTTP, atau HTTPS
+          secara manual.
         </Text>
       </View>
     );
@@ -189,14 +163,9 @@ function CameraVideo({
         surfaceType="textureView"
       />
 
-      {status === "loading" ||
-      status === "idle" ? (
+      {status === "loading" || status === "idle" ? (
         <View style={styles.videoLoadingOverlay}>
-          <ActivityIndicator
-            size="large"
-            color="#ffffff"
-          />
-
+          <ActivityIndicator size="large" color="#ffffff" />
           <Text style={styles.videoLoadingText}>
             Menghubungkan ke CCTV...
           </Text>
@@ -205,14 +174,10 @@ function CameraVideo({
 
       {status === "error" ? (
         <View style={styles.videoErrorOverlay}>
-          <Text style={styles.videoErrorIcon}>
-            ⚠
-          </Text>
-
+          <Text style={styles.videoErrorIcon}>⚠</Text>
           <Text style={styles.videoErrorTitle}>
             Video tidak dapat diputar
           </Text>
-
           <Text style={styles.videoErrorText}>
             {playerError ||
               "Periksa URL, username/password, codec dan jaringan kamera."}
@@ -223,10 +188,7 @@ function CameraVideo({
       {status === "readyToPlay" ? (
         <View style={styles.readyBadge}>
           <View style={styles.readyDot} />
-
-          <Text style={styles.readyText}>
-            LIVE
-          </Text>
+          <Text style={styles.readyText}>LIVE</Text>
         </View>
       ) : null}
     </View>
@@ -252,10 +214,7 @@ function TabButton({
         active && styles.tabButtonActive,
       ]}
     >
-      <Text style={styles.tabIcon}>
-        {icon}
-      </Text>
-
+      <Text style={styles.tabIcon}>{icon}</Text>
       <Text
         style={[
           styles.tabText,
@@ -269,60 +228,40 @@ function TabButton({
 }
 
 export default function HomeScreen() {
-  const [activeTab, setActiveTab] =
-    useState<TabName>("live");
+  const [activeTab, setActiveTab] = useState<TabName>("live");
 
-  const [cameras, setCameras] = useState<
-    DiscoveredCamera[]
-  >([]);
-
+  const [cameras, setCameras] = useState<DiscoveredCamera[]>([]);
   const [selectedCamera, setSelectedCamera] =
     useState<DiscoveredCamera | null>(null);
 
-  const [activeStream, setActiveStream] =
-    useState("");
-
+  const [activeStream, setActiveStream] = useState("");
   const [manualUrl, setManualUrl] = useState(
     "rtsp://192.168.1.20:554/stream1"
   );
 
-  const [username, setUsername] =
-    useState("");
-
-  const [password, setPassword] =
-    useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
   const [vendor, setVendor] =
     useState<(typeof CCTV_VENDORS)[number]>(
       "Generic / ONVIF"
     );
 
-  const [searching, setSearching] =
-    useState(false);
-
+  const [searching, setSearching] = useState(false);
   const [connectingOnvif, setConnectingOnvif] =
     useState<string | null>(null);
-
-  const [testing, setTesting] =
-    useState(false);
+  const [testing, setTesting] = useState(false);
 
   const [statusText, setStatusText] =
     useState<string | null>(null);
 
-  const [history, setHistory] =
-    useState<HistoryItem[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
 
   const [activeProfile, setActiveProfile] =
-    useState<OnvifMediaProfile | null>(
-      null
-    );
+    useState<OnvifMediaProfile | null>(null);
 
-  const [autoReconnect, setAutoReconnect] =
-    useState(true);
-
-  const [showCameraInfo, setShowCameraInfo] =
-    useState(true);
-
+  const [autoReconnect, setAutoReconnect] = useState(true);
+  const [showCameraInfo, setShowCameraInfo] = useState(true);
   const [hardwareControls, setHardwareControls] =
     useState(true);
 
@@ -365,8 +304,7 @@ export default function HomeScreen() {
     setStatusText(null);
 
     try {
-      const found =
-        await discoverOnvifCameras(7000);
+      const found = await discoverOnvifCameras(7000);
 
       setCameras(found);
 
@@ -374,7 +312,6 @@ export default function HomeScreen() {
         setStatusText(
           `${found.length} kamera ditemukan melalui ONVIF.`
         );
-
         setActiveTab("cctv");
       } else {
         setStatusText(
@@ -394,10 +331,7 @@ export default function HomeScreen() {
 
       setStatusText(message);
 
-      Alert.alert(
-        "Pencarian gagal",
-        message
-      );
+      Alert.alert("Pencarian gagal", message);
     } finally {
       setSearching(false);
     }
@@ -406,20 +340,17 @@ export default function HomeScreen() {
   const connectOnvifCamera = async (
     camera: DiscoveredCamera
   ) => {
-    const endpoint =
-      getOnvifEndpoint(camera);
+    const endpoint = getOnvifEndpoint(camera);
 
     if (!endpoint) {
       Alert.alert(
         "Endpoint ONVIF tidak tersedia",
         "Kamera ditemukan tetapi tidak memberikan endpoint layanan ONVIF."
       );
-
       return;
     }
 
-    const key =
-      `${camera.host}:${camera.port}`;
+    const key = `${camera.host}:${camera.port}`;
 
     if (connectingOnvif === key) {
       return;
@@ -432,20 +363,15 @@ export default function HomeScreen() {
     );
 
     try {
-      const result =
-        await getOnvifStreamUri(
-          endpoint,
-          {
-            username:
-              username.trim() ||
-              undefined,
-            password:
-              password || undefined,
-          }
-        );
+      const result = await getOnvifStreamUri(
+        endpoint,
+        {
+          username: username.trim() || undefined,
+          password: password || undefined,
+        }
+      );
 
-      if (!result.ok ||
-        !result.streamUri) {
+      if (!result.ok || !result.streamUri) {
         const message =
           result.message ||
           "ONVIF tidak memberikan URI stream.";
@@ -466,38 +392,24 @@ export default function HomeScreen() {
         return;
       }
 
-      const streamUri =
-        result.streamUri;
+      const streamUri = result.streamUri;
 
-      /*
-       * Simpan URI yang sudah lengkap untuk
-       * player. URL yang ditampilkan ke user
-       * tetap tanpa username/password.
-       */
       setActiveStream(streamUri);
-
-      setActiveProfile(
-        result.profile ?? null
-      );
+      setActiveProfile(result.profile ?? null);
 
       setManualUrl(
-        hideCredentialsFromUrl(
-          streamUri
-        )
+        hideCredentialsFromUrl(streamUri)
       );
 
       setStatusText(
         `RTSP berhasil diperoleh • ${
-          result.profile?.name ||
-          "Media Profile"
+          result.profile?.name || "Media Profile"
         }`
       );
 
       addHistory(
         "connected",
-        hideCredentialsFromUrl(
-          streamUri
-        ),
+        hideCredentialsFromUrl(streamUri),
         "URI RTSP berhasil diperoleh melalui ONVIF."
       );
 
@@ -526,42 +438,31 @@ export default function HomeScreen() {
   };
 
   const runManualCheck = async () => {
-    const trimmedUrl =
-      manualUrl.trim();
+    const trimmedUrl = manualUrl.trim();
 
     if (!trimmedUrl) {
       Alert.alert(
         "URL kosong",
         "Masukkan URL kamera terlebih dahulu."
       );
-
       return;
     }
 
-    if (
-      !isSupportedCameraUrl(
-        trimmedUrl
-      )
-    ) {
+    if (!isSupportedCameraUrl(trimmedUrl)) {
       Alert.alert(
         "URL tidak valid",
         "Gunakan rtsp://, rtsps://, http:// atau https://."
       );
-
       return;
     }
 
-    const endpoint =
-      getEndpointDetails(
-        trimmedUrl
-      );
+    const endpoint = getEndpointDetails(trimmedUrl);
 
     if (!endpoint) {
       Alert.alert(
         "URL tidak valid",
         "Format URL kamera tidak dapat dikenali."
       );
-
       return;
     }
 
@@ -576,11 +477,8 @@ export default function HomeScreen() {
           url: trimmedUrl,
           vendor,
           username:
-            username.trim() ||
-            undefined,
-          password:
-            password ||
-            undefined,
+            username.trim() || undefined,
+          password: password || undefined,
         } as CameraNetworkConfig);
 
       const resultText =
@@ -592,9 +490,7 @@ export default function HomeScreen() {
       setStatusText(resultText);
 
       addHistory(
-        result.ok
-          ? "connected"
-          : "error",
+        result.ok ? "connected" : "error",
         trimmedUrl,
         result.message
       );
@@ -617,26 +513,21 @@ export default function HomeScreen() {
   };
 
   const connectManualCamera = () => {
-    const url =
-      manualUrl.trim();
+    const url = manualUrl.trim();
 
     if (!url) {
       Alert.alert(
         "URL kosong",
         "Masukkan URL CCTV terlebih dahulu."
       );
-
       return;
     }
 
-    if (
-      !isSupportedCameraUrl(url)
-    ) {
+    if (!isSupportedCameraUrl(url)) {
       Alert.alert(
         "URL tidak valid",
         "Gunakan rtsp://, rtsps://, http:// atau https://."
       );
-
       return;
     }
 
@@ -649,9 +540,7 @@ export default function HomeScreen() {
 
     setSelectedCamera(null);
     setActiveProfile(null);
-    setActiveStream(
-      authenticatedUrl
-    );
+    setActiveStream(authenticatedUrl);
 
     setStatusText(
       "Mencoba membuka stream CCTV..."
@@ -667,23 +556,18 @@ export default function HomeScreen() {
   };
 
   const disconnectCamera = () => {
-    const oldStream =
-      activeStream;
+    const oldStream = activeStream;
 
     setActiveStream("");
     setActiveProfile(null);
     setSelectedCamera(null);
 
-    setStatusText(
-      "CCTV telah diputus."
-    );
+    setStatusText("CCTV telah diputus.");
 
     if (oldStream) {
       addHistory(
         "disconnected",
-        hideCredentialsFromUrl(
-          oldStream
-        ),
+        hideCredentialsFromUrl(oldStream),
         "Stream CCTV dihentikan."
       );
     }
@@ -701,8 +585,7 @@ export default function HomeScreen() {
         {
           text: "Hapus",
           style: "destructive",
-          onPress: () =>
-            setHistory([]),
+          onPress: () => setHistory([]),
         },
       ]
     );
@@ -712,16 +595,10 @@ export default function HomeScreen() {
     <View style={styles.header}>
       <View style={styles.headerTop}>
         <View style={styles.logoCircle}>
-          <Text style={styles.logoText}>
-            C
-          </Text>
+          <Text style={styles.logoText}>C</Text>
         </View>
 
-        <View
-          style={
-            styles.headerTitleWrap
-          }
-        >
+        <View style={styles.headerTitleWrap}>
           <Text style={styles.title}>
             CCTV Universal
           </Text>
@@ -743,13 +620,9 @@ export default function HomeScreen() {
 
       {activeStream ? (
         <View style={styles.activeInfo}>
-          <View
-            style={styles.liveDot}
-          />
+          <View style={styles.liveDot} />
 
-          <Text
-            style={styles.activeInfoText}
-          >
+          <Text style={styles.activeInfoText}>
             LIVE
           </Text>
 
@@ -768,37 +641,23 @@ export default function HomeScreen() {
 
   const renderLive = () => (
     <>
-      <View
-        style={styles.sectionHeader}
-      >
+      <View style={styles.sectionHeader}>
         <View>
-          <Text
-            style={styles.sectionTitle}
-          >
+          <Text style={styles.sectionTitle}>
             Live CCTV
           </Text>
 
-          <Text
-            style={styles.sectionSubtitle}
-          >
+          <Text style={styles.sectionSubtitle}>
             Pantau kamera secara langsung
           </Text>
         </View>
 
         {activeStream ? (
           <Pressable
-            onPress={
-              disconnectCamera
-            }
-            style={
-              styles.dangerButton
-            }
+            onPress={disconnectCamera}
+            style={styles.dangerButton}
           >
-            <Text
-              style={
-                styles.dangerButtonText
-              }
-            >
+            <Text style={styles.dangerButtonText}>
               Putus
             </Text>
           </Pressable>
@@ -807,51 +666,33 @@ export default function HomeScreen() {
 
       <CameraVideo
         url={activeStream}
-        nativeControls={
-          hardwareControls
-        }
+        nativeControls={hardwareControls}
       />
 
-      {showCameraInfo &&
-      selectedCamera ? (
-        <View
-          style={styles.infoCard}
-        >
-          <Text
-            style={styles.infoTitle}
-          >
+      {showCameraInfo && selectedCamera ? (
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>
             Kamera Aktif
           </Text>
 
-          <Text
-            style={styles.infoText}
-          >
-            Host:{" "}
-            {selectedCamera.host}
+          <Text style={styles.infoText}>
+            Host: {selectedCamera.host}
           </Text>
 
-          <Text
-            style={styles.infoText}
-          >
-            Port:{" "}
-            {selectedCamera.port}
+          <Text style={styles.infoText}>
+            Port: {selectedCamera.port}
           </Text>
 
           {activeProfile ? (
-            <Text
-              style={styles.infoText}
-            >
-              Profile:{" "}
-              {activeProfile.name}
+            <Text style={styles.infoText}>
+              Profile: {activeProfile.name}
             </Text>
           ) : null}
         </View>
       ) : null}
 
       <View style={styles.panel}>
-        <Text
-          style={styles.panelTitle}
-        >
+        <Text style={styles.panelTitle}>
           Hubungkan CCTV Manual
         </Text>
 
@@ -861,38 +702,30 @@ export default function HomeScreen() {
 
         <ScrollView
           horizontal
-          showsHorizontalScrollIndicator={
-            false
-          }
-          style={
-            styles.vendorScroll
-          }
+          showsHorizontalScrollIndicator={false}
+          style={styles.vendorScroll}
         >
-          {CCTV_VENDORS.map(
-            (item) => (
-              <Pressable
-                key={item}
-                onPress={() =>
-                  setVendor(item)
-                }
+          {CCTV_VENDORS.map((item) => (
+            <Pressable
+              key={item}
+              onPress={() => setVendor(item)}
+              style={[
+                styles.vendorChip,
+                vendor === item &&
+                  styles.vendorChipActive,
+              ]}
+            >
+              <Text
                 style={[
-                  styles.vendorChip,
+                  styles.vendorChipText,
                   vendor === item &&
-                    styles.vendorChipActive,
+                    styles.vendorChipTextActive,
                 ]}
               >
-                <Text
-                  style={[
-                    styles.vendorChipText,
-                    vendor === item &&
-                      styles.vendorChipTextActive,
-                  ]}
-                >
-                  {item}
-                </Text>
-              </Pressable>
-            )
-          )}
+                {item}
+              </Text>
+            </Pressable>
+          ))}
         </ScrollView>
 
         <Text style={styles.label}>
@@ -901,9 +734,7 @@ export default function HomeScreen() {
 
         <TextInput
           value={manualUrl}
-          onChangeText={
-            setManualUrl
-          }
+          onChangeText={setManualUrl}
           placeholder="rtsp://192.168.1.20:554/stream1"
           placeholderTextColor="#64748b"
           autoCapitalize="none"
@@ -922,9 +753,7 @@ export default function HomeScreen() {
 
         <TextInput
           value={username}
-          onChangeText={
-            setUsername
-          }
+          onChangeText={setUsername}
           placeholder="admin"
           placeholderTextColor="#64748b"
           autoCapitalize="none"
@@ -938,9 +767,7 @@ export default function HomeScreen() {
 
         <TextInput
           value={password}
-          onChangeText={
-            setPassword
-          }
+          onChangeText={setPassword}
           placeholder="Password kamera"
           placeholderTextColor="#64748b"
           autoCapitalize="none"
@@ -950,59 +777,38 @@ export default function HomeScreen() {
         />
 
         <Pressable
-          onPress={
-            connectManualCamera
-          }
+          onPress={connectManualCamera}
           style={({ pressed }) => [
             styles.primaryButton,
-            pressed &&
-              styles.buttonPressed,
+            pressed && styles.buttonPressed,
           ]}
         >
-          <Text
-            style={
-              styles.primaryButtonText
-            }
-          >
+          <Text style={styles.primaryButtonText}>
             ▶  Hubungkan & Tampilkan
           </Text>
         </Pressable>
 
         <Pressable
           disabled={testing}
-          onPress={
-            runManualCheck
-          }
+          onPress={runManualCheck}
           style={({ pressed }) => [
             styles.secondaryButton,
-            pressed &&
-              styles.buttonPressed,
-            testing &&
-              styles.buttonDisabled,
+            pressed && styles.buttonPressed,
+            testing && styles.buttonDisabled,
           ]}
         >
           {testing ? (
-            <ActivityIndicator
-              color="#fff"
-            />
+            <ActivityIndicator color="#fff" />
           ) : (
-            <Text
-              style={
-                styles.primaryButtonText
-              }
-            >
+            <Text style={styles.primaryButtonText}>
               Uji Koneksi
             </Text>
           )}
         </Pressable>
 
         {statusText ? (
-          <View
-            style={styles.statusBox}
-          >
-            <Text
-              style={styles.statusText}
-            >
+          <View style={styles.statusBox}>
+            <Text style={styles.statusText}>
               {statusText}
             </Text>
           </View>
@@ -1013,10 +819,17 @@ export default function HomeScreen() {
 
   const renderCameras = () => (
     <>
-      <View
-        style={styles.sectionHeader}
-      >
-        <View
-          style={
-            styles.sectionHeaderText
-      
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionHeaderText}>
+          <Text style={styles.sectionTitle}>
+            Daftar CCTV
+          </Text>
+
+          <Text style={styles.sectionSubtitle}>
+            Kamera yang ditemukan melalui ONVIF
+          </Text>
+        </View>
+
+        <Pressable
+          onPress={searchCameras}
+          disabled
