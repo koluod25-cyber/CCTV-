@@ -146,9 +146,14 @@ if (typeof raw === "string") {
 if (!data) return;
 
         const camera = parseProbeMatch(
-          data,
-          String(event?.address ?? event?.host ?? "")
-        );
+  data,
+  String(
+    event?.remoteAddress ??
+      event?.address ??
+      event?.host ??
+      ""
+  )
+);
 
         if (!camera) return;
 
