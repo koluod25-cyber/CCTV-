@@ -82,9 +82,13 @@ function addCredentials(
 function CameraVideo({
   url,
   nativeControls,
+  onLoad,
+  onError,
 }: {
   url: string;
   nativeControls: boolean;
+  onLoad?: () => void;
+  onError?: (message: string) => void;
 }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
@@ -122,10 +126,17 @@ function CameraVideo({
         onLoad={() => {
           setLoaded(true);
           setError(false);
+          onLoad?.();
         }}
-        onError={() => {
+        onError={(videoError) => {
           setLoaded(false);
           setError(true);
+
+          const message =
+            videoError?.error?.errorString ||
+            "Native player gagal membuka stream CCTV.";
+
+          onError?.(message);
         }}
         bufferConfig={{
           minBufferMs: 1500,
