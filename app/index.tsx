@@ -365,6 +365,44 @@ export default function HomeScreen() {
 
   const [nativeControls, setNativeControls] =
     useState(true);
+const [muted, setMuted] = useState(false);
+
+const [cameraCount, setCameraCount] =
+  useState(1);
+
+const [ownerText, setOwnerText] =
+  useState("Pemilik: CCTV Universal Monitor");
+
+const [logoUri, setLogoUri] =
+  useState("");
+
+const marqueeX =
+  useRef(new Animated.Value(0)).current;
+
+useEffect(() => {
+  const animation = Animated.loop(
+    Animated.sequence([
+      Animated.timing(marqueeX, {
+        toValue: -180,
+        duration: 5000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+      Animated.timing(marqueeX, {
+        toValue: 0,
+        duration: 5000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    ]),
+  );
+
+  animation.start();
+
+  return () => {
+    animation.stop();
+  };
+}, [marqueeX]);
 
   const suggestedUrl = useMemo(
     () =>
@@ -740,36 +778,75 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <CameraVideo
-  url={activeStream}
-  nativeControls={nativeControls}
-  onLoad={() => {
-    setTesting(false);
+      <View style={styles.cameraGrid}>
+  {Array.from({ length: cameraCount }).map(
+    (_, index) => {
+      const stream =
+        index === 0 ? activeStream : "";
 
-    setStatusText(
-      "ONLINE • RTSP berhasil dibuka oleh native player.",
-    );
+      return (
+        <View
+          key={index}
+          style={styles.cameraSlot}
+        >
+          <View style={styles.cameraSlotHeader}>
+            <Text style={styles.cameraSlotTitle}>
+              Kamera {index + 1}
+            </Text>
 
-    addHistory(
-      "connected",
-      activeStream,
-      "RTSP berhasil dibuka oleh native player.",
-    );
-  }}
-  onError={(message) => {
-    setTesting(false);
+            <Text style={styles.cameraSlotStatus}>
+              {stream
+                ? "LIVE"
+                : "BELUM TERHUBUNG"}
+            </Text>
+          </View>
 
-    setStatusText(
-      `OFFLINE • ${message}`,
-    );
+          <CameraVideo
+            url={stream}
+            nativeControls={nativeControls}
+            muted={muted}
+            onLoad={() => {
+              setTesting(false);
 
-    addHistory(
-      "error",
-      activeStream,
-      message,
-    );
-  }}
-/>
+              setStatusText(
+                `ONLINE • Kamera ${
+                  index + 1
+                } berhasil dibuka oleh native player.`,
+              );
+
+              if (stream) {
+                addHistory(
+                  "connected",
+                  stream,
+                  `Kamera ${
+                    index + 1
+                  } berhasil dibuka oleh native player.`,
+                );
+              }
+            }}
+            onError={(message) => {
+              setTesting(false);
+
+              setStatusText(
+                `OFFLINE • Kamera ${
+                  index + 1
+                }: ${message}`,
+              );
+
+              if (stream) {
+                addHistory(
+                  "error",
+                  stream,
+                  message,
+                );
+              }
+            }}
+          />
+        </View>
+      );
+    },
+  )}
+</View>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>
@@ -814,6 +891,24 @@ export default function HomeScreen() {
             <Text style={styles.switchTitle}>
               Kontrol video
             </Text>
+<View style={styles.switchRow}>
+  <View style={styles.switchTextWrap}>
+    <Text style={styles.switchTitle}>
+      Suara CCTV
+    </Text>
+
+    <Text style={styles.switchDescription}>
+      Aktifkan atau matikan suara dari stream CCTV.
+    </Text>
+  </View>
+
+  <Switch
+    value={!muted}
+    onValueChange={(value) =>
+      setMuted(!value)
+    }
+  />
+</View>
 
             <Text style={styles.switchDescription}>
               Tampilkan kontrol bawaan pemutar video.
