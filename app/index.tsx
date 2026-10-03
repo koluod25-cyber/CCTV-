@@ -113,7 +113,7 @@ function CameraVideo({ url, nativeControls }: { url: string; nativeControls: boo
           <Text style={styles.errorIcon}>⚠</Text>
           <Text style={styles.overlayTitle}>Video tidak dapat diputar</Text>
           <Text style={styles.overlayText}>
-            {player.error?.message || "Periksa URL, codec dan jaringan kamera."}
+            {player.error?.message || "Periksa URL, codec, alamat RTSP dan jaringan kamera."}
           </Text>
         </View>
       ) : null}
