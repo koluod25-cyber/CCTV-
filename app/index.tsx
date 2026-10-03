@@ -137,12 +137,50 @@ function CameraVideo({
   setLoaded(false);
   setError(true);
 
-  const rawError = JSON.stringify(videoError);
+  const errorString =
+    videoError?.error?.errorString ||
+    "";
+
+  const errorCode =
+    videoError?.error?.errorCode ||
+    "";
+
+  const errorType =
+    videoError?.error?.errorType ||
+    "";
+
+  const detail =
+    [
+      errorCode
+        ? `Code: ${errorCode}`
+        : "",
+      errorType
+        ? `Type: ${errorType}`
+        : "",
+      errorString
+        ? `Detail: ${errorString}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" • ");
 
   console.log(
-    "CCTV EXOPLAYER ERROR:",
-    rawError,
+    "=== CCTV EXOPLAYER ERROR ===",
   );
+
+  console.log(
+    JSON.stringify(
+      videoError,
+      null,
+      2,
+    ),
+  );
+
+  onError?.(
+    detail ||
+      "ExoPlayer gagal membuka stream CCTV.",
+  );
+}}
 
   const message =
     videoError?.error?.errorString ||
