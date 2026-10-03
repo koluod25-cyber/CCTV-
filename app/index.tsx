@@ -755,34 +755,30 @@ const testConnection =
   url={activeStream}
   nativeControls={nativeControls}
   onLoad={() => {
-    if (testing) {
-      setTesting(false);
+    setTesting(false);
 
-      setStatusText(
-        "ONLINE • RTSP berhasil dibuka oleh native player.",
-      );
+    setStatusText(
+      "ONLINE • RTSP berhasil dibuka oleh native player.",
+    );
 
-      addHistory(
-        "connected",
-        activeStream,
-        "RTSP berhasil dibuka oleh native player.",
-      );
-    }
+    addHistory(
+      "connected",
+      activeStream,
+      "RTSP berhasil dibuka oleh native player.",
+    );
   }}
   onError={(message) => {
-    if (testing) {
-      setTesting(false);
+    setTesting(false);
 
-      setStatusText(
-        `OFFLINE • ${message}`,
-      );
+    setStatusText(
+      `OFFLINE • ${message}`,
+    );
 
-      addHistory(
-        "error",
-        activeStream,
-        message,
-      );
-    }
+    addHistory(
+      "error",
+      activeStream,
+      message,
+    );
   }}
 />
 
