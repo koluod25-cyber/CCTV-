@@ -41,19 +41,31 @@ const config: ExpoConfig = {
   },
 
   plugins: [
-    "expo-router",
+  "expo-router",
 
-    [
-      "@isvend/expo-udp",
-      {
-        multicast: true,
-
-        localNetworkUsageDescription:
-          "Aplikasi menggunakan jaringan lokal untuk menemukan dan terhubung ke kamera CCTV.",
+  [
+    "react-native-video",
+    {
+      androidExtensions: {
+        useExoplayerRtsp: true,
+        useExoplayerSmoothStreaming: false,
+        useExoplayerHls: false,
+        useExoplayerDash: false,
       },
-    ],
+    },
+  ],
 
-    [
+  [
+    "@isvend/expo-udp",
+    {
+      multicast: true,
+      localNetworkUsageDescription:
+        "Aplikasi menggunakan jaringan lokal untuk menemukan dan terhubung ke kamera CCTV.",
+    },
+  ],
+
+  // ...
+],
       "expo-build-properties",
       {
         android: {
