@@ -123,66 +123,100 @@ function CameraVideo({
         playInBackground={false}
         playWhenInactive={false}
         repeat={false}
+        viewType="textureView"
         onLoad={() => {
-  console.log(
-    "CCTV EXOPLAYER LOAD SUCCESS:",
-    url,
-  );
+          console.log(
+            "CCTV EXOPLAYER LOAD SUCCESS:",
+            url,
+          );
 
-  setLoaded(true);
-  setError(false);
-  onLoad?.();
-}}
+          setLoaded(true);
+          setError(false);
+
+          onLoad?.();
+        }}
         onError={(videoError) => {
-  setLoaded(false);
-  setError(true);
+          setLoaded(false);
+          setError(true);
 
-  const errorString =
-    videoError?.error?.errorString ||
-    "";
+          const errorObject =
+            videoError?.error;
 
-  const errorCode =
-    videoError?.error?.errorCode ||
-    "";
+          const errorCode =
+            errorObject?.errorCode || "";
 
-  const detail =
-    [
-      errorCode
-        ? `Code: ${errorCode}`
-        : "",
-     
-      errorString
-        ? `Detail: ${errorString}`
-        : "",
-    ]
-      .filter(Boolean)
-      .join(" • ");
+          const errorString =
+            errorObject?.errorString || "";
 
-  console.log(
-    "=== CCTV EXOPLAYER ERROR ===",
-  );
+          const errorException =
+            errorObject?.errorException || "";
 
-  console.log(
-    JSON.stringify(
-      videoError,
-      null,
-      2,
-    ),
-  );
+          const errorStack =
+            errorObject?.errorStackTrace || "";
 
-  onError?.(
-    detail ||
-      "ExoPlayer gagal membuka stream CCTV.",
-  );
-}}
+          const detail = [
+            errorCode
+              ? `Code: ${errorCode}`
+              : "",
+            errorString
+              ? `Detail: ${errorString}`
+              : "",
+            errorException
+              ? `Exception: ${errorException}`
+              : "",
+          ]
+            .filter(Boolean)
+            .join(" • ");
 
+          console.log(
+            "=== CCTV EXOPLAYER ERROR ===",
+          );
+
+          console.log(
+            "URL:",
+            url,
+          );
+
+          console.log(
+            "ERROR CODE:",
+            errorCode,
+          );
+
+          console.log(
+            "ERROR STRING:",
+            errorString,
+          );
+
+          console.log(
+            "ERROR EXCEPTION:",
+            errorException,
+          );
+
+          console.log(
+            "ERROR STACK:",
+            errorStack,
+          );
+
+          console.log(
+            JSON.stringify(
+              videoError,
+              null,
+              2,
+            ),
+          );
+
+          onError?.(
+            detail ||
+              "ExoPlayer gagal membuka stream CCTV.",
+          );
+        }}
         bufferConfig={{
           minBufferMs: 1500,
           maxBufferMs: 5000,
           bufferForPlaybackMs: 500,
           bufferForPlaybackAfterRebufferMs: 1000,
         }}
-/>
+      />
 
       {!loaded && !error ? (
         <View style={styles.overlay}>
@@ -199,15 +233,18 @@ function CameraVideo({
 
       {error ? (
         <View style={styles.overlay}>
-          <Text style={styles.errorIcon}>⚠</Text>
+          <Text style={styles.errorIcon}>
+            ⚠
+          </Text>
 
           <Text style={styles.overlayTitle}>
             Video tidak dapat diputar
           </Text>
 
           <Text style={styles.overlayText}>
+            ExoPlayer gagal membuka stream.
             Periksa URL RTSP, username/password,
-            codec H.264 dan jaringan kamera.
+            codec kamera, dan jaringan.
           </Text>
         </View>
       ) : null}
