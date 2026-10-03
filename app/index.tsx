@@ -113,18 +113,17 @@ function CameraVideo({
   return (
     <View style={styles.videoBox}>
       <Video
-        source={{
-          uri: url,
-        }}
-        style={styles.video}
-        controls={nativeControls}
-        resizeMode="contain"
-        paused={false}
-        playInBackground={false}
-        playWhenInactive={false}
-        repeat={false}
-        viewType="textureView"
-        onLoad={() => {
+  source={{
+    uri: url,
+  }}
+  style={styles.video}
+  controls={nativeControls}
+  resizeMode="contain"
+  paused={false}
+  playInBackground={false}
+  playWhenInactive={false}
+  repeat={false}
+  onLoad={() => {
           console.log(
             "CCTV EXOPLAYER LOAD SUCCESS:",
             url,
