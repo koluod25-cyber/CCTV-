@@ -188,6 +188,7 @@ function CameraVideo({
           bufferForPlaybackMs: 500,
           bufferForPlaybackAfterRebufferMs: 1000,
         }}
+/>
 
       {!loaded && !error ? (
         <View style={styles.overlay}>
