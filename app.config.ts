@@ -6,19 +6,14 @@ const config: ExpoConfig = {
   name: "CCTV Universal Monitor",
   slug: "cctv-universal-monitor",
   version: "1.0.0",
-
   orientation: "portrait",
-
   scheme: "cctvuniversalmonitor",
-
   userInterfaceStyle: "automatic",
-
   newArchEnabled: true,
 
   ios: {
     supportsTablet: true,
     bundleIdentifier: bundleId,
-
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
@@ -26,11 +21,8 @@ const config: ExpoConfig = {
 
   android: {
     package: bundleId,
-
     edgeToEdgeEnabled: true,
-
     predictiveBackGestureEnabled: false,
-
     permissions: [
       "INTERNET",
       "ACCESS_NETWORK_STATE",
@@ -41,51 +33,35 @@ const config: ExpoConfig = {
   },
 
   plugins: [
-  "expo-router",
+    "expo-router",
 
-  [
-    "react-native-video",
-    {
-      androidExtensions: {
-        useExoplayerRtsp: true,
-        useExoplayerSmoothStreaming: false,
-        useExoplayerHls: false,
-        useExoplayerDash: false,
+    [
+      "react-native-video",
+      {
+        androidExtensions: {
+          useExoplayerRtsp: true,
+          useExoplayerSmoothStreaming: false,
+          useExoplayerHls: false,
+          useExoplayerDash: false,
+        },
       },
-    },
-  ],
+    ],
 
-  [
-    "@isvend/expo-udp",
-    {
-      multicast: true,
-      localNetworkUsageDescription:
-        "Aplikasi menggunakan jaringan lokal untuk menemukan dan terhubung ke kamera CCTV.",
-    },
-  ],
-
-  [
-    "expo-build-properties",
-    {
-      android: {
-        minSdkVersion: 24,
-        usesCleartextTraffic: true,
-        buildArchs: [
-          "armeabi-v7a",
-          "arm64-v8a",
-        ],
+    [
+      "@isvend/expo-udp",
+      {
+        multicast: true,
+        localNetworkUsageDescription:
+          "Aplikasi menggunakan jaringan lokal untuk menemukan dan terhubung ke kamera CCTV.",
       },
-    },
-  ],
-],
+    ],
+
+    [
       "expo-build-properties",
       {
         android: {
           minSdkVersion: 24,
-
-          // Penting untuk kamera CCTV yang menggunakan http://
           usesCleartextTraffic: true,
-
           buildArchs: [
             "armeabi-v7a",
             "arm64-v8a",
