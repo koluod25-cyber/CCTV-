@@ -544,26 +544,6 @@ setActiveTab("live");
     return;
   }
 
-  const target =
-    addCredentials(
-      value,
-      username.trim(),
-      password,
-    );
-
-  setSelectedCamera(null);
-  setProfile(null);
-  setActiveStream(target);
-
-  setTesting(true);
-
-  setStatusText(
-    "Mencoba membuka stream CCTV...",
-  );
-
-  setActiveTab("live");
-};
-
     const target =
       addCredentials(
         value,
@@ -579,15 +559,15 @@ setActiveTab("live");
       "Mencoba membuka stream CCTV...",
     );
 
-    setTesting(true);
+   setTesting(true);
 
 setStatusText(
-  "Mencoba membuka stream CCTV..."
+  "URI RTSP berhasil diperoleh. Membuka video..."
 );
 
 setActiveTab("live");
 
-const testConnection =
+    const testConnection =
   async () => {
     const value =
       manualUrl.trim();
