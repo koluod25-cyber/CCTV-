@@ -101,11 +101,6 @@ function CameraVideo({
   onLoad?: () => void;
   onError?: (message: string) => void;
 }) {
-  url: string;
-  nativeControls: boolean;
-  onLoad?: () => void;
-  onError?: (message: string) => void;
-}) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 
