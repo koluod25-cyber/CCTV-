@@ -127,7 +127,7 @@ return {
   scopes,
   address,
 };
-
+}
 function decodeMessage(raw: unknown): string {
   if (typeof raw === "string") {
     return raw;
