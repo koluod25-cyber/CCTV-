@@ -182,11 +182,6 @@ function CameraVideo({
   );
 }}
 
-    onError?.(
-    detail ||
-      "ExoPlayer gagal membuka stream CCTV.",
-  );
-}}
         bufferConfig={{
           minBufferMs: 1500,
           maxBufferMs: 5000,
