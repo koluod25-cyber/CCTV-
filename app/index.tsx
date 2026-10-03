@@ -493,77 +493,110 @@ export default function HomeScreen() {
     setActiveTab("live");
   };
 
-  const testConnection =
-    async () => {
-      const value =
-        manualUrl.trim();
+const testConnection =
+  async () => {
+    const value =
+      manualUrl.trim();
 
-      if (
-        !isCameraUrl(value) ||
-        !getEndpointDetails(value)
-      ) {
-        Alert.alert(
-          "URL tidak valid",
-          "Masukkan URL kamera yang benar.",
+    const endpoint =
+      getEndpointDetails(value);
+
+    if (
+      !isCameraUrl(value) ||
+      !endpoint
+    ) {
+      Alert.alert(
+        "URL tidak valid",
+        "Masukkan URL kamera yang benar.",
+      );
+
+      return;
+    }
+
+    /*
+     * RTSP/ONVIF tidak dapat diuji menggunakan fetch().
+     * Untuk RTSP, pengujian dilakukan langsung oleh
+     * native react-native-video melalui onLoad/onError.
+     */
+    if (
+      endpoint.protocol === "RTSP" ||
+      endpoint.protocol === "ONVIF"
+    ) {
+      const target =
+        addCredentials(
+          value,
+          username.trim(),
+          password,
         );
-
-        return;
-      }
 
       setTesting(true);
+      setSelectedCamera(null);
+      setProfile(null);
+      setActiveStream(target);
 
-      try {
-        const camera: CameraNetworkConfig =
-          {
-            id: "manual-camera",
-            name: "Camera manual",
-            url: value,
-            vendor,
-            username:
-              username.trim() ||
-              undefined,
-            password:
-              password ||
-              undefined,
-          };
+      setStatusText(
+        "Menguji RTSP melalui native player...",
+      );
 
-        const result =
-          await testCameraConnection(
-            camera,
-          );
+      setActiveTab("live");
 
-        const message =
-          `${result.status.toUpperCase()} • ${result.message}` +
-          (result.latencyMs
-            ? ` • ${result.latencyMs}ms`
-            : "");
+      return;
+    }
 
-        setStatusText(message);
+    setTesting(true);
 
-        addHistory(
-          result.ok
-            ? "connected"
-            : "error",
-          value,
-          result.message,
+    try {
+      const camera: CameraNetworkConfig =
+        {
+          id: "manual-camera",
+          name: "Camera manual",
+          url: value,
+          vendor,
+          username:
+            username.trim() ||
+            undefined,
+          password:
+            password ||
+            undefined,
+        };
+
+      const result =
+        await testCameraConnection(
+          camera,
         );
-      } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Tes koneksi gagal.";
 
-        setStatusText(message);
+      const message =
+        `${result.status.toUpperCase()} • ${result.message}` +
+        (result.latencyMs
+          ? ` • ${result.latencyMs}ms`
+          : "");
 
-        addHistory(
-          "error",
-          value,
-          message,
-        );
-      } finally {
-        setTesting(false);
-      }
-    };
+      setStatusText(message);
+
+      addHistory(
+        result.ok
+          ? "connected"
+          : "error",
+        value,
+        result.message,
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Tes koneksi gagal.";
+
+      setStatusText(message);
+
+      addHistory(
+        "error",
+        value,
+        message,
+      );
+    } finally {
+      setTesting(false);
+    }
+  };
 
   const disconnect = () => {
     if (activeStream) {
@@ -624,9 +657,39 @@ export default function HomeScreen() {
       </View>
 
       <CameraVideo
-        url={activeStream}
-        nativeControls={nativeControls}
-      />
+  url={activeStream}
+  nativeControls={nativeControls}
+  onLoad={() => {
+    if (testing) {
+      setTesting(false);
+
+      setStatusText(
+        "ONLINE • RTSP berhasil dibuka oleh native player.",
+      );
+
+      addHistory(
+        "connected",
+        activeStream,
+        "RTSP berhasil dibuka oleh native player.",
+      );
+    }
+  }}
+  onError={(message) => {
+    if (testing) {
+      setTesting(false);
+
+      setStatusText(
+        `OFFLINE • ${message}`,
+      );
+
+      addHistory(
+        "error",
+        activeStream,
+        message,
+      );
+    }
+  }}
+/>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>
