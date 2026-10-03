@@ -7,6 +7,9 @@ import {
 import {
   ActivityIndicator,
   Alert,
+  Animated,
+  Easing,
+  Image,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -15,6 +18,7 @@ import {
   Text,
   TextInput,
   View,
+  
 } from "react-native";
 import Video from "react-native-video";
 
@@ -87,9 +91,16 @@ function addCredentials(
 function CameraVideo({
   url,
   nativeControls,
+  muted,
   onLoad,
   onError,
 }: {
+  url: string;
+  nativeControls: boolean;
+  muted: boolean;
+  onLoad?: () => void;
+  onError?: (message: string) => void;
+}) {
   url: string;
   nativeControls: boolean;
   onLoad?: () => void;
@@ -123,6 +134,7 @@ function CameraVideo({
   }}
   style={styles.video}
   controls={nativeControls}
+  muted={muted}
   resizeMode="contain"
   paused={false}
   playInBackground={false}
