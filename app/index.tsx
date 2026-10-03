@@ -571,407 +571,508 @@ export default function HomeScreen() {
       "CCTV telah diputus.",
     );
   };
-
   const renderLive = () => (
-    <>
-      <View style={styles.rowHeader}>
-        <View style={styles.flex}>
-          <Text style={styles.heading}>
+    <ScrollView
+      style={styles.content}
+      contentContainerStyle={styles.contentContainer}
+    >
+      <View style={styles.sectionHeader}>
+        <View>
+          <Text style={styles.sectionTitle}>
             Live CCTV
           </Text>
 
-          <Text style={styles.subheading}>
-            Pantau kamera secara langsung
+          <Text style={styles.sectionSubtitle}>
+            Pantau kamera CCTV secara langsung.
           </Text>
         </View>
 
-        {activeStream ? (
-          <Pressable
-            onPress={disconnect}
-            style={styles.danger}
-          >
-            <Text style={styles.dangerText}>
-              Putus
-            </Text>
-          </Pressable>
-        ) : null}
+        <View
+          style={[
+            styles.statusPill,
+            activeStream
+              ? styles.statusPillOnline
+              : styles.statusPillOffline,
+          ]}
+        >
+          <View
+            style={[
+              styles.statusDot,
+              activeStream
+                ? styles.statusDotOnline
+                : styles.statusDotOffline,
+            ]}
+          />
+
+          <Text style={styles.statusPillText}>
+            {activeStream
+              ? "TERHUBUNG"
+              : "TIDAK TERHUBUNG"}
+          </Text>
+        </View>
       </View>
 
       <CameraVideo
         url={activeStream}
-        nativeControls={
-          nativeControls
-        }
+        nativeControls={nativeControls}
       />
 
-      {showInfo &&
-      selectedCamera ? (
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>
+          Kontrol Live
+        </Text>
+
+        <View style={styles.buttonRow}>
+          <Pressable
+            style={[
+              styles.primaryButton,
+              styles.flexButton,
+            ]}
+            onPress={connectManual}
+          >
+            <Text style={styles.primaryButtonText}>
+              ▶ Tampilkan Live
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={[
+              styles.secondaryButton,
+              styles.flexButton,
+            ]}
+            onPress={disconnect}
+            disabled={!activeStream}
+          >
+            <Text
+              style={[
+                styles.secondaryButtonText,
+                !activeStream &&
+                  styles.disabledText,
+              ]}
+            >
+              ■ Stop
+            </Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.switchRow}>
+          <View style={styles.switchTextWrap}>
+            <Text style={styles.switchTitle}>
+              Kontrol video
+            </Text>
+
+            <Text style={styles.switchDescription}>
+              Tampilkan kontrol bawaan pemutar video.
+            </Text>
+          </View>
+
+          <Switch
+            value={nativeControls}
+            onValueChange={setNativeControls}
+          />
+        </View>
+      </View>
+
+      {statusText ? (
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}>
+            {statusText}
+          </Text>
+        </View>
+      ) : null}
+
+      {selectedCamera ? (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>
             Kamera Aktif
           </Text>
 
-          <Text style={styles.muted}>
-            Host: {selectedCamera.host}
+          <Text style={styles.cameraName}>
+            {selectedCamera.name ||
+              "CCTV ONVIF"}
           </Text>
 
-          <Text style={styles.muted}>
-            Port: {selectedCamera.port}
+          <Text style={styles.cameraMeta}>
+            {selectedCamera.host}
+            {selectedCamera.port
+              ? `:${selectedCamera.port}`
+              : ""}
           </Text>
 
           {profile ? (
-            <Text style={styles.muted}>
-              Profile: {profile.name}
-            </Text>
+            <View style={styles.profileBox}>
+              <Text style={styles.profileLabel}>
+                Profil ONVIF
+              </Text>
+
+              <Text style={styles.profileValue}>
+                {profile.name ||
+                  profile.token ||
+                  "Media Profile"}
+              </Text>
+            </View>
           ) : null}
         </View>
       ) : null}
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>
-          Hubungkan CCTV Manual
+          Hubungkan CCTV
         </Text>
 
-        <Text style={styles.label}>
-          Merek / Profil
-        </Text>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={
-            false
-          }
-        >
-          {CCTV_VENDORS.map(
-            (item) => (
-              <Pressable
-                key={item}
-                onPress={() =>
-                  setVendor(item)
-                }
-                style={[
-                  styles.chip,
-                  vendor === item &&
-                    styles.chipActive,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    vendor === item &&
-                      styles.chipTextActive,
-                  ]}
-                >
-                  {item}
-                </Text>
-              </Pressable>
-            ),
-          )}
-        </ScrollView>
-
-        <Text style={styles.label}>
-          URL RTSP / HTTP / HTTPS
+        <Text style={styles.fieldLabel}>
+          URL Stream
         </Text>
 
         <TextInput
           value={manualUrl}
-          onChangeText={
-            setManualUrl
-          }
+          onChangeText={setManualUrl}
           placeholder="rtsp://192.168.1.20:554/stream1"
-          placeholderTextColor="#64748b"
+          placeholderTextColor="#7d8795"
           autoCapitalize="none"
           autoCorrect={false}
-          keyboardType="url"
           style={styles.input}
         />
 
-        <Text style={styles.helper}>
-          Contoh: {suggestedUrl}
-        </Text>
-
-        <Text style={styles.label}>
-          Username CCTV
+        <Text style={styles.fieldLabel}>
+          Username
         </Text>
 
         <TextInput
           value={username}
-          onChangeText={
-            setUsername
-          }
-          placeholder="admin"
-          placeholderTextColor="#64748b"
+          onChangeText={setUsername}
+          placeholder="Username kamera"
+          placeholderTextColor="#7d8795"
           autoCapitalize="none"
           autoCorrect={false}
           style={styles.input}
         />
 
-        <Text style={styles.label}>
-          Password CCTV
+        <Text style={styles.fieldLabel}>
+          Password
         </Text>
 
         <TextInput
           value={password}
-          onChangeText={
-            setPassword
-          }
+          onChangeText={setPassword}
           placeholder="Password kamera"
-          placeholderTextColor="#64748b"
+          placeholderTextColor="#7d8795"
+          secureTextEntry
           autoCapitalize="none"
           autoCorrect={false}
-          secureTextEntry
           style={styles.input}
         />
 
-        <Pressable
-          onPress={connectManual}
-          style={styles.primary}
-        >
-          <Text style={styles.primaryText}>
-            ▶ Hubungkan & Tampilkan
-          </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={testConnection}
-          disabled={testing}
-          style={[
-            styles.secondary,
-            testing &&
-              styles.disabled,
-          ]}
-        >
-          {testing ? (
-            <ActivityIndicator
-              color="#fff"
-            />
-          ) : (
-            <Text style={styles.primaryText}>
-              Uji Koneksi
+        <View style={styles.buttonRow}>
+          <Pressable
+            style={[
+              styles.primaryButton,
+              styles.flexButton,
+            ]}
+            onPress={connectManual}
+          >
+            <Text style={styles.primaryButtonText}>
+              Hubungkan & Tampilkan
             </Text>
-          )}
-        </Pressable>
+          </Pressable>
 
-        {statusText ? (
-          <View style={styles.status}>
-            <Text style={styles.muted}>
-              {statusText}
-            </Text>
-          </View>
-        ) : null}
+          <Pressable
+            style={[
+              styles.secondaryButton,
+              styles.flexButton,
+            ]}
+            onPress={testConnection}
+            disabled={testing}
+          >
+            {testing ? (
+              <ActivityIndicator
+                size="small"
+              />
+            ) : (
+              <Text
+                style={styles.secondaryButtonText}
+              >
+                Uji Koneksi
+              </Text>
+            )}
+          </Pressable>
+        </View>
       </View>
-    </>
+    </ScrollView>
   );
+
   const renderCctv = () => (
-    <>
-      <View style={styles.rowHeader}>
-        <View style={styles.flex}>
-          <Text style={styles.heading}>
-            Daftar CCTV
+    <ScrollView
+      style={styles.content}
+      contentContainerStyle={styles.contentContainer}
+    >
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionHeaderText}>
+          <Text style={styles.sectionTitle}>
+            CCTV
           </Text>
 
-          <Text style={styles.subheading}>
-            Kamera yang ditemukan melalui ONVIF
+          <Text style={styles.sectionSubtitle}>
+            Cari kamera ONVIF di jaringan lokal.
           </Text>
         </View>
 
         <Pressable
+          style={styles.primaryButtonSmall}
           onPress={searchCameras}
           disabled={searching}
-          style={[
-            styles.smallPrimary,
-            searching &&
-              styles.disabled,
-          ]}
         >
           {searching ? (
             <ActivityIndicator
-              color="#fff"
               size="small"
+              color="#fff"
             />
           ) : (
-            <Text style={styles.smallText}>
-              Cari CCTV
+            <Text
+              style={styles.primaryButtonText}
+            >
+              🔍 Cari CCTV
             </Text>
           )}
         </Pressable>
       </View>
 
-      {cameras.length === 0 ? (
-        <View style={styles.emptyCard}>
-          <Text style={styles.bigIcon}>
-            📡
-          </Text>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>
+          Kamera Ditemukan
+        </Text>
 
-          <Text style={styles.emptyTitle}>
-            Belum ada kamera
-          </Text>
+        {searching ? (
+          <View style={styles.loadingBox}>
+            <ActivityIndicator
+              size="large"
+            />
 
-          <Text style={styles.centerText}>
-            Tekan Cari CCTV untuk
-            menjalankan ONVIF/WS-Discovery.
-          </Text>
-        </View>
-      ) : (
-        cameras.map(
-          (camera) => {
+            <Text style={styles.loadingText}>
+              Mencari kamera CCTV...
+            </Text>
+          </View>
+        ) : cameras.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyIcon}>
+              📷
+            </Text>
+
+            <Text style={styles.emptyTitle}>
+              Belum ada kamera
+            </Text>
+
+            <Text style={styles.centerText}>
+              Tekan "Cari CCTV" untuk mencari
+              kamera ONVIF pada jaringan Wi-Fi
+              yang sama.
+            </Text>
+          </View>
+        ) : (
+          cameras.map((camera) => {
             const key =
               `${camera.host}:${camera.port}`;
 
             const endpoint =
-              camera.xaddrs?.find(
-                (item) =>
-                  /^https?:\/\//i.test(
-                    item,
-                  ),
-              ) ?? "";
-
-            const busy =
-              connecting === key;
+              camera.xaddrs?.find((item) =>
+                /^https?:\/\//i.test(item),
+              );
 
             return (
               <View
-                key={key}
-                style={styles.card}
+                key={
+                  camera.id ||
+                  key
+                }
+                style={styles.cameraCard}
               >
-                <Text
+                <View
                   style={
-                    styles.cardTitle
+                    styles.cameraCardHeader
                   }
                 >
-                  📷 {camera.host}
-                </Text>
-
-                <Text
-                  style={styles.muted}
-                >
-                  Port {camera.port}
-                </Text>
-
-                <Text
-                  style={
-                    styles.endpoint
-                  }
-                >
-                  {endpoint ||
-                    "Endpoint ONVIF tidak diketahui"}
-                </Text>
-
-                <Pressable
-                  onPress={() =>
-                    connectOnvif(
-                      camera,
-                    )
-                  }
-                  disabled={busy}
-                  style={[
-                    styles.primary,
-                    busy &&
-                      styles.disabled,
-                  ]}
-                >
-                  {busy ? (
-                    <ActivityIndicator
-                      color="#fff"
-                    />
-                  ) : (
+                  <View
+                    style={
+                      styles.cameraIconBox
+                    }
+                  >
                     <Text
                       style={
-                        styles.primaryText
+                        styles.cameraIcon
                       }
                     >
-                      ▶ Hubungkan & Live
+                      📹
                     </Text>
-                  )}
-                </Pressable>
+                  </View>
+
+                  <View
+                    style={
+                      styles.cameraCardInfo
+                    }
+                  >
+                    <Text
+                      style={
+                        styles.cameraName
+                      }
+                    >
+                      {camera.name ||
+                        "Kamera ONVIF"}
+                    </Text>
+
+                    <Text
+                      style={
+                        styles.cameraMeta
+                      }
+                    >
+                      {camera.host}
+                      {camera.port
+                        ? `:${camera.port}`
+                        : ""}
+                    </Text>
+
+                    {endpoint ? (
+                      <Text
+                        style={
+                          styles.endpointText
+                        }
+                        numberOfLines={1}
+                      >
+                        {endpoint}
+                      </Text>
+                    ) : null}
+                  </View>
+                </View>
+
+                <View
+                  style={
+                    styles.buttonRow
+                  }
+                >
+                  <Pressable
+                    style={[
+                      styles.primaryButton,
+                      styles.flexButton,
+                    ]}
+                    onPress={() =>
+                      connectOnvif(
+                        camera,
+                      )
+                    }
+                    disabled={
+                      connecting === key
+                    }
+                  >
+                                        {connecting === key ? (
+                      <ActivityIndicator
+                        size="small"
+                        color="#fff"
+                      />
+                    ) : (
+                      <Text
+                        style={
+                          styles.primaryButtonText
+                        }
+                      >
+                        Hubungkan
+                      </Text>
+                    )}
+                  </Pressable>
+                </View>
               </View>
             );
-          },
-        )
-      )}
-    </>
+          })
+        )}
+      </View>
+
+      {statusText ? (
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}>
+            {statusText}
+          </Text>
+        </View>
+      ) : null}
+    </ScrollView>
   );
 
-  const renderHistory =
-    () => (
-      <>
-        <View style={styles.rowHeader}>
-          <View style={styles.flex}>
-            <Text
-              style={styles.heading}
-            >
-              Riwayat
-            </Text>
+  const renderHistory = () => (
+    <ScrollView
+      style={styles.content}
+      contentContainerStyle={styles.contentContainer}
+    >
+      <View style={styles.sectionHeader}>
+        <View>
+          <Text style={styles.sectionTitle}>
+            Riwayat
+          </Text>
 
-            <Text
-              style={
-                styles.subheading
-              }
-            >
-              Aktivitas koneksi CCTV
-            </Text>
-          </View>
-
-          {history.length ? (
-            <Pressable
-              onPress={() =>
-                setHistory([])
-              }
-              style={styles.danger}
-            >
-              <Text
-                style={
-                  styles.dangerText
-                }
-              >
-                Hapus
-              </Text>
-            </Pressable>
-          ) : null}
+          <Text style={styles.sectionSubtitle}>
+            Riwayat koneksi dan aktivitas CCTV.
+          </Text>
         </View>
+      </View>
 
-        {!history.length ? (
-          <View
-            style={
-              styles.emptyCard
-            }
-          >
-            <Text
-              style={
-                styles.bigIcon
-              }
-            >
+      <View style={styles.card}>
+        {history.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyIcon}>
               🕘
             </Text>
 
-            <Text
-              style={
-                styles.emptyTitle
-              }
-            >
+            <Text style={styles.emptyTitle}>
               Belum ada riwayat
+            </Text>
+
+            <Text style={styles.centerText}>
+              Aktivitas koneksi CCTV akan muncul
+              di sini.
             </Text>
           </View>
         ) : (
-          history.map(
-            (item) => (
+          history.map((item) => (
+            <View
+              key={item.id}
+              style={styles.historyItem}
+            >
               <View
-                key={item.id}
-                style={styles.card}
+                style={[
+                  styles.historyIndicator,
+                  item.action === "connected"
+                    ? styles.historyConnected
+                    : item.action ===
+                        "disconnected"
+                      ? styles.historyDisconnected
+                      : styles.historyError,
+                ]}
+              />
+
+              <View
+                style={
+                  styles.historyContent
+                }
               >
                 <View
-                  style={styles.row}
+                  style={
+                    styles.historyHeader
+                  }
                 >
                   <Text
                     style={
-                      styles.action
+                      styles.historyAction
                     }
                   >
-                    {item.action.toUpperCase()}
+                    {item.action ===
+                    "connected"
+                      ? "Terhubung"
+                      : item.action ===
+                          "disconnected"
+                        ? "Diputus"
+                        : "Error"}
                   </Text>
 
                   <Text
-                    style={styles.time}
+                    style={
+                      styles.historyTime
+                    }
                   >
                     {item.time}
                   </Text>
@@ -979,216 +1080,308 @@ export default function HomeScreen() {
 
                 <Text
                   style={
-                    styles.endpoint
+                    styles.historyUrl
                   }
+                  numberOfLines={2}
                 >
                   {item.url}
                 </Text>
 
                 <Text
                   style={
-                    styles.muted
+                    styles.historyMessage
                   }
                 >
                   {item.message}
                 </Text>
               </View>
-            ),
-          )
+            </View>
+          ))
         )}
-      </>
-    );
+      </View>
+    </ScrollView>
+  );
 
-  const renderSettings =
-    () => (
-      <>
-        <Text
-          style={styles.heading}
-        >
-          Pengaturan
-        </Text>
-
-        <Text
-          style={
-            styles.subheading
-          }
-        >
-          Tampilan dan kontrol live video
-        </Text>
-
-        <View style={styles.card}>
-          <View style={styles.setting}>
-            <View style={styles.flex}>
-              <Text
-                style={
-                  styles.cardTitle
-                }
-              >
-                Info kamera
-              </Text>
-
-              <Text
-                style={
-                  styles.muted
-                }
-              >
-                Tampilkan informasi kamera aktif.
-              </Text>
-            </View>
-
-            <Switch
-              value={showInfo}
-              onValueChange={
-                setShowInfo
-              }
-            />
-          </View>
-
-          <View style={styles.setting}>
-            <View style={styles.flex}>
-              <Text
-                style={
-                  styles.cardTitle
-                }
-              >
-                Kontrol video
-              </Text>
-
-              <Text
-                style={
-                  styles.muted
-                }
-              >
-                Tampilkan kontrol native pemutar.
-              </Text>
-            </View>
-
-            <Switch
-              value={nativeControls}
-              onValueChange={
-                setNativeControls
-              }
-            />
-          </View>
-        </View>
-      </>
-    );
-
-  return (
-    <SafeAreaView
-      style={styles.safe}
+  const renderSettings = () => (
+    <ScrollView
+      style={styles.content}
+      contentContainerStyle={styles.contentContainer}
     >
-      <View style={styles.header}>
-        <View style={styles.flex}>
-          <Text
-            style={styles.appTitle}
-          >
-            CCTV Universal Monitor
+      <View style={styles.sectionHeader}>
+        <View>
+          <Text style={styles.sectionTitle}>
+            Pengaturan
           </Text>
 
-          <Text
-            style={
-              styles.appSubtitle
-            }
-          >
-            ONVIF • RTSP • Live Monitor
-          </Text>
-        </View>
-
-        <View
-          style={
-            styles.headerBadge
-          }
-        >
-          <View
-            style={styles.liveDot}
-          />
-
-          <Text
-            style={
-              styles.headerBadgeText
-            }
-          >
-            {activeStream
-              ? "LIVE"
-              : "READY"}
+          <Text style={styles.sectionSubtitle}>
+            Pengaturan koneksi dan tampilan CCTV.
           </Text>
         </View>
       </View>
 
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={
-          styles.contentContainer
-        }
-        keyboardShouldPersistTaps="handled"
-      >
-        {activeTab === "live" &&
-          renderLive()}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>
+          Kamera
+        </Text>
 
-        {activeTab === "cctv" &&
-          renderCctv()}
+        <Text style={styles.fieldLabel}>
+          Vendor CCTV
+        </Text>
 
-        {activeTab === "history" &&
-          renderHistory()}
+        <View style={styles.vendorGrid}>
+          {CCTV_VENDORS.map(
+            (item) => (
+              <Pressable
+                key={item}
+                style={[
+                  styles.vendorButton,
+                  vendor === item &&
+                    styles.vendorButtonActive,
+                ]}
+                onPress={() =>
+                  setVendor(item)
+                }
+              >
+                <Text
+                  style={[
+                    styles.vendorText,
+                    vendor === item &&
+                      styles.vendorTextActive,
+                  ]}
+                >
+                  {item}
+                </Text>
+              </Pressable>
+            ),
+          )}
+        </View>
 
-        {activeTab === "settings" &&
-          renderSettings()}
-      </ScrollView>
+        <View style={styles.suggestionBox}>
+          <Text
+            style={
+              styles.suggestionLabel
+            }
+          >
+            URL RTSP contoh
+          </Text>
 
-      <View style={styles.tabs}>
-        <TabButton
-          icon="▶"
-          label="Live"
-          active={
-            activeTab === "live"
-          }
-          onPress={() =>
-            setActiveTab("live")
-          }
-        />
+          <Text
+            style={
+              styles.suggestionValue
+            }
+            numberOfLines={2}
+          >
+            {suggestedUrl}
+          </Text>
+        </View>
+      </View>
 
-        <TabButton
-          icon="📷"
-          label="CCTV"
-          active={
-            activeTab === "cctv"
-          }
-          onPress={() =>
-            setActiveTab("cctv")
-          }
-        />
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>
+          Tampilan
+        </Text>
 
-        <TabButton
-          icon="🕘"
-          label="Riwayat"
-          active={
-            activeTab === "history"
-          }
-          onPress={() =>
-            setActiveTab("history")
-          }
-        />
+        <View style={styles.switchRow}>
+          <View style={styles.switchTextWrap}>
+            <Text style={styles.switchTitle}>
+              Informasi koneksi
+            </Text>
 
-        <TabButton
-          icon="⚙"
-          label="Pengaturan"
-          active={
-            activeTab === "settings"
-          }
-          onPress={() =>
-            setActiveTab("settings")
-          }
-        />
+            <Text
+              style={
+                styles.switchDescription
+              }
+            >
+              Tampilkan informasi status
+              koneksi pada layar.
+            </Text>
+          </View>
+
+          <Switch
+            value={showInfo}
+            onValueChange={setShowInfo}
+          />
+        </View>
+
+        <View style={styles.switchRow}>
+          <View style={styles.switchTextWrap}>
+            <Text style={styles.switchTitle}>
+              Kontrol video
+            </Text>
+
+            <Text
+              style={
+                styles.switchDescription
+              }
+            >
+              Tampilkan kontrol native pada
+              pemutar video.
+            </Text>
+          </View>
+
+          <Switch
+            value={nativeControls}
+            onValueChange={setNativeControls}
+          />
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>
+          Status Sistem
+        </Text>
+
+        <View style={styles.statusRow}>
+          <Text style={styles.statusLabel}>
+            ONVIF Discovery
+          </Text>
+
+          <Text style={styles.statusValue}>
+            Aktif
+          </Text>
+        </View>
+
+        <View style={styles.statusRow}>
+          <Text style={styles.statusLabel}>
+            RTSP Player
+          </Text>
+
+          <Text style={styles.statusValue}>
+            Native
+          </Text>
+        </View>
+
+        <View style={styles.statusRow}>
+          <Text style={styles.statusLabel}>
+            Kamera ditemukan
+          </Text>
+
+          <Text style={styles.statusValue}>
+            {cameras.length}
+          </Text>
+        </View>
+
+        <View style={styles.statusRow}>
+          <Text style={styles.statusLabel}>
+            Stream aktif
+          </Text>
+
+          <Text style={styles.statusValue}>
+            {activeStream
+              ? "Ya"
+              : "Tidak"}
+          </Text>
+        </View>
+      </View>
+    </ScrollView>
+  );
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.app}>
+        <View style={styles.header}>
+          <View style={styles.headerTitleWrap}>
+            <Text style={styles.appTitle}>
+              CCTV Universal Monitor
+            </Text>
+
+            <Text style={styles.appSubtitle}>
+              ONVIF • RTSP • HTTP
+            </Text>
+          </View>
+
+          <View style={styles.headerStatus}>
+            <View
+              style={[
+                styles.headerStatusDot,
+                activeStream
+                  ? styles.headerStatusOnline
+                  : styles.headerStatusOffline,
+              ]}
+            />
+
+            <Text style={styles.headerStatusText}>
+              {activeStream
+                ? "LIVE"
+                : "OFFLINE"}
+            </Text>
+          </View>
+        </View>
+
+        {showInfo && statusText ? (
+          <View style={styles.topStatus}>
+            <Text
+              style={styles.topStatusText}
+              numberOfLines={2}
+            >
+              {statusText}
+            </Text>
+          </View>
+        ) : null}
+
+        <View style={styles.main}>
+          {activeTab === "live"
+            ? renderLive()
+            : activeTab === "cctv"
+              ? renderCctv()
+              : activeTab === "history"
+                ? renderHistory()
+                : renderSettings()}
+        </View>
+
+        <View style={styles.bottomTabs}>
+          <TabButton
+            icon="▶"
+            label="Live CCTV"
+            active={activeTab === "live"}
+            onPress={() =>
+              setActiveTab("live")
+            }
+          />
+
+          <TabButton
+            icon="📹"
+            label="CCTV"
+            active={activeTab === "cctv"}
+            onPress={() =>
+              setActiveTab("cctv")
+            }
+          />
+
+          <TabButton
+            icon="🕘"
+            label="Riwayat"
+            active={
+              activeTab === "history"
+            }
+            onPress={() =>
+              setActiveTab("history")
+            }
+          />
+
+          <TabButton
+            icon="⚙"
+            label="Pengaturan"
+            active={
+              activeTab === "settings"
+            }
+            onPress={() =>
+              setActiveTab("settings")
+            }
+          />
+        </View>
       </View>
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
-  safe: {
+  safeArea: {
     flex: 1,
-    backgroundColor: "#0b1220",
+    backgroundColor: "#0b1118",
+  },
+
+  app: {
+    flex: 1,
+    backgroundColor: "#0b1118",
   },
 
   header: {
@@ -1197,41 +1390,77 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     borderBottomWidth: 1,
-    borderBottomColor: "#1e293b",
-    backgroundColor: "#0f172a",
+    borderBottomColor: "#202a35",
+    backgroundColor: "#111923",
   },
 
-  flex: {
+  headerTitleWrap: {
     flex: 1,
   },
 
   appTitle: {
-    color: "#f8fafc",
+    color: "#ffffff",
     fontSize: 19,
     fontWeight: "800",
   },
 
   appSubtitle: {
-    color: "#94a3b8",
-    fontSize: 12,
     marginTop: 3,
+    color: "#8d99a8",
+    fontSize: 12,
   },
 
-  headerBadge: {
+  headerStatus: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 7,
     paddingHorizontal: 10,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: "#172033",
+    backgroundColor: "#18222d",
   },
 
-  headerBadgeText: {
-    color: "#e2e8f0",
+  headerStatusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+
+  headerStatusOnline: {
+    backgroundColor: "#36d399",
+  },
+
+  headerStatusOffline: {
+    backgroundColor: "#687585",
+  },
+
+  headerStatusText: {
+    color: "#dbe4ee",
     fontSize: 11,
     fontWeight: "800",
-    marginLeft: 6,
+  },
+
+  topStatus: {
+    marginHorizontal: 14,
+    marginTop: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 10,
+    backgroundColor: "#142333",
+    borderWidth: 1,
+    borderColor: "#23405b",
+  },
+
+  topStatusText: {
+    color: "#bcdcff",
+    fontSize: 12,
+    lineHeight: 18,
+  },
+
+  main: {
+    flex: 1,
   },
 
   content: {
@@ -1240,101 +1469,143 @@ const styles = StyleSheet.create({
 
   contentContainer: {
     padding: 16,
-    paddingBottom: 24,
+    paddingBottom: 30,
   },
 
-  rowHeader: {
+  sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 14,
+    justifyContent: "space-between",
+    marginBottom: 16,
+    gap: 12,
   },
 
-  heading: {
-    color: "#f8fafc",
-    fontSize: 23,
+  sectionHeaderText: {
+    flex: 1,
+  },
+
+  sectionTitle: {
+    color: "#ffffff",
+    fontSize: 24,
     fontWeight: "800",
   },
 
-  subheading: {
-    color: "#94a3b8",
-    fontSize: 13,
+  sectionSubtitle: {
     marginTop: 4,
-  },
-
-  card: {
-    backgroundColor: "#111c2f",
-    borderWidth: 1,
-    borderColor: "#22304a",
-    borderRadius: 14,
-    padding: 15,
-    marginBottom: 14,
-  },
-
-  cardTitle: {
-    color: "#f1f5f9",
-    fontSize: 16,
-    fontWeight: "700",
-    marginBottom: 6,
-  },
-
-  muted: {
-    color: "#94a3b8",
+    color: "#8793a2",
     fontSize: 13,
     lineHeight: 19,
   },
 
-  emptyVideo: {
-    height: 220,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#22304a",
-    backgroundColor: "#050b14",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
+  card: {
     marginBottom: 14,
+    padding: 15,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#202b37",
+    backgroundColor: "#111923",
+  },
+
+  cardTitle: {
+    marginBottom: 13,
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "800",
   },
 
   videoBox: {
-    height: 240,
-    borderRadius: 14,
-    overflow: "hidden",
-    backgroundColor: "#000",
-    marginBottom: 14,
     position: "relative",
+    width: "100%",
+    aspectRatio: 16 / 9,
+    marginBottom: 14,
+    overflow: "hidden",
+    borderRadius: 15,
+    backgroundColor: "#020609",
+    borderWidth: 1,
+    borderColor: "#25313e",
   },
 
   video: {
     width: "100%",
     height: "100%",
-    backgroundColor: "#000",
+    backgroundColor: "#020609",
+  },
+
+  emptyVideo: {
+    width: "100%",
+    aspectRatio: 16 / 9,
+    marginBottom: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 25,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#25313e",
+    backgroundColor: "#111923",
+  },
+
+  bigIcon: {
+    marginBottom: 10,
+    fontSize: 40,
+  },
+
+  emptyBox: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+  },
+
+  emptyIcon: {
+    marginBottom: 10,
+    fontSize: 35,
+  },
+
+  emptyTitle: {
+    marginBottom: 6,
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  centerText: {
+    color: "#8793a2",
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: "center",
   },
 
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
     alignItems: "center",
     justifyContent: "center",
-    padding: 20,
-    backgroundColor: "rgba(0,0,0,0.62)",
-  },
-
-  overlayText: {
-    color: "#e2e8f0",
-    textAlign: "center",
-    marginTop: 10,
-    lineHeight: 19,
+    paddingHorizontal: 25,
+    backgroundColor: "rgba(0,0,0,0.55)",
   },
 
   overlayTitle: {
-    color: "#fff",
-    fontSize: 17,
+    marginTop: 10,
+    color: "#ffffff",
+    fontSize: 16,
     fontWeight: "800",
+    textAlign: "center",
+  },
+
+  overlayText: {
     marginTop: 8,
+    color: "#d8e0e8",
+    fontSize: 13,
+    lineHeight: 19,
     textAlign: "center",
   },
 
   errorIcon: {
-    color: "#fbbf24",
+    color: "#ff8d8d",
     fontSize: 34,
   },
 
@@ -1344,235 +1615,430 @@ const styles = StyleSheet.create({
     left: 10,
     flexDirection: "row",
     alignItems: "center",
+    gap: 6,
     paddingHorizontal: 9,
     paddingVertical: 6,
-    borderRadius: 12,
-    backgroundColor: "rgba(0,0,0,0.68)",
+    borderRadius: 7,
+    backgroundColor: "rgba(130,0,0,0.78)",
   },
 
   liveDot: {
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: "#22c55e",
+    backgroundColor: "#ff5353",
   },
 
   liveText: {
-    color: "#fff",
-    fontSize: 10,
+    color: "#ffffff",
+    fontSize: 11,
     fontWeight: "900",
-    marginLeft: 5,
   },
 
-  bigIcon: {
-    fontSize: 34,
-    marginBottom: 10,
+  statusPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
 
-  emptyTitle: {
-    color: "#f8fafc",
-    fontSize: 17,
+  statusPillOnline: {
+    backgroundColor: "#123b2d",
+  },
+
+  statusPillOffline: {
+    backgroundColor: "#202832",
+  },
+
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+
+  statusDotOnline: {
+    backgroundColor: "#36d399",
+  },
+
+  statusDotOffline: {
+    backgroundColor: "#687585",
+  },
+
+  statusPillText: {
+    color: "#d9e4ee",
+    fontSize: 10,
+    fontWeight: "800",
+  },
+
+  buttonRow: {
+    flexDirection: "row",
+    gap: 9,
+    marginTop: 4,
+  },
+
+  flexButton: {
+    flex: 1,
+  },
+
+  primaryButton: {
+    minHeight: 46,
+    paddingHorizontal: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 10,
+    backgroundColor: "#1976d2",
+  },
+
+  primaryButtonSmall: {
+    minHeight: 40,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 9,
+    backgroundColor: "#1976d2",
+  },
+
+  primaryButtonText: {
+    color: "#ffffff",
+    fontSize: 13,
     fontWeight: "800",
     textAlign: "center",
   },
 
-  centerText: {
-    color: "#94a3b8",
-    textAlign: "center",
-    marginTop: 7,
-    lineHeight: 20,
-  },
-
-  emptyCard: {
-    backgroundColor: "#111c2f",
-    borderWidth: 1,
-    borderColor: "#22304a",
-    borderRadius: 14,
-    padding: 30,
+  secondaryButton: {
+    minHeight: 46,
+    paddingHorizontal: 14,
     alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#344352",
+    backgroundColor: "#19232e",
   },
 
-  label: {
-    color: "#cbd5e1",
+  secondaryButtonText: {
+    color: "#dce5ed",
     fontSize: 13,
-    fontWeight: "700",
-    marginTop: 12,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  disabledText: {
+    color: "#65717e",
+  },
+
+  infoBox: {
+    marginBottom: 14,
+    paddingHorizontal: 13,
+    paddingVertical: 11,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#23405b",
+    backgroundColor: "#122131",
+  },
+
+  infoText: {
+    color: "#bcdcff",
+    fontSize: 12,
+    lineHeight: 18,
+  },
+
+  fieldLabel: {
+    marginTop: 5,
     marginBottom: 7,
+    color: "#b9c4cf",
+    fontSize: 12,
+    fontWeight: "700",
   },
 
   input: {
-    backgroundColor: "#0b1220",
-    borderWidth: 1,
-    borderColor: "#334155",
-    borderRadius: 10,
-    color: "#f8fafc",
+    minHeight: 46,
+    marginBottom: 10,
     paddingHorizontal: 12,
-    paddingVertical: 11,
-    fontSize: 14,
-  },
-
-  helper: {
-    color: "#64748b",
-    fontSize: 11,
-    marginTop: 6,
-  },
-
-  primary: {
-    minHeight: 44,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#2563eb",
-    marginTop: 12,
-    paddingHorizontal: 14,
-  },
-
-  secondary: {
-    minHeight: 44,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#334155",
-    marginTop: 8,
-    paddingHorizontal: 14,
-  },
-
-  primaryText: {
-    color: "#fff",
-    fontWeight: "800",
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: "#2b3845",
+    backgroundColor: "#0b1219",
+    color: "#ffffff",
     fontSize: 13,
   },
 
-  smallPrimary: {
-    minHeight: 38,
-    borderRadius: 9,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#2563eb",
-    paddingHorizontal: 12,
-  },
-
-  smallText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-
-  danger: {
-    backgroundColor: "#3a1720",
-    borderWidth: 1,
-    borderColor: "#7f1d1d",
-    borderRadius: 9,
-    paddingHorizontal: 11,
-    paddingVertical: 9,
-  },
-
-  dangerText: {
-    color: "#fecaca",
-    fontWeight: "800",
-    fontSize: 12,
-  },
-
-  disabled: {
-    opacity: 0.55,
-  },
-  chip: {
-    borderWidth: 1,
-    borderColor: "#334155",
-    borderRadius: 20,
-    paddingHorizontal: 11,
-    paddingVertical: 8,
-    marginRight: 7,
-    backgroundColor: "#0b1220",
-  },
-
-  chipActive: {
-    borderColor: "#2563eb",
-    backgroundColor: "#172554",
-  },
-
-  chipText: {
-    color: "#94a3b8",
-    fontSize: 12,
-  },
-
-  chipTextActive: {
-    color: "#bfdbfe",
-    fontWeight: "800",
-  },
-
-  status: {
-    marginTop: 12,
-    padding: 10,
-    borderRadius: 9,
-    backgroundColor: "#0b1220",
-  },
-
-  endpoint: {
-    color: "#cbd5e1",
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: 5,
-  },
-
-  row: {
+  switchRow: {
+    minHeight: 62,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#202b37",
   },
 
-  action: {
-    color: "#60a5fa",
-    fontSize: 11,
-    fontWeight: "900",
+  switchTextWrap: {
+    flex: 1,
+    paddingVertical: 10,
   },
 
-  time: {
-    color: "#64748b",
-    fontSize: 11,
+  switchTitle: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "700",
   },
 
-  setting: {
+  switchDescription: {
+    marginTop: 3,
+    color: "#7f8b99",
+    fontSize: 12,
+    lineHeight: 17,
+  },
+
+  cameraCard: {
+    marginBottom: 11,
+    padding: 13,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#263442",
+    backgroundColor: "#0d151e",
+  },
+
+  cameraCardHeader: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 6,
-    marginBottom: 10,
+    gap: 12,
+    marginBottom: 12,
   },
 
-  tabs: {
+  cameraIconBox: {
+    width: 45,
+    height: 45,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 11,
+    backgroundColor: "#172433",
+  },
+
+  cameraIcon: {
+    fontSize: 23,
+  },
+
+  cameraCardInfo: {
+    flex: 1,
+  },
+
+  cameraName: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+
+  cameraMeta: {
+    marginTop: 3,
+    color: "#8b98a7",
+    fontSize: 12,
+  },
+
+  endpointText: {
+    marginTop: 4,
+    color: "#64788d",
+    fontSize: 10,
+  },
+
+  profileBox: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 9,
+    backgroundColor: "#172330",
+  },
+
+  profileLabel: {
+    color: "#7e8d9d",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+
+  profileValue: {
+    marginTop: 3,
+    color: "#dce7f0",
+    fontSize: 12,
+  },
+
+  loadingBox: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 35,
+  },
+
+  loadingText: {
+    marginTop: 10,
+    color: "#8d99a8",
+    fontSize: 13,
+  },
+
+  vendorGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+
+  vendorButton: {
+    paddingHorizontal: 11,
+    paddingVertical: 9,
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: "#2c3946",
+    backgroundColor: "#0c141c",
+  },
+
+  vendorButtonActive: {
+    borderColor: "#1976d2",
+    backgroundColor: "#15365a",
+  },
+
+  vendorText: {
+    color: "#9aa6b3",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+
+  vendorTextActive: {
+    color: "#ffffff",
+  },
+
+  suggestionBox: {
+    marginTop: 15,
+    padding: 11,
+    borderRadius: 9,
+    backgroundColor: "#0b131b",
+  },
+
+  suggestionLabel: {
+    color: "#718091",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+
+  suggestionValue: {
+    marginTop: 5,
+    color: "#b8cce0",
+    fontSize: 11,
+    lineHeight: 17,
+  },
+
+  statusRow: {
+    minHeight: 43,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: "#202b37",
+  },
+
+  statusLabel: {
+    color: "#8d99a8",
+    fontSize: 13,
+  },
+
+  statusValue: {
+    color: "#dce7f0",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+
+  historyItem: {
+    flexDirection: "row",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#202b37",
+  },
+
+  historyIndicator: {
+    width: 4,
+    marginRight: 11,
+    borderRadius: 4,
+  },
+
+  historyConnected: {
+    backgroundColor: "#36d399",
+  },
+
+  historyDisconnected: {
+    backgroundColor: "#7d8a98",
+  },
+
+  historyError: {
+    backgroundColor: "#ef6b73",
+  },
+
+  historyContent: {
+    flex: 1,
+  },
+
+  historyHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+
+  historyAction: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+
+  historyTime: {
+    color: "#697786",
+    fontSize: 10,
+  },
+
+  historyUrl: {
+    marginTop: 5,
+    color: "#8ea0b1",
+    fontSize: 11,
+  },
+
+  historyMessage: {
+    marginTop: 4,
+    color: "#687887",
+    fontSize: 11,
+    lineHeight: 16,
+  },
+
+  bottomTabs: {
+    minHeight: 67,
+    flexDirection: "row",
+    alignItems: "stretch",
     borderTopWidth: 1,
-    borderTopColor: "#1e293b",
-    backgroundColor: "#0f172a",
-    paddingHorizontal: 6,
-    paddingTop: 6,
-    paddingBottom: 7,
+    borderTopColor: "#202a35",
+    backgroundColor: "#111923",
   },
 
   tab: {
     flex: 1,
-    minHeight: 54,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 10,
+    paddingVertical: 7,
+    borderTopWidth: 2,
+    borderTopColor: "transparent",
   },
 
   tabActive: {
-    backgroundColor: "#172554",
+    borderTopColor: "#1976d2",
+    backgroundColor: "#15212d",
   },
 
   tabIcon: {
-    fontSize: 16,
     marginBottom: 3,
+    fontSize: 17,
   },
 
   tabText: {
-    color: "#64748b",
+    color: "#718091",
     fontSize: 10,
     fontWeight: "700",
   },
 
   tabTextActive: {
-    color: "#bfdbfe",
+    color: "#ffffff",
   },
 });
