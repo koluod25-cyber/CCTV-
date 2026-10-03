@@ -501,13 +501,13 @@ export default function HomeScreen() {
         "URI RTSP berhasil diperoleh dari ONVIF.",
       );
 
-      addHistory(
-        "connected",
-        result.streamUri,
-        result.message,
-      );
+      setTesting(true);
 
-      setActiveTab("live");
+setStatusText(
+  "URI RTSP berhasil diperoleh. Membuka video..."
+);
+
+setActiveTab("live");
     } catch (error) {
       const message =
         error instanceof Error
@@ -559,14 +559,13 @@ export default function HomeScreen() {
       "Mencoba membuka stream CCTV...",
     );
 
-    addHistory(
-      "connected",
-      value,
-      "Stream manual dibuka.",
-    );
+    setTesting(true);
 
-    setActiveTab("live");
-  };
+setStatusText(
+  "Mencoba membuka stream CCTV..."
+);
+
+setActiveTab("live");
 
 const testConnection =
   async () => {
@@ -674,13 +673,23 @@ const testConnection =
   };
 
   const disconnect = () => {
-    if (activeStream) {
-      addHistory(
-        "disconnected",
-        activeStream,
-        "Stream CCTV dihentikan.",
-      );
-    }
+  if (activeStream) {
+    addHistory(
+      "disconnected",
+      activeStream,
+      "Stream CCTV dihentikan.",
+    );
+  }
+
+  setTesting(false);
+  setActiveStream("");
+  setSelectedCamera(null);
+  setProfile(null);
+
+  setStatusText(
+    "CCTV telah diputus.",
+  );
+};
 
     setActiveStream("");
     setSelectedCamera(null);
