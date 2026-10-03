@@ -145,18 +145,12 @@ function CameraVideo({
     videoError?.error?.errorCode ||
     "";
 
-  const errorType =
-    videoError?.error?.errorType ||
-    "";
-
   const detail =
     [
       errorCode
         ? `Code: ${errorCode}`
         : "",
-      errorType
-        ? `Type: ${errorType}`
-        : "",
+     
       errorString
         ? `Detail: ${errorString}`
         : "",
