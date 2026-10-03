@@ -532,17 +532,37 @@ setActiveTab("live");
   };
 
   const connectManual = () => {
-    const value =
-      manualUrl.trim();
+  const value =
+    manualUrl.trim();
 
-    if (!isCameraUrl(value)) {
-      Alert.alert(
-        "URL tidak valid",
-        "Gunakan rtsp://, rtsps://, http:// atau https://.",
-      );
+  if (!isCameraUrl(value)) {
+    Alert.alert(
+      "URL tidak valid",
+      "Gunakan rtsp://, rtsps://, http:// atau https://.",
+    );
 
-      return;
-    }
+    return;
+  }
+
+  const target =
+    addCredentials(
+      value,
+      username.trim(),
+      password,
+    );
+
+  setSelectedCamera(null);
+  setProfile(null);
+  setActiveStream(target);
+
+  setTesting(true);
+
+  setStatusText(
+    "Mencoba membuka stream CCTV...",
+  );
+
+  setActiveTab("live");
+};
 
     const target =
       addCredentials(
@@ -690,15 +710,6 @@ const testConnection =
     "CCTV telah diputus.",
   );
 };
-
-    setActiveStream("");
-    setSelectedCamera(null);
-    setProfile(null);
-
-    setStatusText(
-      "CCTV telah diputus.",
-    );
-  };
   const renderLive = () => (
     <ScrollView
       style={styles.content}
