@@ -197,10 +197,10 @@ async function buildWsSecurityHeader(
     );
 
   const digestBuffer =
-    await Crypto.digest(
-      Crypto.CryptoDigestAlgorithm.SHA1,
-      digestInput
-    );
+  await Crypto.digest(
+    Crypto.CryptoDigestAlgorithm.SHA1,
+    digestInput as unknown as BufferSource
+  );
 
   const passwordDigest =
     bytesToBase64(
