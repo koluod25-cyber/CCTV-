@@ -417,7 +417,7 @@ export default function HomeScreen() {
     }
   };
 
-  const connectOnvif = async (
+    const connectOnvif = async (
     camera: DiscoveredCamera,
   ) => {
     const endpoint =
@@ -497,17 +497,13 @@ export default function HomeScreen() {
         result.profile ?? null,
       );
 
-      setStatusText(
-        "URI RTSP berhasil diperoleh dari ONVIF.",
-      );
-
       setTesting(true);
 
-setStatusText(
-  "URI RTSP berhasil diperoleh. Membuka video..."
-);
+      setStatusText(
+        "URI RTSP berhasil diperoleh. Membuka video...",
+      );
 
-setActiveTab("live");
+      setActiveTab("live");
     } catch (error) {
       const message =
         error instanceof Error
@@ -532,17 +528,17 @@ setActiveTab("live");
   };
 
   const connectManual = () => {
-  const value =
-    manualUrl.trim();
+    const value =
+      manualUrl.trim();
 
-  if (!isCameraUrl(value)) {
-    Alert.alert(
-      "URL tidak valid",
-      "Gunakan rtsp://, rtsps://, http:// atau https://.",
-    );
+    if (!isCameraUrl(value)) {
+      Alert.alert(
+        "URL tidak valid",
+        "Gunakan rtsp://, rtsps://, http:// atau https://.",
+      );
 
-    return;
-  }
+      return;
+    }
 
     const target =
       addCredentials(
@@ -555,141 +551,138 @@ setActiveTab("live");
     setProfile(null);
     setActiveStream(target);
 
+    setTesting(true);
+
     setStatusText(
       "Mencoba membuka stream CCTV...",
     );
 
-   setTesting(true);
-
-setStatusText(
-  "URI RTSP berhasil diperoleh. Membuka video..."
-);
-
-setActiveTab("live");
-
-    const testConnection =
-  async () => {
-    const value =
-      manualUrl.trim();
-
-    const endpoint =
-      getEndpointDetails(value);
-
-    if (
-      !isCameraUrl(value) ||
-      !endpoint
-    ) {
-      Alert.alert(
-        "URL tidak valid",
-        "Masukkan URL kamera yang benar.",
-      );
-
-      return;
-    }
-
-    /*
-     * RTSP/ONVIF tidak dapat diuji menggunakan fetch().
-     * Untuk RTSP, pengujian dilakukan langsung oleh
-     * native react-native-video melalui onLoad/onError.
-     */
-    if (
-      endpoint.protocol === "RTSP" ||
-      endpoint.protocol === "ONVIF"
-    ) {
-      const target =
-        addCredentials(
-          value,
-          username.trim(),
-          password,
-        );
-
-      setTesting(true);
-      setSelectedCamera(null);
-      setProfile(null);
-      setActiveStream(target);
-
-      setStatusText(
-        "Menguji RTSP melalui native player...",
-      );
-
-      setActiveTab("live");
-
-      return;
-    }
-
-    setTesting(true);
-
-    try {
-      const camera: CameraNetworkConfig =
-        {
-          id: "manual-camera",
-          name: "Camera manual",
-          url: value,
-          vendor,
-          username:
-            username.trim() ||
-            undefined,
-          password:
-            password ||
-            undefined,
-        };
-
-      const result =
-        await testCameraConnection(
-          camera,
-        );
-
-      const message =
-        `${result.status.toUpperCase()} • ${result.message}` +
-        (result.latencyMs
-          ? ` • ${result.latencyMs}ms`
-          : "");
-
-      setStatusText(message);
-
-      addHistory(
-        result.ok
-          ? "connected"
-          : "error",
-        value,
-        result.message,
-      );
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Tes koneksi gagal.";
-
-      setStatusText(message);
-
-      addHistory(
-        "error",
-        value,
-        message,
-      );
-    } finally {
-      setTesting(false);
-    }
+    setActiveTab("live");
   };
 
+  const testConnection =
+    async () => {
+      const value =
+        manualUrl.trim();
+
+      const endpoint =
+        getEndpointDetails(value);
+
+      if (
+        !isCameraUrl(value) ||
+        !endpoint
+      ) {
+        Alert.alert(
+          "URL tidak valid",
+          "Masukkan URL kamera yang benar.",
+        );
+
+        return;
+      }
+
+      /*
+       * RTSP/ONVIF tidak dapat diuji menggunakan fetch().
+       * Untuk RTSP, pengujian dilakukan langsung oleh
+       * native react-native-video melalui onLoad/onError.
+       */
+      if (
+        endpoint.protocol === "RTSP" ||
+        endpoint.protocol === "ONVIF"
+      ) {
+        const target =
+          addCredentials(
+            value,
+            username.trim(),
+            password,
+          );
+
+        setTesting(true);
+        setSelectedCamera(null);
+        setProfile(null);
+        setActiveStream(target);
+
+        setStatusText(
+          "Menguji RTSP melalui native player...",
+        );
+
+        setActiveTab("live");
+
+        return;
+      }
+
+      setTesting(true);
+
+      try {
+        const camera: CameraNetworkConfig =
+          {
+            id: "manual-camera",
+            name: "Camera manual",
+            url: value,
+            vendor,
+            username:
+              username.trim() ||
+              undefined,
+            password:
+              password ||
+              undefined,
+          };
+
+        const result =
+          await testCameraConnection(
+            camera,
+          );
+
+        const message =
+          `${result.status.toUpperCase()} • ${result.message}` +
+          (result.latencyMs
+            ? ` • ${result.latencyMs}ms`
+            : "");
+
+        setStatusText(message);
+
+        addHistory(
+          result.ok
+            ? "connected"
+            : "error",
+          value,
+          result.message,
+        );
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Tes koneksi gagal.";
+
+        setStatusText(message);
+
+        addHistory(
+          "error",
+          value,
+          message,
+        );
+      } finally {
+        setTesting(false);
+      }
+    };
+
   const disconnect = () => {
-  if (activeStream) {
-    addHistory(
-      "disconnected",
-      activeStream,
-      "Stream CCTV dihentikan.",
+    if (activeStream) {
+      addHistory(
+        "disconnected",
+        activeStream,
+        "Stream CCTV dihentikan.",
+      );
+    }
+
+    setTesting(false);
+    setActiveStream("");
+    setSelectedCamera(null);
+    setProfile(null);
+
+    setStatusText(
+      "CCTV telah diputus.",
     );
-  }
-
-  setTesting(false);
-  setActiveStream("");
-  setSelectedCamera(null);
-  setProfile(null);
-
-  setStatusText(
-    "CCTV telah diputus.",
-  );
-};
+  };
   const renderLive = () => (
     <ScrollView
       style={styles.content}
