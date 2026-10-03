@@ -124,20 +124,33 @@ function CameraVideo({
         playWhenInactive={false}
         repeat={false}
         onLoad={() => {
-          setLoaded(true);
-          setError(false);
-          onLoad?.();
-        }}
+  console.log(
+    "CCTV EXOPLAYER LOAD SUCCESS:",
+    url,
+  );
+
+  setLoaded(true);
+  setError(false);
+  onLoad?.();
+}}
         onError={(videoError) => {
-          setLoaded(false);
-          setError(true);
+  setLoaded(false);
+  setError(true);
 
-          const message =
-            videoError?.error?.errorString ||
-            "Native player gagal membuka stream CCTV.";
+  const rawError = JSON.stringify(videoError);
 
-          onError?.(message);
-        }}
+  console.log(
+    "CCTV EXOPLAYER ERROR:",
+    rawError,
+  );
+
+  const message =
+    videoError?.error?.errorString ||
+    rawError ||
+    "Native player gagal membuka stream CCTV.";
+
+  onError?.(message);
+}}
         bufferConfig={{
           minBufferMs: 1500,
           maxBufferMs: 5000,
