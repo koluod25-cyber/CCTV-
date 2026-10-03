@@ -182,12 +182,10 @@ function CameraVideo({
   );
 }}
 
-  const message =
-    videoError?.error?.errorString ||
-    rawError ||
-    "Native player gagal membuka stream CCTV.";
-
-  onError?.(message);
+    onError?.(
+    detail ||
+      "ExoPlayer gagal membuka stream CCTV.",
+  );
 }}
         bufferConfig={{
           minBufferMs: 1500,
@@ -195,7 +193,6 @@ function CameraVideo({
           bufferForPlaybackMs: 500,
           bufferForPlaybackAfterRebufferMs: 1000,
         }}
-      />
 
       {!loaded && !error ? (
         <View style={styles.overlay}>
