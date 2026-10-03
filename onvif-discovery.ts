@@ -4,6 +4,8 @@ const WS_DISCOVERY_ADDRESS = "239.255.255.250";
 const WS_DISCOVERY_PORT = 3702;
 
 export type DiscoveredCamera = {
+  id: string;
+  name: string;
   host: string;
   port: number;
   xaddrs: string[];
@@ -104,16 +106,27 @@ function parseProbeMatch(
     return null;
   }
 
-  return {
-    host: first.host,
-    port: first.port,
-    xaddrs,
-    types: getXmlTag(payload, "Types"),
-    scopes: getXmlTag(payload, "Scopes"),
-    address:
-      getXmlTag(payload, "Address") || fallbackAddress,
-  };
-}
+   const address =
+  getXmlTag(payload, "Address") || fallbackAddress;
+
+const scopes = getXmlTag(payload, "Scopes");
+
+const name =
+  scopes.match(/(?:name|hardware)\/([^ ]+)/i)?.[1] ||
+  first.host;
+
+const id = address || `${first.host}:${first.port}`;
+
+return {
+  id,
+  name,
+  host: first.host,
+  port: first.port,
+  xaddrs,
+  types: getXmlTag(payload, "Types"),
+  scopes,
+  address,
+};
 
 function decodeMessage(raw: unknown): string {
   if (typeof raw === "string") {
