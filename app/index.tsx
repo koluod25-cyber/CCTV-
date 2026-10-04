@@ -917,7 +917,7 @@ const addHistory = (
     }
   />
 </View>
-
+</View>
       {statusText ? (
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
