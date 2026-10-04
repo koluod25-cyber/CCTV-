@@ -1130,8 +1130,7 @@ async function getStreamUri(
         </t2:GetStreamUri>
       `
       : `
-        <trt:GetStream
-
+       
         <trt:GetStreamUri>
 
           <trt:StreamSetup>
