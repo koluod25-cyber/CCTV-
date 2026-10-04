@@ -1144,11 +1144,7 @@ async function getStreamUri(
             profileToken,
           )}</t2:ProfileToken>
 
-        </t2:GetStreamUri>
-      `
-      : `
-        <trt:GetStrea
-        <trt:GetStreamUri>
+                <trt:GetStreamUri>
 
           <trt:StreamSetup>
 
