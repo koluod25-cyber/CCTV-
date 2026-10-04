@@ -898,31 +898,74 @@ function getMediaServiceCandidates(
   capabilitiesXml: string,
   fallbackUrl: string,
 ): string[] {
-  const xaddrs =
-    extractAllXAddrs(
-      capabilitiesXml,
-    );
+  /*
+   * ONVIF GetCapabilities biasanya mengembalikan XAddr
+   * di dalam blok <Media> atau <Media2>. Jangan hanya
+   * melihat nama/path URL karena banyak kamera memakai
+   * endpoint seperti /onvif/media_service.
+   */
+  const media1Blocks = getAllElements(
+    capabilitiesXml,
+    "Media",
+  );
 
-  const mediaCandidates =
-    xaddrs.filter(
-      (value) =>
-        /\/media(?:2)?(?:[/?#:]|$)/i.test(
-          value,
-        ),
-    );
+  const media2Blocks = getAllElements(
+    capabilitiesXml,
+    "Media2",
+  );
 
-  const remaining =
-    xaddrs.filter(
-      (value) =>
-        !mediaCandidates.includes(
-          value,
-        ),
-    );
+  const media1Candidates: string[] = [];
+  const media2Candidates: string[] = [];
 
+  for (const block of media1Blocks) {
+    for (const element of getAllElements(block, "XAddr")) {
+      const value = stripXml(element);
+
+      if (
+        value &&
+        /^https?:\/\//i.test(value)
+      ) {
+        media1Candidates.push(value);
+      }
+    }
+  }
+
+  for (const block of media2Blocks) {
+    for (const element of getAllElements(block, "XAddr")) {
+      const value = stripXml(element);
+
+      if (
+        value &&
+        /^https?:\/\//i.test(value)
+      ) {
+        media2Candidates.push(value);
+      }
+    }
+  }
+
+  /*
+   * Fallback untuk kamera yang tidak membungkus XAddr
+   * secara standar tetapi URL-nya tetap mengandung media.
+   */
+  const allXAddrs = extractAllXAddrs(
+    capabilitiesXml,
+  );
+
+  const pathMediaCandidates = allXAddrs.filter(
+    (value) =>
+      /\/media(?:2)?(?:[/?#: ]|$)/i.test(value),
+  );
+
+  /*
+   * Media1 ditempatkan lebih dulu karena target utama
+   * aplikasi adalah ONVIF Media Profile/Media 1.
+   */
   return Array.from(
     new Set([
-      ...mediaCandidates,
-      ...remaining,
+      ...media1Candidates,
+      ...pathMediaCandidates,
+      ...media2Candidates,
+      ...allXAddrs,
       fallbackUrl,
     ]),
   );
