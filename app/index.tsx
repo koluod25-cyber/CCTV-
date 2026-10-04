@@ -416,6 +416,9 @@ const [activeStream, setActiveStream] =
 
 const [playerConnected, setPlayerConnected] =
   useState(false);
+useEffect(() => {
+  setPlayerConnected(false);
+}, [activeStream]);
 
 const [manualUrl, setManualUrl] =
     useState(
