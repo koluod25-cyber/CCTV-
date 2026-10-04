@@ -837,6 +837,7 @@ Endpoint yang dicoba: ${endpoints.length}`,
     }
 
     setTesting(false);
+    setPlayerConnected(false);
     setActiveStream("");
     setSelectedCamera(null);
     setProfile(null);
