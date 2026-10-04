@@ -597,75 +597,27 @@ async function soapRequest(
 
   const attempts: Array<{
     version: SoapVersion;
-    envelope: string;
-    headers: Record<
-      string,
-      string
-    >;
+    useSecurity: boolean;
   }> = [
     {
       version: 2,
-
-      envelope: `<?xml version="1.0" encoding="UTF-8"?>
-<s:Envelope
-  xmlns:s="http://www.w3.org/2003/05/soap-envelope"
-  xmlns:tds="http://www.onvif.org/ver10/device/wsdl"
-  xmlns:trt="http://www.onvif.org/ver10/media/wsdl"
-  xmlns:t2="http://www.onvif.org/ver20/media/wsdl"
-  xmlns:tt="http://www.onvif.org/ver10/schema">
-
-  <s:Header>
-    ${security}
-  </s:Header>
-
-  <s:Body>
-    ${body}
-  </s:Body>
-
-</s:Envelope>`,
-
-      headers: {
-        "Content-Type":
-          `application/soap+xml; charset=utf-8; action="${action}"`,
-
-        SOAPAction:
-          `"${action}"`,
-      },
+      useSecurity: true,
     },
-
+    {
+      version: 2,
+      useSecurity: false,
+    },
     {
       version: 1,
-
-      envelope: `<?xml version="1.0" encoding="UTF-8"?>
-<s:Envelope
-  xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
-  xmlns:tds="http://www.onvif.org/ver10/device/wsdl"
-  xmlns:trt="http://www.onvif.org/ver10/media/wsdl"
-  xmlns:t2="http://www.onvif.org/ver20/media/wsdl"
-  xmlns:tt="http://www.onvif.org/ver10/schema">
-
-  <s:Header>
-    ${security}
-  </s:Header>
-
-  <s:Body>
-    ${body}
-  </s:Body>
-
-</s:Envelope>`,
-
-      headers: {
-        "Content-Type":
-          "text/xml; charset=utf-8",
-
-        SOAPAction:
-          `"${action}"`,
-      },
+      useSecurity: true,
+    },
+    {
+      version: 1,
+      useSecurity: false,
     },
   ];
 
-  const errors: string[] =
-    [];
+  const errors: string[] = [];
 
   const hasCredentials =
     Boolean(
@@ -678,27 +630,89 @@ async function soapRequest(
   for (
     const attempt of attempts
   ) {
-    try {
-      const baseHeaders =
-        {
-          ...attempt.headers,
+    const soap11 =
+      attempt.version === 1;
+
+    const envelope =
+      soap11
+        ? `<?xml version="1.0" encoding="UTF-8"?>
+<s:Envelope
+  xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:tds="http://www.onvif.org/ver10/device/wsdl"
+  xmlns:trt="http://www.onvif.org/ver10/media/wsdl"
+  xmlns:t2="http://www.onvif.org/ver20/media/wsdl"
+  xmlns:tt="http://www.onvif.org/ver10/schema">
+
+  <s:Header>
+    ${
+      attempt.useSecurity
+        ? security
+        : ""
+    }
+  </s:Header>
+
+  <s:Body>
+    ${body}
+  </s:Body>
+
+</s:Envelope>`
+        : `<?xml version="1.0" encoding="UTF-8"?>
+<s:Envelope
+  xmlns:s="http://www.w3.org/2003/05/soap-envelope"
+  xmlns:tds="http://www.onvif.org/ver10/device/wsdl"
+  xmlns:trt="http://www.onvif.org/ver10/media/wsdl"
+  xmlns:t2="http://www.onvif.org/ver20/media/wsdl"
+  xmlns:tt="http://www.onvif.org/ver10/schema">
+
+  <s:Header>
+    ${
+      attempt.useSecurity
+        ? security
+        : ""
+    }
+  </s:Header>
+
+  <s:Body>
+    ${body}
+  </s:Body>
+
+</s:Envelope>`;
+
+    const headers: Record<
+      string,
+      string
+    > = soap11
+      ? {
+          "Content-Type":
+            "text/xml; charset=utf-8",
+
+          SOAPAction:
+            `"${action}"`,
+        }
+      : {
+          /*
+           * SOAP 1.2 membawa action di Content-Type.
+           * Jangan menambahkan SOAPAction HTTP header
+           * karena beberapa kamera lama menolaknya.
+           */
+          "Content-Type":
+            `application/soap+xml; charset=utf-8; action="${action}"`,
         };
 
+    try {
       let response =
         await fetch(
           endpoint,
           {
             method: "POST",
-            headers:
-              baseHeaders,
-            body:
-              attempt.envelope,
+            headers,
+            body: envelope,
           },
         );
 
       /*
        * Jika kamera meminta HTTP Digest,
-       * lakukan request kedua dengan Authorization Digest.
+       * lakukan challenge-response.
        */
       if (
         response.status === 401 &&
@@ -733,18 +747,16 @@ async function soapRequest(
             await fetch(
               endpoint,
               {
-                method:
-                  "POST",
+                method: "POST",
 
                 headers: {
-                  ...baseHeaders,
+                  ...headers,
 
                   Authorization:
                     authorization,
                 },
 
-                body:
-                  attempt.envelope,
+                body: envelope,
               },
             );
         }
@@ -766,7 +778,13 @@ async function soapRequest(
           "";
 
         errors.push(
-          `SOAP ${attempt.version}.0 HTTP ${response.status}` +
+          `SOAP ${attempt.version}.0 ${
+            attempt.useSecurity
+              ? "WS-Security"
+              : "tanpa WS-Security"
+          } HTTP ${
+            response.status
+          }` +
             (
               challenge
                 ? ` [Auth: ${challenge.slice(
@@ -818,7 +836,11 @@ async function soapRequest(
       error
     ) {
       errors.push(
-        `SOAP ${attempt.version}.0: ${
+        `SOAP ${attempt.version}.0 ${
+          attempt.useSecurity
+            ? "WS-Security"
+            : "tanpa WS-Security"
+        }: ${
           error instanceof Error
             ? error.message
             : "Network error"
