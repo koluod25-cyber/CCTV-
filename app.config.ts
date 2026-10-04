@@ -48,7 +48,7 @@ const config: ExpoConfig = {
       },
     ],
 
-    withRtspTcp,
+    "./plugins/withRtspTcp.js",
 
     [
       "@isvend/expo-udp",
