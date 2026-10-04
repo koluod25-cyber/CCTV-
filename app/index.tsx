@@ -2047,6 +2047,39 @@ const styles = StyleSheet.create({
     backgroundColor: "#0d151e",
   },
 
+    cameraGrid: {
+    width: "100%",
+    gap: 10,
+    marginBottom: 4,
+  },
+
+  cameraSlot: {
+    width: "100%",
+  },
+
+  cameraSlotHeader: {
+    minHeight: 32,
+    paddingHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    backgroundColor: "#172330",
+  },
+
+  cameraSlotTitle: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+
+  cameraSlotStatus: {
+    color: "#8d99a8",
+    fontSize: 9,
+    fontWeight: "800",
+  },
+
   cameraCardHeader: {
     flexDirection: "row",
     alignItems: "center",
