@@ -312,54 +312,55 @@ export default function HomeScreen() {
   const [activeTab, setActiveTab] =
     useState<TabName>("live");
 
-  const [cameras, setCameras] =
+const [cameras, setCameras] =
     useState<DiscoveredCamera[]>([]);
 
-  const [selectedCamera, setSelectedCamera] =
+const [selectedCamera, setSelectedCamera] =
     useState<DiscoveredCamera | null>(null);
 
-  const [activeStream, setActiveStream] =
+const [activeStream, setActiveStream] =
     useState("");
 
-  const [manualUrl, setManualUrl] =
+const [manualUrl, setManualUrl] =
     useState(
       "rtsp://192.168.1.20:554/stream1",
     );
 
-  const [username, setUsername] =
+const [username, setUsername] =
     useState("");
 
-  const [password, setPassword] =
+const [password, setPassword] =
     useState("");
 
-  const [vendor, setVendor] =
+const [vendor, setVendor] =
     useState<(typeof CCTV_VENDORS)[number]>(
       "Generic / ONVIF",
     );
 
-  const [searching, setSearching] =
+const [searching, setSearching] =
     useState(false);
 
-  const [connecting, setConnecting] =
+const [connecting, setConnecting] =
     useState<string | null>(null);
 
-  const [testing, setTesting] =
+const [testing, setTesting] =
     useState(false);
 
-  const [statusText, setStatusText] =
+const [statusText, setStatusText] =
     useState("");
 
-  const [profile, setProfile] =
+const [profile, setProfile] =
     useState<OnvifMediaProfile | null>(null);
 
-  const [history, setHistory] =
+const [history, setHistory] =
     useState<HistoryItem[]>([]);
 
-  const [showInfo, setShowInfo] =
-    useState(true);
+const [showInfo, setShowInfo] =
+    useState(true); 
 
-  const [nativeControls, setNativeControls] =
+const [nativeControls, setNativeControls] =
     useState(true);
+  
 const [muted, setMuted] = useState(false);
 
 const [cameraCount, setCameraCount] =
@@ -373,9 +374,9 @@ const [logoUri, setLogoUri] =
 
 const marqueeX =
   useRef(new Animated.Value(0)).current;
-
 useEffect(() => {
-  const animation = Animated.loop(
+
+const animation = Animated.loop(
     Animated.sequence([
       Animated.timing(marqueeX, {
         toValue: -180,
@@ -399,7 +400,7 @@ useEffect(() => {
   };
 }, [marqueeX]);
 
-  const suggestedUrl = useMemo(
+const suggestedUrl = useMemo(
     () =>
       makeRtspUrl(
         vendor,
@@ -408,7 +409,7 @@ useEffect(() => {
     [vendor],
   );
 
-  const addHistory = (
+const addHistory = (
     action: HistoryItem["action"],
     url: string,
     message: string,
@@ -881,11 +882,12 @@ useEffect(() => {
           </Pressable>
         </View>
 
-        <View style={styles.switchRow}>
-          <View style={styles.switchTextWrap}>
-            <Text style={styles.switchTitle}>
-              Kontrol video
-            </Text>
+ <View style={styles.switchRow}>  <Viewstyle={styles.switchTextWrap}>
+ <Text style={styles.switchTitle}>
+     Kontrol video
+    </Text>
+ 
+    <Text
 <View style={styles.switchRow}>
   <View style={styles.switchTextWrap}>
     <Text style={styles.switchTitle}>
