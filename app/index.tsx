@@ -557,10 +557,10 @@ const addHistory = (
             setActiveTab("live");
 
             addHistory(
-              "success",
-              endpoint,
-              "Media Profile ONVIF dan URI RTSP berhasil diperoleh.",
-            );
+            "connected",
+               endpoint,
+"Media Profile ONVIF dan URI RTSP berhasil diperoleh.",
+);
 
             return;
           }
