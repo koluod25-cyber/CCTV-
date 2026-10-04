@@ -373,10 +373,13 @@ function randomHex(
 async function md5Hex(
   value: string,
 ): Promise<string> {
+  const input =
+    stringToUtf8(value);
+
   const digest =
     await Crypto.digest(
       Crypto.CryptoDigestAlgorithm.MD5,
-      value,
+      input as unknown as BufferSource,
     );
 
   const bytes =
