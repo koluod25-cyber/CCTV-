@@ -1022,8 +1022,9 @@ async function getProfiles(
 }
 
 /* ============================================================
- * STREAM URI
+ * PROFILES
  * ============================================================ */
+
 async function getProfiles(
   mediaUrl: string,
   credentials: OnvifCredentials,
@@ -1031,8 +1032,13 @@ async function getProfiles(
 ): Promise<string> {
   /*
    * Kompatibilitas kamera ONVIF OEM pada port 8899.
-   * Media1 memakai SOAP 1.2 minimal tanpa SOAPAction
-   * dan tanpa WS-Security pada request awal.
+   *
+   * Media1:
+   * - SOAP 1.2
+   * - Content-Type sederhana
+   * - tanpa SOAPAction
+   * - tanpa WS-Security pada request awal
+   * - GetProfiles memakai default namespace ONVIF Media
    */
   if (mediaVersion === 1) {
     const envelope = `<?xml version="1.0" encoding="UTF-8"?>
@@ -1059,10 +1065,17 @@ async function getProfiles(
         Boolean(credentials.username) &&
         Boolean(credentials.password);
 
-      if (response.status === 401 && hasCredentials) {
+      if (
+        response.status === 401 &&
+        hasCredentials
+      ) {
         const challenge =
-          response.headers.get("WWW-Authenticate") ||
-          response.headers.get("www-authenticate") ||
+          response.headers.get(
+            "WWW-Authenticate",
+          ) ||
+          response.headers.get(
+            "www-authenticate",
+          ) ||
           "";
 
         if (/Digest\s/i.test(challenge)) {
@@ -1086,14 +1099,28 @@ async function getProfiles(
         }
       }
 
-      const responseText = await response.text();
+      const responseText =
+        await response.text();
 
       if (response.ok) {
-        if (/<(?:[\w-]+:)?Fault\b/i.test(responseText)) {
+        if (
+          /<(?:[\w-]+:)?Fault\b/i.test(
+            responseText,
+          )
+        ) {
           throw new Error(
-            getTag(responseText, "Text") ||
-              getTag(responseText, "Reason") ||
-              getTag(responseText, "Subcode") ||
+            getTag(
+              responseText,
+              "Text",
+            ) ||
+              getTag(
+                responseText,
+                "Reason",
+              ) ||
+              getTag(
+                responseText,
+                "Subcode",
+              ) ||
               "ONVIF SOAP Fault",
           );
         }
@@ -1111,7 +1138,10 @@ async function getProfiles(
           ? error.message
           : "Media1 compatibility request gagal.";
 
-      // Coba kembali menggunakan SOAP fallback yang lama.
+      /*
+       * Fallback ke SOAP handler umum
+       * untuk kamera ONVIF yang berbeda.
+       */
       try {
         return await soapRequest(
           mediaUrl,
@@ -1132,7 +1162,9 @@ async function getProfiles(
     }
   }
 
-  // Media2 tetap menggunakan mekanisme yang lama.
+  /*
+   * Media2 tetap menggunakan SOAP handler umum.
+   */
   return soapRequest(
     mediaUrl,
     MEDIA2_GET_PROFILES,
