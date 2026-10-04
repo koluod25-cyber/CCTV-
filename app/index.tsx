@@ -882,13 +882,23 @@ const addHistory = (
           </Pressable>
         </View>
 
- <View style={styles.switchRow}>  
-   <View style={styles.switchTextWrap}>
-     <Text style={styles.switchTitle}>
-       Kontrol video
+ <View style={styles.switchRow}>
+  <View style={styles.switchTextWrap}>
+    <Text style={styles.switchTitle}>
+      Kontrol video
     </Text>
- 
-    <Text
+
+    <Text style={styles.switchDescription}>
+      Tampilkan kontrol bawaan pemutar video.
+    </Text>
+  </View>
+
+  <Switch
+    value={nativeControls}
+    onValueChange={setNativeControls}
+  />
+</View>
+
 <View style={styles.switchRow}>
   <View style={styles.switchTextWrap}>
     <Text style={styles.switchTitle}>
