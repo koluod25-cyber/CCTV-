@@ -1144,3 +1144,57 @@ async function getProfiles(
     credentials,
   );
 }
+
+/* ============================================================
+ * STREAM URI
+ * ============================================================ */
+
+async function getStreamUri(
+  mediaUrl: string,
+  profileToken: string,
+  credentials: OnvifCredentials,
+  mediaVersion: 1 | 2,
+): Promise<string> {
+  const body =
+    mediaVersion === 2
+      ? `
+        <t2:GetStreamUri>
+          <t2:StreamSetup>
+            <tt:Stream>RTP-Unicast</tt:Stream>
+            <tt:Transport>
+              <tt:Protocol>RTSP</tt:Protocol>
+            </tt:Transport>
+          </t2:StreamSetup>
+
+          <t2:ProfileToken>${escapeXml(
+            profileToken,
+          )}</t2:ProfileToken>
+        </t2:GetStreamUri>
+      `
+      : `
+        <trt:GetStreamUri>
+          <trt:StreamSetup>
+            <tt:Stream>RTP-Unicast</tt:Stream>
+            <tt:Transport>
+              <tt:Protocol>RTSP</tt:Protocol>
+            </tt:Transport>
+          </trt:StreamSetup>
+
+          <trt:ProfileToken>${escapeXml(
+            profileToken,
+          )}</trt:ProfileToken>
+        </trt:GetStreamUri>
+      `;
+
+  const action =
+    mediaVersion === 2
+      ? MEDIA2_GET_STREAM_URI
+      : MEDIA1_GET_STREAM_URI;
+
+  return soapRequest(
+    mediaUrl,
+    action,
+    body,
+    credentials,
+  );
+}
