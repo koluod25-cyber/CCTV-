@@ -153,10 +153,12 @@ function bytesToBase64(
     i += 3
   ) {
     const a = bytes[i] ?? 0;
+
     const b =
       i + 1 < bytes.length
         ? bytes[i + 1]
         : 0;
+
     const c =
       i + 2 < bytes.length
         ? bytes[i + 2]
@@ -212,7 +214,9 @@ function concatBytes(
     );
 
   const result =
-    new Uint8Array(totalLength);
+    new Uint8Array(
+      totalLength,
+    );
 
   let offset = 0;
 
@@ -293,6 +297,8 @@ async function buildWsSecurityHeader(
   `;
 }
 
+type SoapVersion = 1 | 2;
+
 async function soapRequest(
   endpoint: string,
   action: string,
@@ -304,8 +310,15 @@ async function soapRequest(
       credentials,
     );
 
-  const envelope = `<?xml version="1.0" encoding="UTF-8"?>
+  const attempts: Array<{
+    version: SoapVersion;
+    envelope: string;
+    headers: Record<string, string>;
+  }> = [
+    {
+      version: 2,
 
+      envelope: `<?xml version="1.0" encoding="UTF-8"?>
 <s:Envelope
   xmlns:s="http://www.w3.org/2003/05/soap-envelope"
   xmlns:tds="http://www.onvif.org/ver10/device/wsdl"
@@ -322,57 +335,126 @@ async function soapRequest(
     ${body}
   </s:Body>
 
-</s:Envelope>`;
+</s:Envelope>`,
 
-  const response =
-    await fetch(endpoint, {
-      method: "POST",
       headers: {
         "Content-Type":
           `application/soap+xml; charset=utf-8; action="${action}"`,
-        SOAPAction: `"${action}"`,
+
+        SOAPAction:
+          `"${action}"`,
       },
-      body: envelope,
-    });
+    },
 
-  const text =
-    await response.text();
+    {
+      version: 1,
 
-  if (!response.ok) {
-    throw new Error(
-      `ONVIF HTTP ${response.status}: ${text.slice(
-        0,
-        400,
-      )}`,
-    );
+      envelope: `<?xml version="1.0" encoding="UTF-8"?>
+<s:Envelope
+  xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
+  xmlns:tds="http://www.onvif.org/ver10/device/wsdl"
+  xmlns:trt="http://www.onvif.org/ver10/media/wsdl"
+  xmlns:t2="http://www.onvif.org/ver20/media/wsdl"
+  xmlns:tt="http://www.onvif.org/ver10/schema"
+  xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+
+  <s:Header>
+    ${security}
+  </s:Header>
+
+  <s:Body>
+    ${body}
+  </s:Body>
+
+</s:Envelope>`,
+
+      headers: {
+        "Content-Type":
+          "text/xml; charset=utf-8",
+
+        SOAPAction:
+          `"${action}"`,
+      },
+    },
+  ];
+
+  const errors: string[] = [];
+
+  for (const attempt of attempts) {
+    try {
+      const response =
+        await fetch(
+          endpoint,
+          {
+            method: "POST",
+
+            headers:
+              attempt.headers,
+
+            body:
+              attempt.envelope,
+          },
+        );
+
+      const text =
+        await response.text();
+
+      if (!response.ok) {
+        errors.push(
+          `SOAP ${attempt.version}.0 HTTP ${response.status}: ${text.slice(
+            0,
+            300,
+          )}`,
+        );
+
+        continue;
+      }
+
+      if (
+        /<(?:[\w-]+:)?Fault\b/i.test(
+          text,
+        )
+      ) {
+        const reason =
+          getTag(
+            text,
+            "Text",
+          ) ||
+          getTag(
+            text,
+            "Reason",
+          ) ||
+          getTag(
+            text,
+            "Subcode",
+          ) ||
+          "ONVIF SOAP Fault";
+
+        errors.push(
+          `SOAP ${attempt.version}.0 Fault: ${stripXml(
+            reason,
+          )}`,
+        );
+
+        continue;
+      }
+
+      return text;
+    } catch (error) {
+      errors.push(
+        `SOAP ${attempt.version}.0: ${
+          error instanceof Error
+            ? error.message
+            : "Network error"
+        }`,
+      );
+    }
   }
 
-  if (
-    /<(?:[\w-]+:)?Fault\b/i.test(
-      text,
-    )
-  ) {
-    const reason =
-      getTag(
-        text,
-        "Text",
-      ) ||
-      getTag(
-        text,
-        "Reason",
-      ) ||
-      getTag(
-        text,
-        "Subcode",
-      ) ||
-      "ONVIF SOAP Fault";
-
-    throw new Error(
-      stripXml(reason),
-    );
-  }
-
-  return text;
+  throw new Error(
+    errors.join(" | ") ||
+      "ONVIF SOAP request gagal.",
+  );
 }
 
 async function getCapabilities(
@@ -504,8 +586,8 @@ function parseProfiles(
     ...directProfiles,
   ];
 
-  const profiles: OnvifMediaProfile[] =
-    [];
+  const profiles:
+    OnvifMediaProfile[] = [];
 
   const seenTokens =
     new Set<string>();
@@ -515,15 +597,24 @@ function parseProfiles(
       getAttributeAnyCase(
         element,
         "Profiles",
-        ["token", "Token"],
+        [
+          "token",
+          "Token",
+        ],
       ) ||
       getAttributeAnyCase(
         element,
         "Profile",
-        ["token", "Token"],
+        [
+          "token",
+          "Token",
+        ],
       );
 
-    if (!token || seenTokens.has(token)) {
+    if (
+      !token ||
+      seenTokens.has(token)
+    ) {
       continue;
     }
 
@@ -564,16 +655,21 @@ function parseProfiles(
         ? getAttributeAnyCase(
             encoderElement,
             "VideoEncoderConfiguration",
-            ["token", "Token"],
+            [
+              "token",
+              "Token",
+            ],
           )
         : "";
 
     profiles.push({
       token,
       name,
+
       videoSourceToken:
         videoSourceToken ||
         undefined,
+
       videoEncoderToken:
         videoEncoderToken ||
         undefined,
@@ -852,7 +948,9 @@ export async function getOnvifStreamUri(
 
     const errors: string[] = [];
 
-    for (const mediaUrl of mediaCandidates) {
+    for (
+      const mediaUrl of mediaCandidates
+    ) {
       for (
         const mediaVersion of [1, 2] as const
       ) {
@@ -886,6 +984,7 @@ export async function getOnvifStreamUri(
 
     return {
       ok: false,
+
       message:
         errors.length > 0
           ? `Kamera terdeteksi, tetapi Media Profile ONVIF belum berhasil diperoleh. ${errors[0]}`
