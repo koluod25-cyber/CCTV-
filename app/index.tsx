@@ -876,15 +876,16 @@ Endpoint yang dicoba: ${endpoints.length}`,
           <View
             style={[
               styles.statusDot,
-              activeStream
+              playerConnected 
                 ? styles.statusDotOnline
                 : styles.statusDotOffline,
             ]}
           />
 
           <Text style={styles.statusPillText}>
-            {activeStream
+            {playerConnected
               ? "TERHUBUNG"
+              : activeStream
               : "TIDAK TERHUBUNG"}
           </Text>
         </View>
@@ -907,24 +908,27 @@ Endpoint yang dicoba: ${endpoints.length}`,
             </Text>
 
             <Text style={styles.cameraSlotStatus}>
-              {stream
-                ? "LIVE"
-                : "BELUM TERHUBUNG"}
-            </Text>
-          </View>
+  {index === 0 && playerConnected
+    ? "LIVE"
+    : stream
+      ? "MEMBUKA..."
+      : "BELUM TERHUBUNG"}
+</Text>
+</View>
 
-          <CameraVideo
-            url={stream}
-            nativeControls={nativeControls}
-            muted={muted}
-            onLoad={() => {
-              setTesting(false);
+<CameraVideo
+ url={stream}
+ nativeControls={nativeControls}
+ muted={muted}
+ onLoad={() => {
+ setPlayerConnected(true);
+ setTesting(false);
 
-              setStatusText(
-                `ONLINE • Kamera ${
-                  index + 1
-                } berhasil dibuka oleh native player.`,
-              );
+ setStatusText(
+ `ONLINE • Kamera ${
+  index + 1
+  } berhasil dibuka oleh native player.`,
+  );
 
               if (stream) {
                 addHistory(
@@ -937,6 +941,7 @@ Endpoint yang dicoba: ${endpoints.length}`,
               }
             }}
             onError={(message) => {
+              setPlayerConnected(false);
               setTesting(false);
 
               setStatusText(
