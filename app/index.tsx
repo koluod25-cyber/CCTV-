@@ -103,6 +103,7 @@ function CameraVideo({
 }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const [errorDetail, setErrorDetail] = useState("");
   const [playerKey, setPlayerKey] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
 
@@ -113,6 +114,7 @@ function CameraVideo({
   useEffect(() => {
     setLoaded(false);
     setError(false);
+    setErrorDetail("");
     setPlayerKey(0);
     setRetryCount(0);
 
@@ -139,6 +141,7 @@ function CameraVideo({
     setRetryCount(nextRetry);
     setLoaded(false);
     setError(false);
+    setErrorDetail("");
 
     if (retryTimer.current) {
       clearTimeout(retryTimer.current);
@@ -196,6 +199,7 @@ function CameraVideo({
 
           setLoaded(true);
           setError(false);
+          setErrorDetail("");
           setRetryCount(0);
 
           if (retryTimer.current) {
@@ -238,6 +242,12 @@ function CameraVideo({
             .filter(Boolean)
             .join(" • ");
 
+          const finalDetail =
+            detail ||
+            "ExoPlayer gagal membuka stream CCTV.";
+
+          setErrorDetail(finalDetail);
+
           console.log(
             "=== CCTV EXOPLAYER ERROR ===",
           );
@@ -275,10 +285,7 @@ function CameraVideo({
             ),
           );
 
-          onError?.(
-            detail ||
-              "ExoPlayer gagal membuka stream CCTV.",
-          );
+          onError?.(finalDetail);
 
           // Khusus error native ExoPlayer/Media3,
           // buat instance player baru sampai 3 kali.
@@ -324,6 +331,12 @@ function CameraVideo({
           <Text style={styles.overlayText}>
             ExoPlayer gagal membuka stream.
           </Text>
+
+          {errorDetail ? (
+            <Text style={styles.overlayText}>
+              {errorDetail}
+            </Text>
+          ) : null}
 
           {retryCount < 3 ? (
             <Text style={styles.overlayText}>
