@@ -467,21 +467,24 @@ const addHistory = (
     }
   };
 
-    const connectOnvif = async (
+      const connectOnvif = async (
     camera: DiscoveredCamera,
   ) => {
-    const endpoint =
-      camera.xaddrs?.find((item) =>
-        /^https?:\/\//i.test(item),
-      ) ?? "";
+    const endpoints = Array.from(
+      new Set(
+        (camera.xaddrs ?? []).filter((item) =>
+          /^https?:\/\//i.test(item),
+        ),
+      ),
+    );
 
     const key =
       `${camera.host}:${camera.port}`;
 
-    if (!endpoint) {
+    if (endpoints.length === 0) {
       Alert.alert(
         "Endpoint tidak tersedia",
-        "Kamera tidak memberikan endpoint ONVIF.",
+        "Kamera tidak memberikan endpoint ONVIF HTTP/HTTPS.",
       );
 
       return;
@@ -494,83 +497,96 @@ const addHistory = (
       `Menghubungkan ke ${camera.host}...`,
     );
 
+    const credentials = {
+      username:
+        username.trim() || undefined,
+      password:
+        password || undefined,
+    };
+
+    let lastMessage =
+      "Kamera terdeteksi, tetapi Media Profile ONVIF belum berhasil diperoleh.";
+
+    let lastEndpoint = endpoints[0];
+
     try {
-      const result =
-        await getOnvifStreamUri(
-          endpoint,
-          {
-            username:
-              username.trim() || undefined,
-            password:
-              password || undefined,
-          },
-        );
+      for (let index = 0; index < endpoints.length; index += 1) {
+        const endpoint = endpoints[index];
+        lastEndpoint = endpoint;
 
-      if (
-        !result.ok ||
-        !result.streamUri
-      ) {
         setStatusText(
-          result.message,
+          `Mencoba endpoint ONVIF ${index + 1}/${endpoints.length}...`,
         );
 
-        addHistory(
-          "error",
-          endpoint,
-          result.message,
-        );
+        try {
+          const result =
+            await getOnvifStreamUri(
+              endpoint,
+              credentials,
+            );
 
-        Alert.alert(
-          "Gagal mengambil stream",
-          result.message,
-        );
+          if (
+            result.ok &&
+            result.streamUri
+          ) {
+            const streamUri =
+              addCredentials(
+                result.streamUri,
+                username.trim(),
+                password,
+              );
 
-        return;
+            setActiveStream(streamUri);
+
+            setManualUrl(
+              hideCredentials(
+                result.streamUri,
+              ),
+            );
+
+            setProfile(
+              result.profile ?? null,
+            );
+
+            setTesting(true);
+
+            setStatusText(
+              "URI RTSP berhasil diperoleh. Membuka video...",
+            );
+
+            setActiveTab("live");
+
+            addHistory(
+              "success",
+              endpoint,
+              "Media Profile ONVIF dan URI RTSP berhasil diperoleh.",
+            );
+
+            return;
+          }
+
+          lastMessage = result.message;
+        } catch (error) {
+          lastMessage =
+            error instanceof Error
+              ? error.message
+              : "Endpoint ONVIF gagal diakses.";
+        }
       }
 
-      const streamUri =
-        addCredentials(
-          result.streamUri,
-          username.trim(),
-          password,
-        );
-
-      setActiveStream(streamUri);
-
-      setManualUrl(
-        hideCredentials(
-          result.streamUri,
-        ),
-      );
-
-      setProfile(
-        result.profile ?? null,
-      );
-
-      setTesting(true);
-
-      setStatusText(
-        "URI RTSP berhasil diperoleh. Membuka video...",
-      );
-
-      setActiveTab("live");
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Koneksi ONVIF gagal.";
-
-      setStatusText(message);
+      setStatusText(lastMessage);
 
       addHistory(
         "error",
-        endpoint,
-        message,
+        lastEndpoint,
+        lastMessage,
       );
 
       Alert.alert(
-        "Koneksi gagal",
-        message,
+        "Gagal mengambil stream",
+        `${lastMessage}
+
+Endpoint yang dicoba: ${endpoints.length}`,
       );
     } finally {
       setConnecting(null);
