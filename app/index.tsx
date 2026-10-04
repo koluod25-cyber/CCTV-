@@ -567,8 +567,7 @@ const searchCameras = async () => {
   };
 
 const connectOnvif = async (
-    camera: DiscoveredCamera,
-  ) => {
+  camera: DiscoveredCamera,) => {
     const endpoints = Array.from(
       new Set(
         (camera.xaddrs ?? []).filter((item) =>
@@ -589,8 +588,9 @@ const connectOnvif = async (
       return;
     }
 
-    setConnecting(key);
-    setSelectedCamera(camera);
+setConnecting(key);
+setSelectedCamera(camera);
+setPlayerConnected(false);
 
     setStatusText(
       `Menghubungkan ke ${camera.host}...`,
@@ -613,8 +613,7 @@ const connectOnvif = async (
         const endpoint = endpoints[index];
         lastEndpoint = endpoint;
 
-        setStatusText(
-          `Mencoba endpoint ONVIF ${index + 1}/${endpoints.length}...`,
+setStatusText(`Mencoba endpoint ONVIF ${index + 1}/${endpoints.length}...`,
         );
 
         try {
@@ -712,9 +711,10 @@ Endpoint yang dicoba: ${endpoints.length}`,
         password,
       );
 
-    setSelectedCamera(null);
-    setProfile(null);
-    setActiveStream(target);
+setSelectedCamera(null);
+setProfile(null);
+setPlayerConnected(false);
+setActiveStream(target);
 
     setTesting(true);
 
@@ -761,10 +761,11 @@ Endpoint yang dicoba: ${endpoints.length}`,
             password,
           );
 
-        setTesting(true);
-        setSelectedCamera(null);
-        setProfile(null);
-        setActiveStream(target);
+setTesting(true);
+setSelectedCamera(null);
+setProfile(null);
+setPlayerConnected(false);
+setActiveStream(target);
 
         setStatusText(
           "Menguji RTSP melalui native player...",
