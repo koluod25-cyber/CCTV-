@@ -218,14 +218,14 @@ function CameraVideo({
 
           onError?.(
             detail ||
-              "ExoPlayer gagal membuka stream CCTV.",
+   "ExoPlayer gagal membuka stream CCTV.",
           );
         }}
-        bufferConfig={{
-          minBufferMs: 1500,
-          maxBufferMs: 5000,
-          bufferForPlaybackMs: 500,
-          bufferForPlaybackAfterRebufferMs: 1000,
+  bufferConfig={{
+    minBufferMs: 1500,
+    maxBufferMs: 5000,
+    bufferForPlaybackMs: 500,
+    bufferForPlaybackAfterRebufferMs: 1000,
         }}
       />
 
@@ -882,9 +882,10 @@ const addHistory = (
           </Pressable>
         </View>
 
- <View style={styles.switchRow}>  <Viewstyle={styles.switchTextWrap}>
- <Text style={styles.switchTitle}>
-     Kontrol video
+ <View style={styles.switchRow}>  
+   <View style={styles.switchTextWrap}>
+     <Text style={styles.switchTitle}>
+       Kontrol video
     </Text>
  
     <Text
