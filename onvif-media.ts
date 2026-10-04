@@ -1000,34 +1000,6 @@ function getMediaServiceCandidates(
 async function getProfiles(
   mediaUrl: string,
   credentials: OnvifCredentials,
-  
-      
-  }
-
-  return (
-    profiles.find(
-      (profile) =>
-        Boolean(
-          profile.videoEncoderToken,
-        ),
-    ) ??
-    profiles.find(
-      (profile) =>
-        Boolean(
-          profile.videoSourceToken,
-        ),
-    ) ??
-    profiles[0]
-  );
-}
-
-/* ============================================================
- * PROFILES
- * ============================================================ */
-
-async function getProfiles(
-  mediaUrl: string,
-  credentials: OnvifCredentials,
   mediaVersion: 1 | 2,
 ): Promise<string> {
   /*
