@@ -128,7 +128,9 @@ function getAllElements(
   return xml.match(regex) ?? [];
 }
 
-function stripXml(value: string): string {
+function stripXml(
+  value: string,
+): string {
   return value
     .replace(/<[^>]+>/g, "")
     .replace(/&amp;/g, "&")
@@ -152,7 +154,8 @@ function bytesToBase64(
     i < bytes.length;
     i += 3
   ) {
-    const a = bytes[i] ?? 0;
+    const a =
+      bytes[i] ?? 0;
 
     const b =
       i + 1 < bytes.length
@@ -188,7 +191,9 @@ function bytesToBase64(
 
     result +=
       i + 2 < bytes.length
-        ? alphabet[triple & 63]
+        ? alphabet[
+            triple & 63
+          ]
         : "=";
   }
 
@@ -221,8 +226,13 @@ function concatBytes(
   let offset = 0;
 
   for (const array of arrays) {
-    result.set(array, offset);
-    offset += array.length;
+    result.set(
+      array,
+      offset,
+    );
+
+    offset +=
+      array.length;
   }
 
   return result;
@@ -269,7 +279,9 @@ async function buildWsSecurityHeader(
     );
 
   const nonceBase64 =
-    bytesToBase64(nonce);
+    bytesToBase64(
+      nonce,
+    );
 
   return `
     <wsse:Security
@@ -297,6 +309,276 @@ async function buildWsSecurityHeader(
   `;
 }
 
+/* ============================================================
+ * HTTP DIGEST AUTHENTICATION
+ * ============================================================ */
+
+function parseDigestChallenge(
+  header: string,
+): Record<string, string> {
+  const result: Record<
+    string,
+    string
+  > = {};
+
+  const value =
+    header.replace(
+      /^\s*Digest\s*/i,
+      "",
+    );
+
+  const regex =
+    /([a-zA-Z][a-zA-Z0-9_-]*)\s*=\s*(?:"([^"]*)"|([^,\s]+))/g;
+
+  let match:
+    RegExpExecArray | null;
+
+  while (
+    (match = regex.exec(value)) !==
+    null
+  ) {
+    result[
+      match[1].toLowerCase()
+    ] =
+      match[2] !== undefined
+        ? match[2]
+        : match[3];
+  }
+
+  return result;
+}
+
+function randomHex(
+  length: number,
+): string {
+  let value = "";
+
+  while (
+    value.length < length
+  ) {
+    value += Math.floor(
+      Math.random() *
+        0xffffffff,
+    )
+      .toString(16)
+      .padStart(8, "0");
+  }
+
+  return value.slice(
+    0,
+    length,
+  );
+}
+
+async function md5Hex(
+  value: string,
+): Promise<string> {
+  const digest =
+    await Crypto.digest(
+      Crypto.CryptoDigestAlgorithm.MD5,
+      value,
+    );
+
+  const bytes =
+    new Uint8Array(
+      digest,
+    );
+
+  return Array.from(
+    bytes,
+  )
+    .map(
+      (byte) =>
+        byte
+          .toString(16)
+          .padStart(2, "0"),
+    )
+    .join("");
+}
+
+function quoteDigestValue(
+  value: string,
+): string {
+  return `"${value
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')}"`;
+}
+
+async function buildDigestAuthorization(
+  challengeHeader: string,
+  username: string,
+  password: string,
+  method: string,
+  requestUri: string,
+): Promise<string> {
+  const challenge =
+    parseDigestChallenge(
+      challengeHeader,
+    );
+
+  const realm =
+    challenge.realm;
+
+  const nonce =
+    challenge.nonce;
+
+  if (
+    !realm ||
+    !nonce
+  ) {
+    throw new Error(
+      "HTTP Digest challenge tidak lengkap.",
+    );
+  }
+
+  const algorithm =
+    (
+      challenge.algorithm ||
+      "MD5"
+    ).toUpperCase();
+
+  if (
+    algorithm !== "MD5" &&
+    algorithm !== "MD5-SESS"
+  ) {
+    throw new Error(
+      `HTTP Digest algorithm ${algorithm} belum didukung.`,
+    );
+  }
+
+  const qopOptions =
+    (
+      challenge.qop ||
+      ""
+    )
+      .split(",")
+      .map(
+        (item) =>
+          item
+            .trim()
+            .toLowerCase(),
+      )
+      .filter(Boolean);
+
+  if (
+    qopOptions.length > 0 &&
+    !qopOptions.includes(
+      "auth",
+    )
+  ) {
+    throw new Error(
+      "HTTP Digest kamera tidak menyediakan qop=auth.",
+    );
+  }
+
+  const qop =
+    qopOptions.length > 0
+      ? "auth"
+      : "";
+
+  const cnonce =
+    randomHex(32);
+
+  const nc =
+    "00000001";
+
+  let ha1 =
+    await md5Hex(
+      `${username}:${realm}:${password}`,
+    );
+
+  if (
+    algorithm ===
+    "MD5-SESS"
+  ) {
+    ha1 =
+      await md5Hex(
+        `${ha1}:${nonce}:${cnonce}`,
+      );
+  }
+
+  const ha2 =
+    await md5Hex(
+      `${method}:${requestUri}`,
+    );
+
+  const response =
+    qop
+      ? await md5Hex(
+          `${ha1}:${nonce}:${nc}:${cnonce}:${qop}:${ha2}`,
+        )
+      : await md5Hex(
+          `${ha1}:${nonce}:${ha2}`,
+        );
+
+  const parts = [
+    `username=${quoteDigestValue(username)}`,
+    `realm=${quoteDigestValue(realm)}`,
+    `nonce=${quoteDigestValue(nonce)}`,
+    `uri=${quoteDigestValue(requestUri)}`,
+    `response=${quoteDigestValue(response)}`,
+  ];
+
+  if (algorithm) {
+    parts.push(
+      `algorithm=${algorithm}`,
+    );
+  }
+
+  if (
+    challenge.opaque
+  ) {
+    parts.push(
+      `opaque=${quoteDigestValue(
+        challenge.opaque,
+      )}`,
+    );
+  }
+
+  if (qop) {
+    parts.push(
+      `qop=${qop}`,
+    );
+
+    parts.push(
+      `nc=${nc}`,
+    );
+
+    parts.push(
+      `cnonce=${quoteDigestValue(
+        cnonce,
+      )}`,
+    );
+  }
+
+  return `Digest ${parts.join(
+    ", ",
+  )}`;
+}
+
+function getRequestUri(
+  endpoint: string,
+): string {
+  try {
+    const parsed =
+      new URL(endpoint);
+
+    return (
+      parsed.pathname ||
+      "/"
+    ) + (
+      parsed.search ||
+      ""
+    );
+  } catch {
+    return endpoint;
+  }
+}
+
+/* ============================================================
+ * SOAP
+ * ============================================================ */
+
 type SoapVersion = 1 | 2;
 
 async function soapRequest(
@@ -313,7 +595,10 @@ async function soapRequest(
   const attempts: Array<{
     version: SoapVersion;
     envelope: string;
-    headers: Record<string, string>;
+    headers: Record<
+      string,
+      string
+    >;
   }> = [
     {
       version: 2,
@@ -324,8 +609,7 @@ async function soapRequest(
   xmlns:tds="http://www.onvif.org/ver10/device/wsdl"
   xmlns:trt="http://www.onvif.org/ver10/media/wsdl"
   xmlns:t2="http://www.onvif.org/ver20/media/wsdl"
-  xmlns:tt="http://www.onvif.org/ver10/schema"
-  xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+  xmlns:tt="http://www.onvif.org/ver10/schema">
 
   <s:Header>
     ${security}
@@ -355,8 +639,7 @@ async function soapRequest(
   xmlns:tds="http://www.onvif.org/ver10/device/wsdl"
   xmlns:trt="http://www.onvif.org/ver10/media/wsdl"
   xmlns:t2="http://www.onvif.org/ver20/media/wsdl"
-  xmlns:tt="http://www.onvif.org/ver10/schema"
-  xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  xmlns:tt="http://www.onvif.org/ver10/schema">
 
   <s:Header>
     ${security}
@@ -378,33 +661,121 @@ async function soapRequest(
     },
   ];
 
-  const errors: string[] = [];
+  const errors: string[] =
+    [];
 
-  for (const attempt of attempts) {
+  const hasCredentials =
+    Boolean(
+      credentials.username,
+    ) &&
+    Boolean(
+      credentials.password,
+    );
+
+  for (
+    const attempt of attempts
+  ) {
     try {
-      const response =
+      const baseHeaders =
+        {
+          ...attempt.headers,
+        };
+
+      let response =
         await fetch(
           endpoint,
           {
             method: "POST",
-
             headers:
-              attempt.headers,
-
+              baseHeaders,
             body:
               attempt.envelope,
           },
         );
 
+      /*
+       * Jika kamera meminta HTTP Digest,
+       * lakukan request kedua dengan Authorization Digest.
+       */
+      if (
+        response.status === 401 &&
+        hasCredentials
+      ) {
+        const challenge =
+          response.headers.get(
+            "WWW-Authenticate",
+          ) ||
+          response.headers.get(
+            "www-authenticate",
+          ) ||
+          "";
+
+        if (
+          /Digest\s/i.test(
+            challenge,
+          )
+        ) {
+          const authorization =
+            await buildDigestAuthorization(
+              challenge,
+              credentials.username!,
+              credentials.password!,
+              "POST",
+              getRequestUri(
+                endpoint,
+              ),
+            );
+
+          response =
+            await fetch(
+              endpoint,
+              {
+                method:
+                  "POST",
+
+                headers: {
+                  ...baseHeaders,
+
+                  Authorization:
+                    authorization,
+                },
+
+                body:
+                  attempt.envelope,
+              },
+            );
+        }
+      }
+
       const text =
         await response.text();
 
-      if (!response.ok) {
+      if (
+        !response.ok
+      ) {
+        const challenge =
+          response.headers.get(
+            "WWW-Authenticate",
+          ) ||
+          response.headers.get(
+            "www-authenticate",
+          ) ||
+          "";
+
         errors.push(
-          `SOAP ${attempt.version}.0 HTTP ${response.status}: ${text.slice(
-            0,
-            300,
-          )}`,
+          `SOAP ${attempt.version}.0 HTTP ${response.status}` +
+            (
+              challenge
+                ? ` [Auth: ${challenge.slice(
+                    0,
+                    180,
+                  )}]`
+                : ""
+            ) +
+            `: ${text.slice(
+              0,
+              300,
+            )}`,
         );
 
         continue;
@@ -440,7 +811,9 @@ async function soapRequest(
       }
 
       return text;
-    } catch (error) {
+    } catch (
+      error
+    ) {
       errors.push(
         `SOAP ${attempt.version}.0: ${
           error instanceof Error
@@ -452,10 +825,16 @@ async function soapRequest(
   }
 
   throw new Error(
-    errors.join(" | ") ||
+    errors.join(
+      " | ",
+    ) ||
       "ONVIF SOAP request gagal.",
   );
 }
+
+/* ============================================================
+ * CAPABILITIES
+ * ============================================================ */
 
 async function getCapabilities(
   deviceUrl: string,
@@ -484,17 +863,26 @@ function extractAllXAddrs(
       "XAddr",
     );
 
-  const values: string[] = [];
+  const values: string[] =
+    [];
 
-  for (const element of elements) {
+  for (
+    const element of elements
+  ) {
     const value =
-      stripXml(element);
+      stripXml(
+        element,
+      );
 
     if (
       value &&
-      /^https?:\/\//i.test(value)
+      /^https?:\/\//i.test(
+        value,
+      )
     ) {
-      values.push(value);
+      values.push(
+        value,
+      );
     }
   }
 
@@ -513,10 +901,11 @@ function getMediaServiceCandidates(
     );
 
   const mediaCandidates =
-    xaddrs.filter((value) =>
-      /\/media(?:2)?(?:[/?#:]|$)/i.test(
-        value,
-      ),
+    xaddrs.filter(
+      (value) =>
+        /\/media(?:2)?(?:[/?#:]|$)/i.test(
+          value,
+        ),
     );
 
   const remaining =
@@ -536,32 +925,34 @@ function getMediaServiceCandidates(
   );
 }
 
+/* ============================================================
+ * PROFILES
+ * ============================================================ */
+
 async function getProfiles(
   mediaUrl: string,
   credentials: OnvifCredentials,
   mediaVersion: 1 | 2,
 ): Promise<string> {
-  if (mediaVersion === 2) {
-    const body = `
-      <t2:GetProfiles />
-    `;
-
+  if (
+    mediaVersion === 2
+  ) {
     return soapRequest(
       mediaUrl,
       MEDIA2_GET_PROFILES,
-      body,
+      `
+        <t2:GetProfiles />
+      `,
       credentials,
     );
   }
 
-  const body = `
-    <trt:GetProfiles />
-  `;
-
   return soapRequest(
     mediaUrl,
     MEDIA1_GET_PROFILES,
-    body,
+    `
+      <trt:GetProfiles />
+    `,
     credentials,
   );
 }
@@ -581,18 +972,22 @@ function parseProfiles(
       "Profile",
     );
 
-  const allElements = [
-    ...profileElements,
-    ...directProfiles,
-  ];
+  const allElements =
+    [
+      ...profileElements,
+      ...directProfiles,
+    ];
 
   const profiles:
-    OnvifMediaProfile[] = [];
+    OnvifMediaProfile[] =
+    [];
 
   const seenTokens =
     new Set<string>();
 
-  for (const element of allElements) {
+  for (
+    const element of allElements
+  ) {
     const token =
       getAttributeAnyCase(
         element,
@@ -613,7 +1008,9 @@ function parseProfiles(
 
     if (
       !token ||
-      seenTokens.has(token)
+      seenTokens.has(
+        token,
+      )
     ) {
       continue;
     }
@@ -622,7 +1019,8 @@ function parseProfiles(
       getTag(
         element,
         "Name",
-      ) || token;
+      ) ||
+      token;
 
     const sourceElements =
       getAllElements(
@@ -637,10 +1035,12 @@ function parseProfiles(
       );
 
     const sourceElement =
-      sourceElements[0] ?? "";
+      sourceElements[0] ??
+      "";
 
     const encoderElement =
-      encoderElements[0] ?? "";
+      encoderElements[0] ??
+      "";
 
     const videoSourceToken =
       sourceElement
@@ -675,7 +1075,9 @@ function parseProfiles(
         undefined,
     });
 
-    seenTokens.add(token);
+    seenTokens.add(
+      token,
+    );
   }
 
   return profiles;
@@ -684,7 +1086,9 @@ function parseProfiles(
 function chooseProfile(
   profiles: OnvifMediaProfile[],
 ): OnvifMediaProfile | undefined {
-  if (!profiles.length) {
+  if (
+    !profiles.length
+  ) {
     return undefined;
   }
 
@@ -705,6 +1109,10 @@ function chooseProfile(
   );
 }
 
+/* ============================================================
+ * STREAM URI
+ * ============================================================ */
+
 async function getStreamUri(
   mediaUrl: string,
   profileToken: string,
@@ -723,9 +1131,11 @@ async function getStreamUri(
             </tt:Stream>
 
             <tt:Transport>
+
               <tt:Protocol>
                 RTSP
               </tt:Protocol>
+
             </tt:Transport>
 
           </t2:StreamSetup>
@@ -737,6 +1147,7 @@ async function getStreamUri(
         </t2:GetStreamUri>
       `
       : `
+        <trt:GetStrea
         <trt:GetStreamUri>
 
           <trt:StreamSetup>
@@ -746,9 +1157,11 @@ async function getStreamUri(
             </tt:Stream>
 
             <tt:Transport>
+
               <tt:Protocol>
                 RTSP
               </tt:Protocol>
+
             </tt:Transport>
 
           </trt:StreamSetup>
@@ -869,7 +1282,8 @@ async function tryMediaEndpoint(
   if (!profile) {
     return {
       ok: false,
-      mediaServiceUrl: mediaUrl,
+      mediaServiceUrl:
+        mediaUrl,
       message:
         "Endpoint ONVIF merespons, tetapi tidak ada Media Profile yang dapat dibaca.",
     };
@@ -898,7 +1312,8 @@ async function tryMediaEndpoint(
   if (!normalizedUri) {
     return {
       ok: false,
-      mediaServiceUrl: mediaUrl,
+      mediaServiceUrl:
+        mediaUrl,
       profile,
       message:
         "Media Profile ditemukan, tetapi kamera tidak mengembalikan URI stream RTSP.",
@@ -913,7 +1328,8 @@ async function tryMediaEndpoint(
 
   return {
     ok: true,
-    mediaServiceUrl: mediaUrl,
+    mediaServiceUrl:
+      mediaUrl,
     profile,
     streamUri,
     message:
@@ -952,7 +1368,10 @@ export async function getOnvifStreamUri(
       const mediaUrl of mediaCandidates
     ) {
       for (
-        const mediaVersion of [1, 2] as const
+        const mediaVersion of [
+          1,
+          2,
+        ] as const
       ) {
         try {
           const result =
@@ -984,7 +1403,6 @@ export async function getOnvifStreamUri(
 
     return {
       ok: false,
-
       message:
         errors.length > 0
           ? `Kamera terdeteksi, tetapi Media Profile ONVIF belum berhasil diperoleh. ${errors[0]}`
