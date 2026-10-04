@@ -414,6 +414,9 @@ const [selectedCamera, setSelectedCamera] =
 const [activeStream, setActiveStream] =
     useState("");
 
+const [playerConnected, setPlayerConnected] =
+  useState(false);
+
 const [manualUrl, setManualUrl] =
     useState(
       "rtsp://192.168.1.20:554/stream1",
