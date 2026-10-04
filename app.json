@@ -47,26 +47,3 @@
     }
   }
 }
-
-"intentFilters": [
-  {
-    "action": "MAIN",
-    "category": [
-      "LAUNCHER"
-    ]
-  },
-  {
-    "action": "MAIN",
-    "category": [
-      "LEANBACK_LAUNCHER"
-    ]
-  }
-],
-
-<uses-feature
-    android:name="android.software.leanback"
-    android:required="false" />
-
-<uses-feature
-    android:name="android.hardware.touchscreen"
-    android:required="false" />
