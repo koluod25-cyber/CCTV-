@@ -918,18 +918,6 @@ const addHistory = (
   />
 </View>
 
-            <Text style={styles.switchDescription}>
-              Tampilkan kontrol bawaan pemutar video.
-            </Text>
-          </View>
-
-          <Switch
-            value={nativeControls}
-            onValueChange={setNativeControls}
-          />
-        </View>
-      </View>
-
       {statusText ? (
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
