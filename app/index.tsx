@@ -103,6 +103,58 @@ function CameraVideo({
 }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const [playerKey, setPlayerKey] = useState(0);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    setLoaded(false);
+    setError(false);
+    setPlayerKey(0);
+    setRetryCount(0);
+
+    if (retryTimer.current) {
+      clearTimeout(retryTimer.current);
+      retryTimer.current = null;
+    }
+
+    return () => {
+      if (retryTimer.current) {
+        clearTimeout(retryTimer.current);
+        retryTimer.current = null;
+      }
+    };
+  }, [url]);
+
+  const retryPlayer = () => {
+    if (retryCount >= 3) {
+      return;
+    }
+
+    const nextRetry = retryCount + 1;
+
+    setRetryCount(nextRetry);
+    setLoaded(false);
+    setError(false);
+
+    if (retryTimer.current) {
+      clearTimeout(retryTimer.current);
+    }
+
+    retryTimer.current = setTimeout(() => {
+      console.log(
+        `CCTV EXOPLAYER RETRY ${nextRetry}/3:`,
+        url,
+      );
+
+      setPlayerKey((value) => value + 1);
+
+      retryTimer.current = null;
+    }, 1000);
+  };
 
   if (!url) {
     return (
@@ -124,18 +176,19 @@ function CameraVideo({
   return (
     <View style={styles.videoBox}>
       <Video
-  source={{
-    uri: url,
-  }}
-  style={styles.video}
-  controls={nativeControls}
-  muted={muted}
-  resizeMode="contain"
-  paused={false}
-  playInBackground={false}
-  playWhenInactive={false}
-  repeat={false}
-  onLoad={() => {
+        key={`${url}-${playerKey}`}
+        source={{
+          uri: url,
+        }}
+        style={styles.video}
+        controls={nativeControls}
+        muted={muted}
+        resizeMode="contain"
+        paused={false}
+        playInBackground={false}
+        playWhenInactive={false}
+        repeat={false}
+        onLoad={() => {
           console.log(
             "CCTV EXOPLAYER LOAD SUCCESS:",
             url,
@@ -143,6 +196,12 @@ function CameraVideo({
 
           setLoaded(true);
           setError(false);
+          setRetryCount(0);
+
+          if (retryTimer.current) {
+            clearTimeout(retryTimer.current);
+            retryTimer.current = null;
+          }
 
           onLoad?.();
         }}
@@ -218,14 +277,18 @@ function CameraVideo({
 
           onError?.(
             detail ||
-   "ExoPlayer gagal membuka stream CCTV.",
+              "ExoPlayer gagal membuka stream CCTV.",
           );
+
+          // Khusus error native ExoPlayer/Media3,
+          // buat instance player baru sampai 3 kali.
+          retryPlayer();
         }}
-  bufferConfig={{
-    minBufferMs: 1500,
-    maxBufferMs: 5000,
-    bufferForPlaybackMs: 500,
-    bufferForPlaybackAfterRebufferMs: 1000,
+        bufferConfig={{
+          minBufferMs: 1500,
+          maxBufferMs: 5000,
+          bufferForPlaybackMs: 500,
+          bufferForPlaybackAfterRebufferMs: 1000,
         }}
       />
 
@@ -239,6 +302,12 @@ function CameraVideo({
           <Text style={styles.overlayText}>
             Menghubungkan ke CCTV...
           </Text>
+
+          {retryCount > 0 ? (
+            <Text style={styles.overlayText}>
+              Percobaan ulang {retryCount}/3...
+            </Text>
+          ) : null}
         </View>
       ) : null}
 
@@ -254,9 +323,20 @@ function CameraVideo({
 
           <Text style={styles.overlayText}>
             ExoPlayer gagal membuka stream.
-            Periksa URL RTSP, username/password,
-            codec kamera, dan jaringan.
           </Text>
+
+          {retryCount < 3 ? (
+            <Text style={styles.overlayText}>
+              Mencoba membuka ulang RTSP
+              ({retryCount}/3)...
+            </Text>
+          ) : (
+            <Text style={styles.overlayText}>
+              Percobaan otomatis selesai.
+              Periksa URL RTSP, codec kamera,
+              username/password, dan jaringan.
+            </Text>
+          )}
         </View>
       ) : null}
 
@@ -272,7 +352,7 @@ function CameraVideo({
     </View>
   );
 }
-
+    
 function TabButton({
   icon,
   label,
