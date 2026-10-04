@@ -1000,144 +1000,8 @@ function getMediaServiceCandidates(
 async function getProfiles(
   mediaUrl: string,
   credentials: OnvifCredentials,
-  mediaVersion: 1 | 2,
-): Promise<string> {
-  if (mediaVersion === 2) {
-    return soapRequest(
-      mediaUrl,
-      MEDIA2_GET_PROFILES,
-      `
-        <t2:GetProfiles />
-      `,
-      credentials,
-    );
-  }
-
-  return soapRequest(
-    mediaUrl,
-    MEDIA1_GET_PROFILES,
-    `
-      <trt:GetProfiles />
-    `,
-    credentials,
-  );
-}
-
-function parseProfiles(
-  xml: string,
-): OnvifMediaProfile[] {
-  const profileElements =
-    getAllElements(
-      xml,
-      "Profiles",
-    );
-
-  const directProfiles =
-    getAllElements(
-      xml,
-      "Profile",
-    );
-
-  const allElements = [
-    ...profileElements,
-    ...directProfiles,
-  ];
-
-  const profiles: OnvifMediaProfile[] = [];
-  const seenTokens = new Set<string>();
-
-  for (const element of allElements) {
-    const token =
-      getAttributeAnyCase(
-        element,
-        "Profiles",
-        [
-          "token",
-          "Token",
-        ],
-      ) ||
-      getAttributeAnyCase(
-        element,
-        "Profile",
-        [
-          "token",
-          "Token",
-        ],
-      );
-
-    if (
-      !token ||
-      seenTokens.has(token)
-    ) {
-      continue;
-    }
-
-    const name =
-      getTag(
-        element,
-        "Name",
-      ) || token;
-
-    const sourceElements =
-      getAllElements(
-        element,
-        "VideoSourceConfiguration",
-      );
-
-    const encoderElements =
-      getAllElements(
-        element,
-        "VideoEncoderConfiguration",
-      );
-
-    const sourceElement =
-      sourceElements[0] ?? "";
-
-    const encoderElement =
-      encoderElements[0] ?? "";
-
-    const videoSourceToken =
-      sourceElement
-        ? getTag(
-            sourceElement,
-            "SourceToken",
-          )
-        : "";
-
-    const videoEncoderToken =
-      encoderElement
-        ? getAttributeAnyCase(
-            encoderElement,
-            "VideoEncoderConfiguration",
-            [
-              "token",
-              "Token",
-            ],
-          )
-        : "";
-
-    profiles.push({
-      token,
-      name,
-      videoSourceToken:
-        videoSourceToken ||
-        undefined,
-      videoEncoderToken:
-        videoEncoderToken ||
-        undefined,
-    });
-
-    seenTokens.add(token);
-  }
-
-  return profiles;
-}
-
-function chooseProfile(
-  profiles: OnvifMediaProfile[],
-): OnvifMediaProfile | undefined {
-  if (!profiles.length) {
-    return undefined;
+  
+      
   }
 
   return (
@@ -1160,311 +1024,119 @@ function chooseProfile(
 /* ============================================================
  * STREAM URI
  * ============================================================ */
-
-async function getStreamUri(
+async function getProfiles(
   mediaUrl: string,
-  profileToken: string,
   credentials: OnvifCredentials,
   mediaVersion: 1 | 2,
 ): Promise<string> {
-  const body =
-    mediaVersion === 2
-      ? `
-        <t2:GetStreamUri>
+  /*
+   * Kompatibilitas kamera ONVIF OEM pada port 8899.
+   * Media1 memakai SOAP 1.2 minimal tanpa SOAPAction
+   * dan tanpa WS-Security pada request awal.
+   */
+  if (mediaVersion === 1) {
+    const envelope = `<?xml version="1.0" encoding="UTF-8"?>
+<s:Envelope
+  xmlns:s="http://www.w3.org/2003/05/soap-envelope">
+  <s:Body>
+    <GetProfiles
+      xmlns="http://www.onvif.org/ver10/media/wsdl"/>
+  </s:Body>
+</s:Envelope>`;
 
-          <t2:StreamSetup>
-
-            <tt:Stream>
-              RTP-Unicast
-            </tt:Stream>
-
-            <tt:Transport>
-
-              <tt:Protocol>
-                RTSP
-              </tt:Protocol>
-
-            </tt:Transport>
-
-          </t2:StreamSetup>
-
-          <t2:ProfileToken>${escapeXml(
-            profileToken,
-          )}</t2:ProfileToken>
-
-        </t2:GetStreamUri>
-      `
-      : `
-       
-        <trt:GetStreamUri>
-
-          <trt:StreamSetup>
-
-            <tt:Stream>
-              RTP-Unicast
-            </tt:Stream>
-
-            <tt:Transport>
-
-              <tt:Protocol>
-                RTSP
-              </tt:Protocol>
-
-            </tt:Transport>
-
-          </trt:StreamSetup>
-
-          <trt:ProfileToken>${escapeXml(
-            profileToken,
-          )}</trt:ProfileToken>
-
-        </trt:GetStreamUri>
-      `;
-
-  const action =
-    mediaVersion === 2
-      ? MEDIA2_GET_STREAM_URI
-      : MEDIA1_GET_STREAM_URI;
-
-  return soapRequest(
-    mediaUrl,
-    action,
-    body,
-    credentials,
-  );
-}
-
-function normalizeStreamUri(
-  value: string,
-  fallbackUrl: string,
-): string {
-  const trimmed =
-    stripXml(value);
-
-  if (!trimmed) {
-    return "";
-  }
-
-  try {
-    const parsed =
-      new URL(trimmed);
-
-    return parsed.toString();
-  } catch {
-    if (
-      trimmed.startsWith("/")
-    ) {
-      try {
-        return new URL(
-          trimmed,
-          fallbackUrl,
-        ).toString();
-      } catch {
-        return trimmed;
-      }
-    }
-
-    return trimmed;
-  }
-}
-
-function addCredentialsToRtspUri(
-  uri: string,
-  credentials: OnvifCredentials,
-): string {
-  if (
-    !credentials.username &&
-    !credentials.password
-  ) {
-    return uri;
-  }
-
-  try {
-    const parsed =
-      new URL(uri);
-
-    if (
-      credentials.username &&
-      !parsed.username
-    ) {
-      parsed.username =
-        credentials.username;
-    }
-
-    if (
-      credentials.password &&
-      !parsed.password
-    ) {
-      parsed.password =
-        credentials.password;
-    }
-
-    return parsed.toString();
-  } catch {
-    return uri;
-  }
-}
-
-async function tryMediaEndpoint(
-  mediaUrl: string,
-  credentials: OnvifCredentials,
-  mediaVersion: 1 | 2,
-): Promise<OnvifMediaResult> {
-  const profilesXml =
-    await getProfiles(
-      mediaUrl,
-      credentials,
-      mediaVersion,
-    );
-
-  const profiles =
-    parseProfiles(
-      profilesXml,
-    );
-
-  const profile =
-    chooseProfile(
-      profiles,
-    );
-
-  if (!profile) {
-    return {
-      ok: false,
-      mediaServiceUrl:
-        mediaUrl,
-      message:
-        "Endpoint ONVIF merespons, tetapi tidak ada Media Profile yang dapat dibaca.",
+    const headers: Record<string, string> = {
+      "Content-Type": "application/soap+xml",
     };
-  }
 
-  const streamXml =
-    await getStreamUri(
-      mediaUrl,
-      profile.token,
-      credentials,
-      mediaVersion,
-    );
+    try {
+      let response = await fetch(mediaUrl, {
+        method: "POST",
+        headers,
+        body: envelope,
+      });
 
-  const rawUri =
-    getTag(
-      streamXml,
-      "Uri",
-    );
+      const hasCredentials =
+        Boolean(credentials.username) &&
+        Boolean(credentials.password);
 
-  const normalizedUri =
-    normalizeStreamUri(
-      rawUri,
-      mediaUrl,
-    );
+      if (response.status === 401 && hasCredentials) {
+        const challenge =
+          response.headers.get("WWW-Authenticate") ||
+          response.headers.get("www-authenticate") ||
+          "";
 
-  if (!normalizedUri) {
-    return {
-      ok: false,
-      mediaServiceUrl:
-        mediaUrl,
-      profile,
-      message:
-        "Media Profile ditemukan, tetapi kamera tidak mengembalikan URI stream RTSP.",
-    };
-  }
-
-  const streamUri =
-    addCredentialsToRtspUri(
-      normalizedUri,
-      credentials,
-    );
-
-  return {
-    ok: true,
-    mediaServiceUrl:
-      mediaUrl,
-    profile,
-    streamUri,
-    message:
-      `ONVIF Media${mediaVersion} berhasil memperoleh URI stream RTSP.`,
-  };
-}
-
-export async function getOnvifStreamUri(
-  deviceServiceUrl: string,
-  credentials: OnvifCredentials = {},
-): Promise<OnvifMediaResult> {
-  if (!deviceServiceUrl) {
-    return {
-      ok: false,
-      message:
-        "Endpoint layanan ONVIF tidak tersedia.",
-    };
-  }
-
-  try {
-    const capabilitiesXml =
-      await getCapabilities(
-        deviceServiceUrl,
-        credentials,
-      );
-
-    const mediaCandidates =
-      getMediaServiceCandidates(
-        capabilitiesXml,
-        deviceServiceUrl,
-      );
-
-    const errors: string[] = [];
-
-    for (
-      const mediaUrl of mediaCandidates
-    ) {
-      for (
-        const mediaVersion of [
-          1,
-          2,
-        ] as const
-      ) {
-        try {
-          const result =
-            await tryMediaEndpoint(
-              mediaUrl,
-              credentials,
-              mediaVersion,
+        if (/Digest\s/i.test(challenge)) {
+          const authorization =
+            await buildDigestAuthorization(
+              challenge,
+              credentials.username!,
+              credentials.password!,
+              "POST",
+              getRequestUri(mediaUrl),
             );
 
-          if (result.ok) {
-            return result;
-          }
-
-          errors.push(
-            `Media${mediaVersion} ${mediaUrl}: ${result.message}`,
-          );
-        } catch (error) {
-          const message =
-            error instanceof Error
-              ? error.message
-              : "gagal";
-
-          errors.push(
-            `Media${mediaVersion} ${mediaUrl}: ${message}`,
-          );
+          response = await fetch(mediaUrl, {
+            method: "POST",
+            headers: {
+              ...headers,
+              Authorization: authorization,
+            },
+            body: envelope,
+          });
         }
       }
+
+      const responseText = await response.text();
+
+      if (response.ok) {
+        if (/<(?:[\w-]+:)?Fault\b/i.test(responseText)) {
+          throw new Error(
+            getTag(responseText, "Text") ||
+              getTag(responseText, "Reason") ||
+              getTag(responseText, "Subcode") ||
+              "ONVIF SOAP Fault",
+          );
+        }
+
+        return responseText;
+      }
+
+      throw new Error(
+        `Media1 GetProfiles HTTP ${response.status}: ` +
+          responseText.slice(0, 500),
+      );
+    } catch (error) {
+      const compatibilityError =
+        error instanceof Error
+          ? error.message
+          : "Media1 compatibility request gagal.";
+
+      // Coba kembali menggunakan SOAP fallback yang lama.
+      try {
+        return await soapRequest(
+          mediaUrl,
+          MEDIA1_GET_PROFILES,
+          `<trt:GetProfiles />`,
+          credentials,
+        );
+      } catch (fallbackError) {
+        const fallbackMessage =
+          fallbackError instanceof Error
+            ? fallbackError.message
+            : "SOAP fallback gagal.";
+
+        throw new Error(
+          `${compatibilityError} | fallback: ${fallbackMessage}`,
+        );
+      }
     }
-
-    return {
-      ok: false,
-      message:
-        errors.length > 0
-          ? `Kamera terdeteksi, tetapi Media Profile ONVIF belum berhasil diperoleh. ${errors[0]}`
-          : "Kamera terdeteksi, tetapi Media Profile ONVIF belum berhasil diperoleh.",
-    };
-  } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Gagal mengambil informasi ONVIF.";
-
-    return {
-      ok: false,
-      message,
-    };
   }
+
+  // Media2 tetap menggunakan mekanisme yang lama.
+  return soapRequest(
+    mediaUrl,
+    MEDIA2_GET_PROFILES,
+    `<t2:GetProfiles />`,
+    credentials,
+  );
 }
