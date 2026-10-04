@@ -931,188 +931,58 @@ function getMediaServiceCandidates(
 /* ============================================================
  * PROFILES
  * ============================================================ */
+const body =
+  mediaVersion === 2
+    ? `
+      <t2:GetStreamUri>
 
-async function getProfiles(
-  mediaUrl: string,
-  credentials: OnvifCredentials,
-  mediaVersion: 1 | 2,
-): Promise<string> {
-  if (
-    mediaVersion === 2
-  ) {
-    return soapRequest(
-      mediaUrl,
-      MEDIA2_GET_PROFILES,
-      `
-        <t2:GetProfiles />
-      `,
-      credentials,
-    );
-  }
+        <t2:StreamSetup>
 
-  return soapRequest(
-    mediaUrl,
-    MEDIA1_GET_PROFILES,
+          <tt:Stream>
+            RTP-Unicast
+          </tt:Stream>
+
+          <tt:Transport>
+
+            <tt:Protocol>
+              RTSP
+            </tt:Protocol>
+
+          </tt:Transport>
+
+        </t2:StreamSetup>
+
+        <t2:ProfileToken>${escapeXml(
+          profileToken,
+        )}</t2:ProfileToken>
+
+      </t2:GetStreamUri>
     `
-      <trt:GetProfiles />
-    `,
-    credentials,
-  );
-}
+    : `
+      <trt:GetStreamUri>
 
-function parseProfiles(
-  xml: string,
-): OnvifMediaProfile[] {
-  const profileElements =
-    getAllElements(
-      xml,
-      "Profiles",
-    );
+        <trt:StreamSetup>
 
-  const directProfiles =
-    getAllElements(
-      xml,
-      "Profile",
-    );
+          <tt:Stream>
+            RTP-Unicast
+          </tt:Stream>
 
-  const allElements =
-    [
-      ...profileElements,
-      ...directProfiles,
-    ];
+          <tt:Transport>
 
-  const profiles:
-    OnvifMediaProfile[] =
-    [];
+            <tt:Protocol>
+              RTSP
+            </tt:Protocol>
 
-  const seenTokens =
-    new Set<string>();
+          </tt:Transport>
 
-  for (
-    const element of allElements
-  ) {
-    const token =
-      getAttributeAnyCase(
-        element,
-        "Profiles",
-        [
-          "token",
-          "Token",
-        ],
-      ) ||
-      getAttributeAnyCase(
-        element,
-        "Profile",
-        [
-          "token",
-          "Token",
-        ],
-      );
+        </trt:StreamSetup>
 
-    if (
-      !token ||
-      seenTokens.has(
-        token,
-      )
-    ) {
-      continue;
-    }
+        <trt:ProfileToken>${escapeXml(
+          profileToken,
+        )}</trt:ProfileToken>
 
-    const name =
-      getTag(
-        element,
-        "Name",
-      ) ||
-      token;
-
-    const sourceElements =
-      getAllElements(
-        element,
-        "VideoSourceConfiguration",
-      );
-
-    const encoderElements =
-      getAllElements(
-        element,
-        "VideoEncoderConfiguration",
-      );
-
-    const sourceElement =
-      sourceElements[0] ??
-      "";
-
-    const encoderElement =
-      encoderElements[0] ??
-      "";
-
-    const videoSourceToken =
-      sourceElement
-        ? getTag(
-            sourceElement,
-            "SourceToken",
-          )
-        : "";
-
-    const videoEncoderToken =
-      encoderElement
-        ? getAttributeAnyCase(
-            encoderElement,
-            "VideoEncoderConfiguration",
-            [
-              "token",
-              "Token",
-            ],
-          )
-        : "";
-
-    profiles.push({
-      token,
-      name,
-
-      videoSourceToken:
-        videoSourceToken ||
-        undefined,
-
-      videoEncoderToken:
-        videoEncoderToken ||
-        undefined,
-    });
-
-    seenTokens.add(
-      token,
-    );
-  }
-
-  return profiles;
-}
-
-function chooseProfile(
-  profiles: OnvifMediaProfile[],
-): OnvifMediaProfile | undefined {
-  if (
-    !profiles.length
-  ) {
-    return undefined;
-  }
-
-  return (
-    profiles.find(
-      (profile) =>
-        Boolean(
-          profile.videoEncoderToken,
-        ),
-    ) ??
-    profiles.find(
-      (profile) =>
-        Boolean(
-          profile.videoSourceToken,
-        ),
-    ) ??
-    profiles[0]
-  );
-}
-
-/* ============================================================
+      </trt:GetStreamUri>
+    `; ============================================================
  * STREAM URI
  * ============================================================ */
 
