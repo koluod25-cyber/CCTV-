@@ -1,5 +1,4 @@
 import type { ExpoConfig } from "expo/config";
-import withRtspTcp from "./plugins/withRtspTcp.js";
 
 const bundleId = "space.manus.cctv.universal.monitor.t20260903114227";
 
