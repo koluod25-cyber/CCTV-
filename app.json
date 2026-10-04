@@ -3,7 +3,7 @@
     "name": "CCTV Universal Monitor",
     "slug": "cctv-universal-monitor",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "android": {
@@ -47,3 +47,26 @@
     }
   }
 }
+
+"intentFilters": [
+  {
+    "action": "MAIN",
+    "category": [
+      "LAUNCHER"
+    ]
+  },
+  {
+    "action": "MAIN",
+    "category": [
+      "LEANBACK_LAUNCHER"
+    ]
+  }
+],
+
+<uses-feature
+    android:name="android.software.leanback"
+    android:required="false" />
+
+<uses-feature
+    android:name="android.hardware.touchscreen"
+    android:required="false" />
