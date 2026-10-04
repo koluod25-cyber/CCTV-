@@ -883,12 +883,13 @@ setActiveStream(target);
             ]}
           />
 
-          <Text style={styles.statusPillText}>
-            {playerConnected
-              ? "TERHUBUNG"
-              : activeStream
-              : "TIDAK TERHUBUNG"}
-          </Text>
+<Text style={styles.statusPillText}>
+  {playerConnected
+    ? "TERHUBUNG"
+    : activeStream
+      ? "MEMBUKA STREAM"
+      : "TIDAK TERHUBUNG"}
+</Text>
         </View>
       </View>
 
