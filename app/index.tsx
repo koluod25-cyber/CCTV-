@@ -528,7 +528,7 @@ const addHistory = (
       ].slice(0, 100),
     );
   };
-  const searchCameras = async () => {
+const searchCameras = async () => {
     if (searching) {
       return;
     }
@@ -566,7 +566,7 @@ const addHistory = (
     }
   };
 
-      const connectOnvif = async (
+const connectOnvif = async (
     camera: DiscoveredCamera,
   ) => {
     const endpoints = Array.from(
@@ -1656,22 +1656,25 @@ Endpoint yang dicoba: ${endpoints.length}`,
           </View>
 
           <View style={styles.headerStatus}>
-            <View
-              style={[
-                styles.headerStatusDot,
-                activeStream
-                  ? styles.headerStatusOnline
-                  : styles.headerStatusOffline,
-              ]}
-            />
 
-            <Text style={styles.headerStatusText}>
-              {activeStream
-                ? "LIVE"
-                : "OFFLINE"}
-            </Text>
-          </View>
-        </View>
+<View
+  style={[
+    styles.headerStatusDot,
+    playerConnected
+      ? styles.headerStatusOnline
+      : styles.headerStatusOffline,
+  ]}
+/>
+
+<Text style={styles.headerStatusText}>
+  {playerConnected
+    ? "LIVE"
+    : activeStream
+      ? "CONNECTING"
+      : "OFFLINE"}
+</Text>
+</View>
+</View>
 
         {showInfo && statusText ? (
           <View style={styles.topStatus}>
