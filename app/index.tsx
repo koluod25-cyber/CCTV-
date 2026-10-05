@@ -2354,4 +2354,45 @@ cameraSlot: {
   tabTextActive: {
     color: "#ffffff",
   },
+
+layoutRow: {
+  width: "100%",
+  flexDirection: "row",
+  flexWrap: "wrap",
+  gap: 8,
+  marginTop: 8,
+},
+
+layoutButton: {
+  minWidth: 48,
+  height: 42,
+  paddingHorizontal: 14,
+  borderRadius: 8,
+  borderWidth: 1,
+  borderColor: "#555",
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "#222",
+},
+
+layoutButtonActive: {
+  borderWidth: 2,
+  borderColor: "#00c853",
+},
+
+layoutButtonText: {
+  fontSize: 16,
+  fontWeight: "700",
+},
+
+layoutButtonTextActive: {
+  fontWeight: "800",
+},
+
+layoutHint: {
+  marginTop: 8,
+  fontSize: 12,
+  opacity: 0.7,
+},
+
 });
