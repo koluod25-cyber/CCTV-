@@ -5,6 +5,7 @@ export type OnvifMediaProfile = {
   name: string;
   videoSourceToken?: string;
   videoEncoderToken?: string;
+  videoEncoding?: string;
 };
 
 export type OnvifMediaResult = {
@@ -654,13 +655,22 @@ function parseProfiles(xml: string): OnvifMediaProfile[] {
           ["token", "Token"],
         )
       : "";
-
-    profiles.push({
-      token,
-      name,
-      videoSourceToken: videoSourceToken || undefined,
-      videoEncoderToken: videoEncoderToken || undefined,
-    });
+const videoEncoding = encoderElement
+  ? getTag(
+      encoderElement,
+      "Encoding",
+    ).toUpperCase()
+  : "";
+profiles.push({
+  token,
+  name,
+  videoSourceToken:
+    videoSourceToken || undefined,
+  videoEncoderToken:
+    videoEncoderToken || undefined,
+  videoEncoding:
+    videoEncoding || undefined,
+});
 
     seenTokens.add(token);
   }
@@ -671,12 +681,49 @@ function parseProfiles(xml: string): OnvifMediaProfile[] {
 function chooseProfile(
   profiles: OnvifMediaProfile[],
 ): OnvifMediaProfile | undefined {
-  if (!profiles.length) return undefined;
+  if (!profiles.length) {
+    return undefined;
+  }
+
+  // Prioritas utama: H.264.
+  // ExoPlayer RTSP Android paling aman dengan H.264.
+  const h264Profile = profiles.find(
+    (profile) =>
+      Boolean(profile.videoEncoderToken) &&
+      profile.videoEncoding?.toUpperCase() === "H264",
+  );
+
+  if (h264Profile) {
+    return h264Profile;
+  }
+
+  // Beberapa kamera menulis codec sebagai AVC.
+  const avcProfile = profiles.find(
+    (profile) =>
+      Boolean(profile.videoEncoderToken) &&
+      profile.videoEncoding?.toUpperCase() === "AVC",
+  );
+
+  if (avcProfile) {
+    return avcProfile;
+  }
+
+  // Jika kamera tidak memberikan informasi Encoding,
+  // gunakan profil encoder seperti sebelumnya.
+  const encoderProfile = profiles.find(
+    (profile) =>
+      Boolean(profile.videoEncoderToken),
+  );
+
+  if (encoderProfile) {
+    return encoderProfile;
+  }
 
   return (
-    profiles.find((profile) => Boolean(profile.videoEncoderToken)) ??
-    profiles.find((profile) => Boolean(profile.videoSourceToken)) ??
-    profiles[0]
+    profiles.find(
+      (profile) =>
+        Boolean(profile.videoSourceToken),
+    ) ?? profiles[0]
   );
 }
 
