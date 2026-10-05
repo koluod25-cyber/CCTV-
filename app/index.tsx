@@ -2109,14 +2109,17 @@ const styles = StyleSheet.create({
   },
 
     cameraGrid: {
-    width: "100%",
-    gap: 10,
-    marginBottom: 4,
-  },
+  width: "100%",
+  flexDirection: "row",
+  flexWrap: "wrap",
+  justifyContent: "space-between",
+  gap: 10,
+  marginBottom: 4,
+},
 
-  cameraSlot: {
-    width: "100%",
-  },
+cameraSlot: {
+  marginBottom: 0,
+},
 
   cameraSlotHeader: {
     minHeight: 32,
