@@ -104,60 +104,12 @@ function CameraVideo({
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
   const [errorDetail, setErrorDetail] = useState("");
-  const [playerKey, setPlayerKey] = useState(0);
-  const [retryCount, setRetryCount] = useState(0);
-
-  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
 
   useEffect(() => {
     setLoaded(false);
     setError(false);
     setErrorDetail("");
-    setPlayerKey(0);
-    setRetryCount(0);
-
-    if (retryTimer.current) {
-      clearTimeout(retryTimer.current);
-      retryTimer.current = null;
-    }
-
-    return () => {
-      if (retryTimer.current) {
-        clearTimeout(retryTimer.current);
-        retryTimer.current = null;
-      }
-    };
   }, [url]);
-
-  const retryPlayer = () => {
-    if (retryCount >= 3) {
-      return;
-    }
-
-    const nextRetry = retryCount + 1;
-
-    setRetryCount(nextRetry);
-    setLoaded(false);
-    setError(false);
-    setErrorDetail("");
-
-    if (retryTimer.current) {
-      clearTimeout(retryTimer.current);
-    }
-
-    retryTimer.current = setTimeout(() => {
-      console.log(
-        `CCTV EXOPLAYER RETRY ${nextRetry}/3:`,
-        url,
-      );
-
-      setPlayerKey((value) => value + 1);
-
-      retryTimer.current = null;
-    }, 1000);
-  };
 
   if (!url) {
     return (
@@ -179,7 +131,6 @@ function CameraVideo({
   return (
     <View style={styles.videoBox}>
       <Video
-        key={`${url}-${playerKey}`}
         source={{
           uri: url,
         }}
@@ -200,12 +151,6 @@ function CameraVideo({
           setLoaded(true);
           setError(false);
           setErrorDetail("");
-          setRetryCount(0);
-
-          if (retryTimer.current) {
-            clearTimeout(retryTimer.current);
-            retryTimer.current = null;
-          }
 
           onLoad?.();
         }}
@@ -287,9 +232,9 @@ function CameraVideo({
 
           onError?.(finalDetail);
 
-          // Khusus error native ExoPlayer/Media3,
-          // buat instance player baru sampai 3 kali.
-          retryPlayer();
+          // Jangan membuat instance Video baru.
+          // Error 21004 / FAILED_RUNTIME_CHECK dapat
+          // dipicu berulang jika player direkreasi otomatis.
         }}
         bufferConfig={{
           minBufferMs: 1500,
@@ -309,12 +254,6 @@ function CameraVideo({
           <Text style={styles.overlayText}>
             Menghubungkan ke CCTV...
           </Text>
-
-          {retryCount > 0 ? (
-            <Text style={styles.overlayText}>
-              Percobaan ulang {retryCount}/3...
-            </Text>
-          ) : null}
         </View>
       ) : null}
 
@@ -338,18 +277,10 @@ function CameraVideo({
             </Text>
           ) : null}
 
-          {retryCount < 3 ? (
-            <Text style={styles.overlayText}>
-              Mencoba membuka ulang RTSP
-              ({retryCount}/3)...
-            </Text>
-          ) : (
-            <Text style={styles.overlayText}>
-              Percobaan otomatis selesai.
-              Periksa URL RTSP, codec kamera,
-              username/password, dan jaringan.
-            </Text>
-          )}
+          <Text style={styles.overlayText}>
+            Periksa URL RTSP, codec kamera,
+            username/password, dan jaringan.
+          </Text>
         </View>
       ) : null}
 
