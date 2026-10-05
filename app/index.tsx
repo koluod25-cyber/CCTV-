@@ -487,11 +487,4 @@ const styles = StyleSheet.create({
   bottomTabs: { flexDirection: "row", minHeight: 66, borderTopWidth: 1, borderTopColor: "#202a35", backgroundColor: "#111923" }, tab: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 7 }, tabActive: { backgroundColor: "#172433" }, tabIcon: { fontSize: 18 }, tabText: { marginTop: 3, color: "#7f8b99", fontSize: 10, fontWeight: "700" }, tabTextActive: { color: "#fff" },
 });
 
-  const clearLogo = () => { setLogoUri(""); setSettingsSaved(false); setStatusText("Logo dihapus. Tekan Simpan Pengaturan."); };
-  const saveSettings = () => {
-    setSavedOwnerText(ownerText.trim() || "Pemilik: CCTV Universal Monitor");
-    setSavedLogoUri(logoUri.trim());
-    setSettingsSaved(true);
-    setStatusText("Pengaturan berhasil disimpan.");
-    Alert.alert("Berhasil", "Pengaturan identitas dan logo telah disimpan.");
-  };
+
