@@ -1541,6 +1541,11 @@ const renderLive = () => (
     CCTV Universal Monitor
   </Text>
 
+  <Text style={styles.appSubtitle}>
+    ONVIF • RTSP • HTTP
+  </Text>
+</View>
+
 {logoUri.trim() ? (
   <Image
     source={{ uri: logoUri.trim() }}
