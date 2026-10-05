@@ -1541,17 +1541,15 @@ const renderLive = () => (
     CCTV Universal Monitor
   </Text>
 
-  <Text style={styles.appSubtitle}>
-    ONVIF • RTSP • HTTP
-  </Text>
-</View>
+{logoUri.trim() ? (
+  <Image
+    source={{ uri: logoUri.trim() }}
+    style={styles.headerLogo}
+    resizeMode="contain"
+  />
+) : null}
 
-            <Text style={styles.appSubtitle}>
-              ONVIF • RTSP • HTTP
-            </Text>
-          </View>
-
-          <View style={styles.headerStatus}>
+<View style={styles.headerStatus}>
 
 <View
   style={[
@@ -1664,6 +1662,13 @@ const styles = StyleSheet.create({
   headerTitleWrap: {
     flex: 1,
   },
+
+  headerLogo: {
+  width: 48,
+  height: 48,
+  marginHorizontal: 8,
+  borderRadius: 8,
+},
 
   appTitle: {
     color: "#ffffff",
