@@ -1251,6 +1251,262 @@ const renderLive = () => (
   const renderHistory = () => (
     <ScrollView
       style={styles.content}
+      contentContainerStyle={styles.contentContainer}
+    >
+      <View style={styles.sectionHeader}>
+        <View>
+          <Text style={styles.sectionTitle}>
+            Riwayat
+          </Text>
+
+          <Text style={styles.sectionSubtitle}>
+            Riwayat koneksi dan aktivitas CCTV.
+          </Text>
+        </View>
+
+        <Pressable
+          style={styles.secondaryButton}
+          onPress={() => setHistory([])}
+          disabled={history.length === 0}
+        >
+          <Text
+            style={[
+              styles.secondaryButtonText,
+              history.length === 0 &&
+                styles.disabledText,
+            ]}
+          >
+            Hapus Riwayat
+          </Text>
+        </Pressable>
+      </View>
+
+      {history.length === 0 ? (
+        <View style={styles.emptyBox}>
+          <Text style={styles.emptyIcon}>
+            🕘
+          </Text>
+
+          <Text style={styles.emptyTitle}>
+            Belum ada riwayat
+          </Text>
+
+          <Text style={styles.centerText}>
+            Aktivitas koneksi CCTV akan tampil di sini.
+          </Text>
+        </View>
+      ) : (
+        history.map((item) => (
+          <View
+            key={item.id}
+            style={styles.card}
+          >
+            <Text style={styles.cardTitle}>
+              {item.action === "connected"
+                ? "✓ Terhubung"
+                : item.action === "disconnected"
+                  ? "■ Terputus"
+                  : "⚠ Error"}
+            </Text>
+
+            <Text style={styles.statusText}>
+              {item.message}
+            </Text>
+
+            <Text style={styles.endpointText}>
+              {item.url}
+            </Text>
+
+            <Text style={styles.cameraMeta}>
+              {item.time}
+            </Text>
+          </View>
+        ))
+      )}
+    </ScrollView>
+  );
+
+  const renderSettings = () => (
+    <ScrollView
+      style={styles.content}
+      contentContainerStyle={styles.contentContainer}
+    >
+      <View style={styles.sectionHeader}>
+        <View>
+          <Text style={styles.sectionTitle}>
+            Pengaturan
+          </Text>
+
+          <Text style={styles.sectionSubtitle}>
+            Atur tampilan, koneksi, dan kontrol video.
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>
+          Identitas Pemilik
+        </Text>
+
+        <Text style={styles.switchDescription}>
+          Teks identitas pemilik aplikasi.
+        </Text>
+
+        <TextInput
+          value={ownerText}
+          onChangeText={setOwnerText}
+          placeholder="Masukkan identitas pemilik"
+          placeholderTextColor="#888"
+          style={styles.input}
+        />
+
+        <Text style={styles.switchDescription}>
+          URL Logo
+        </Text>
+
+        <TextInput
+          value={logoUri}
+          onChangeText={setLogoUri}
+          placeholder="URL logo (opsional)"
+          placeholderTextColor="#888"
+          autoCapitalize="none"
+          style={styles.input}
+        />
+
+        {logoUri.trim() ? (
+          <Image
+            source={{
+              uri: logoUri.trim(),
+            }}
+            style={styles.logoPreview}
+            resizeMode="contain"
+          />
+        ) : null}
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>
+          Kontrol Video
+        </Text>
+
+        <View style={styles.switchRow}>
+          <View style={styles.switchTextWrap}>
+            <Text style={styles.switchTitle}>
+              Kontrol video
+            </Text>
+
+            <Text style={styles.switchDescription}>
+              Tampilkan kontrol bawaan pemutar video.
+            </Text>
+          </View>
+
+          <Switch
+            value={nativeControls}
+            onValueChange={setNativeControls}
+          />
+        </View>
+
+        <View style={styles.switchRow}>
+          <View style={styles.switchTextWrap}>
+            <Text style={styles.switchTitle}>
+              Suara CCTV
+            </Text>
+
+            <Text style={styles.switchDescription}>
+              Aktifkan atau matikan suara kamera.
+            </Text>
+          </View>
+
+          <Switch
+            value={!muted}
+            onValueChange={(value) =>
+              setMuted(!value)
+            }
+          />
+        </View>
+
+        <View style={styles.switchRow}>
+          <View style={styles.switchTextWrap}>
+            <Text style={styles.switchTitle}>
+              Informasi status
+            </Text>
+
+            <Text style={styles.switchDescription}>
+              Tampilkan informasi status di bagian atas.
+            </Text>
+          </View>
+
+          <Switch
+            value={showInfo}
+            onValueChange={setShowInfo}
+          />
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>
+          Koneksi Kamera
+        </Text>
+
+        <Text style={styles.switchDescription}>
+          Vendor CCTV
+        </Text>
+
+        <TextInput
+          value={vendor}
+          editable={false}
+          style={styles.input}
+        />
+
+        <Text style={styles.switchDescription}>
+          URL RTSP contoh
+        </Text>
+
+        <TextInput
+          value={suggestedUrl}
+          editable={false}
+          style={styles.input}
+        />
+
+        <Text style={styles.switchDescription}>
+          Kamera ONVIF
+        </Text>
+
+        <Text style={styles.statusText}>
+          {selectedCamera
+            ? `Kamera: ${
+                selectedCamera.name ||
+                selectedCamera.host
+              }`
+            : "Belum memilih kamera ONVIF"}
+        </Text>
+
+        <Text style={styles.switchDescription}>
+          Status Stream
+        </Text>
+
+        <Text style={styles.statusText}>
+          {activeStream
+            ? "Stream aktif"
+            : "Stream belum aktif"}
+        </Text>
+      </View>
+
+      {profile ? (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>
+            Media Profile
+          </Text>
+
+          <Text style={styles.statusText}>
+            {profile.name ||
+              profile.token ||
+              "Profile ONVIF"}
+          </Text>
+        </View>
+      ) : null}
+    </ScrollView>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
