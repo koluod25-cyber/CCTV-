@@ -1,7 +1,6 @@
 import type { ExpoConfig } from "expo/config";
 
 const bundleId = "space.manus.cctv.universal.monitor.t20260903114227";
-const appLogo = "./assets/images/anton-service-logo.png";
 
 const config: ExpoConfig = {
   name: "CCTV Universal Monitor",
@@ -11,10 +10,6 @@ const config: ExpoConfig = {
   scheme: "cctvuniversalmonitor",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
-
-  // Logo utama aplikasi.
-  // Logo ini menjadi icon launcher APK Android saat build.
-  icon: appLogo,
 
   ios: {
     supportsTablet: true,
@@ -26,9 +21,6 @@ const config: ExpoConfig = {
 
   android: {
     package: bundleId,
-
-    // Icon launcher Android menggunakan logo yang sama.
-    icon: appLogo,
 
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
@@ -44,6 +36,7 @@ const config: ExpoConfig = {
 
   plugins: [
     "expo-router",
+
     [
       "react-native-video",
       {
@@ -55,7 +48,9 @@ const config: ExpoConfig = {
         },
       },
     ],
+
     "./plugins/withRtspTcp.js",
+
     [
       "@isvend/expo-udp",
       {
@@ -64,6 +59,7 @@ const config: ExpoConfig = {
           "Aplikasi menggunakan jaringan lokal untuk menemukan dan terhubung ke kamera CCTV.",
       },
     ],
+
     [
       "expo-build-properties",
       {
