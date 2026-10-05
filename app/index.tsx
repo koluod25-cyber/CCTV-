@@ -22,6 +22,8 @@ import {
 } from "react-native";
 import Video from "react-native-video";
 
+import * as ImagePicker from "expo-image-picker";
+
 import { CCTV_VENDORS, makeRtspUrl } from "@/cctv";
 import {
   getEndpointDetails,
@@ -411,6 +413,54 @@ const [ownerText, setOwnerText] =
 
 const [logoUri, setLogoUri] =
   useState("");
+
+const pickLogoFromGallery = async () => {
+  try {
+    const permission =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert(
+        "Izin galeri diperlukan",
+        "Izinkan aplikasi mengakses galeri HP untuk memilih logo.",
+      );
+      return;
+    }
+
+    const result =
+      await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+
+    if (
+      !result.canceled &&
+      result.assets?.[0]?.uri
+    ) {
+      setLogoUri(result.assets[0].uri);
+      setStatusText(
+        "Logo berhasil diganti dari galeri HP.",
+      );
+    }
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Gagal memilih logo dari galeri.";
+
+    Alert.alert(
+      "Ganti logo gagal",
+      message,
+    );
+  }
+};
+
+const clearLogo = () => {
+  setLogoUri("");
+  setStatusText("Logo header dihapus.");
+};
 
 const marqueeX =
   useRef(new Animated.Value(0)).current;
@@ -1364,25 +1414,56 @@ const renderLive = () => (
           URL Logo
         </Text>
 
-        <TextInput
-          value={logoUri}
-          onChangeText={setLogoUri}
-          placeholder="URL logo (opsional)"
-          placeholderTextColor="#888"
-          autoCapitalize="none"
-          style={styles.input}
-        />
+         <Text style={styles.switchDescription}>
+  Logo Header
+</Text>
 
-        {logoUri.trim() ? (
-          <Image
-            source={{
-              uri: logoUri.trim(),
-            }}
-            style={styles.logoPreview}
-            resizeMode="contain"
-          />
-        ) : null}
-      </View>
+<Text style={styles.logoHelpText}>
+  Pilih logo langsung dari galeri HP. Logo akan tampil
+  di sudut kanan atas header.
+</Text>
+
+<View style={styles.logoActionRow}>
+  <Pressable
+    onPress={pickLogoFromGallery}
+    style={styles.primaryButtonSmall}
+  >
+    <Text style={styles.primaryButtonText}>
+      Pilih / Ganti Logo
+    </Text>
+  </Pressable>
+
+  {logoUri.trim() ? (
+    <Pressable
+      onPress={clearLogo}
+      style={styles.secondaryButtonSmall}
+    >
+      <Text style={styles.secondaryButtonText}>
+        Hapus
+      </Text>
+    </Pressable>
+  ) : null}
+</View>
+
+{logoUri.trim() ? (
+  <Image
+    source={{
+      uri: logoUri.trim(),
+    }}
+    style={styles.logoPreview}
+    resizeMode="contain"
+  />
+) : (
+  <View style={styles.logoEmptyPreview}>
+    <Text style={styles.logoEmptyText}>
+      Belum ada logo dipilih
+    </Text>
+  </View>
+)}
+
+<Text style={styles.logoUriText} numberOfLines={2}>
+  {logoUri.trim() || "Logo belum dipilih dari galeri."}
+</Text>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>
@@ -2077,13 +2158,63 @@ const styles = StyleSheet.create({
     backgroundColor: "#0d151e",
   },
 
-  logoPreview: {
-    width: 120,
-    height: 80,
-    marginTop: 10,
-    borderRadius: 8,
-    backgroundColor: "#111923",
-  },
+  logoActionRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 9,
+  marginTop: 5,
+},
+
+secondaryButtonSmall: {
+  minHeight: 40,
+  paddingHorizontal: 12,
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 9,
+  borderWidth: 1,
+  borderColor: "#344352",
+  backgroundColor: "#19232e",
+},
+
+logoHelpText: {
+  marginBottom: 8,
+  color: "#7f8b99",
+  fontSize: 12,
+  lineHeight: 17,
+},
+
+logoPreview: {
+  width: 120,
+  height: 80,
+  marginTop: 12,
+  borderRadius: 8,
+  backgroundColor: "#111923",
+},
+
+logoEmptyPreview: {
+  width: 120,
+  height: 80,
+  marginTop: 12,
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 8,
+  borderWidth: 1,
+  borderColor: "#2b3845",
+  backgroundColor: "#0b1219",
+},
+
+logoEmptyText: {
+  color: "#667483",
+  fontSize: 11,
+  textAlign: "center",
+},
+
+logoUriText: {
+  marginTop: 7,
+  color: "#617182",
+  fontSize: 9,
+  lineHeight: 13,
+},
 
     cameraGrid: {
   width: "100%",
