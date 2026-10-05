@@ -869,9 +869,9 @@ setActiveStream(target);
         <View
           style={[
             styles.statusPill,
-            activeStream
-              ? styles.statusPillOnline
-              : styles.statusPillOffline,
+            playerConnected
+            ? styles.statusPillOnline
+            : styles.statusPillOffline
           ]}
         >
           <View
