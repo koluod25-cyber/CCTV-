@@ -2218,6 +2218,13 @@ cameraSlot: {
     fontWeight: "700",
   },
 
+statusText: {
+  marginTop: 5,
+  color: "#b8c6d4",
+  fontSize: 12,
+  lineHeight: 17,
+},
+
   historyItem: {
     flexDirection: "row",
     paddingVertical: 12,
