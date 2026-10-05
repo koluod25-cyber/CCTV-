@@ -1636,11 +1636,6 @@ const renderLive = () => (
     </ScrollView>
   );
 
-  const renderSettings = () => (
-    <ScrollView
-      style={styles.content}
-      contentContainerStyle={styles.contentContainer}
-    >
       <View style={styles.sectionHeader}>
         <View>
           <Text style={styles.sectionTitle}>
