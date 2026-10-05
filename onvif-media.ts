@@ -828,6 +828,21 @@ async function tryMediaEndpoint(
   const profiles = parseProfiles(profilesXml);
   const profile = chooseProfile(profiles);
 
+console.log(
+  "=== ONVIF PROFILES ===",
+  profiles.map((item) => ({
+    token: item.token,
+    name: item.name,
+    encoding: item.videoEncoding,
+    encoderToken: item.videoEncoderToken,
+  })),
+);
+
+console.log(
+  "=== SELECTED ONVIF PROFILE ===",
+  profile,
+);
+
   if (!profile) {
     return {
       ok: false,
