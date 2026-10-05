@@ -1464,7 +1464,7 @@ const renderLive = () => (
 <Text style={styles.logoUriText} numberOfLines={2}>
   {logoUri.trim() || "Logo belum dipilih dari galeri."}
 </Text>
-
+</view>
       <View style={styles.card}>
         <Text style={styles.cardTitle}>
           Kontrol Video
