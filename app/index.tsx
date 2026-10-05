@@ -353,13 +353,7 @@ useEffect(() => {
   setPlayerConnected(false);
 }, [activeStream]);
 
-const [manualUrl, setManualUrl] =
-  useState("rtsp://192.168.1.20:554/stream1");
-
-const [manualUrl, setManualUrl] =
-    useState(
-      "rtsp://192.168.1.20:554/stream1",
-    );
+const [manualUrl, setManualUrl] = useState("rtsp://192.168.1.20:554/stream1");
 
 const [username, setUsername] =
     useState("");
