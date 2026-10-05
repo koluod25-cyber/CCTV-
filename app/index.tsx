@@ -855,52 +855,42 @@ setActiveStream(target);
 </View>
 
 <CameraVideo
- url={stream}
- nativeControls={nativeControls}
- muted={muted}
- onLoad={() => {
- setPlayerConnected(true);
- setTesting(false);
+  url={stream}
+  nativeControls={nativeControls}
+  muted={muted}
+  onLoad={() => {
+    setPlayerConnected(true);
+    setTesting(false);
 
- setStatusText(
- `ONLINE • Kamera ${
-  index + 1
-  } berhasil dibuka oleh native player.`,
-  );
+    setStatusText(
+      `ONLINE • Kamera ${index + 1} berhasil dibuka oleh native player.`,
+    );
 
-              if (stream) {
-                addHistory(
-                  "connected",
-                  stream,
-                  `Kamera ${
-                    index + 1
-                  } berhasil dibuka oleh native player.`,
-                );
-              }
-            }}
-            onError={(message) => {
-              setPlayerConnected(false);
-              setTesting(false);
-
-              setStatusText(
-                `OFFLINE • Kamera ${
-                  index + 1
-                }: ${message}`,
-              );
-
-              if (stream) {
-                addHistory(
-                  "error",
-                  stream,
-                  message,
-                );
-              }
-            }}
-          />
-        </View>
+    if (stream) {
+      addHistory(
+        "connected",
+        stream,
+        `Kamera ${index + 1} berhasil dibuka oleh native player.`,
       );
-    },
-  )}
+    }
+  }}
+  onError={(message) => {
+    setPlayerConnected(false);
+    setTesting(false);
+
+    setStatusText(
+      `OFFLINE • Kamera ${index + 1}: ${message}`,
+    );
+
+    if (stream) {
+      addHistory(
+        "error",
+        stream,
+        message,
+      );
+    }
+  }}
+/>
 </View>
 
       <View style={styles.card}>
