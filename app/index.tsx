@@ -791,9 +791,269 @@ setActiveStream(target);
       "CCTV telah diputus.",
     );
   };
-  const renderLive = () => (
-    <ScrollView
-      style={styles.content}
+
+const renderLive = () => (
+  <ScrollView
+    style={styles.content}
+    contentContainerStyle={styles.contentContainer}
+  >
+    <View style={styles.sectionHeader}>
+      <View>
+        <Text style={styles.sectionTitle}>
+          Live CCTV
+        </Text>
+
+        <Text style={styles.sectionSubtitle}>
+          Pantau kamera CCTV secara langsung.
+        </Text>
+      </View>
+
+      <View
+        style={[
+          styles.statusPill,
+          playerConnected
+            ? styles.statusPillOnline
+            : styles.statusPillOffline,
+        ]}
+      >
+        <View
+          style={[
+            styles.statusDot,
+            playerConnected
+              ? styles.statusDotOnline
+              : styles.statusDotOffline,
+          ]}
+        />
+
+        <Text style={styles.statusPillText}>
+          {playerConnected
+            ? "TERHUBUNG"
+            : activeStream
+              ? "MEMBUKA STREAM"
+              : "TIDAK TERHUBUNG"}
+        </Text>
+      </View>
+    </View>
+
+    {/* PILIHAN JUMLAH KAMERA */}
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>
+        Tata Letak Kamera
+      </Text>
+
+      <View style={styles.layoutRow}>
+        {[1, 2, 4, 6, 9].map((count) => (
+          <Pressable
+            key={count}
+            focusable={true}
+            onPress={() => setCameraCount(count)}
+            style={[
+              styles.layoutButton,
+              cameraCount === count &&
+                styles.layoutButtonActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.layoutButtonText,
+                cameraCount === count &&
+                  styles.layoutButtonTextActive,
+              ]}
+            >
+              {count}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <Text style={styles.layoutHint}>
+        Pilih jumlah tampilan: 1, 2, 4, 6 atau 9 kamera.
+      </Text>
+    </View>
+
+    {/* GRID KAMERA */}
+    <View style={styles.cameraGrid}>
+      {Array.from({ length: cameraCount }).map((_, index) => {
+        const stream = index === 0 ? activeStream : "";
+
+        return (
+          <View
+            key={index}
+            style={[
+              styles.cameraSlot,
+              cameraCount === 1 && {
+                width: "100%",
+              },
+              cameraCount === 2 && {
+                width: "48%",
+              },
+              cameraCount === 4 && {
+                width: "48%",
+              },
+              cameraCount === 6 && {
+                width: "31%",
+              },
+              cameraCount === 9 && {
+                width: "31%",
+              },
+            ]}
+          >
+            <View style={styles.cameraSlotHeader}>
+              <Text style={styles.cameraSlotTitle}>
+                Kamera {index + 1}
+              </Text>
+
+              <Text style={styles.cameraSlotStatus}>
+                {index === 0 && playerConnected
+                  ? "LIVE"
+                  : stream
+                    ? "MEMBUKA..."
+                    : "BELUM TERHUBUNG"}
+              </Text>
+            </View>
+
+            <CameraVideo
+              url={stream}
+              nativeControls={nativeControls}
+              muted={muted}
+              onLoad={() => {
+                setPlayerConnected(true);
+                setTesting(false);
+
+                setStatusText(
+                  `ONLINE • Kamera ${
+                    index + 1
+                  } berhasil dibuka oleh native player.`,
+                );
+
+                if (stream) {
+                  addHistory(
+                    "connected",
+                    stream,
+                    `Kamera ${
+                      index + 1
+                    } berhasil dibuka oleh native player.`,
+                  );
+                }
+              }}
+              onError={(message) => {
+                setPlayerConnected(false);
+                setTesting(false);
+
+                setStatusText(
+                  `OFFLINE • Kamera ${
+                    index + 1
+                  }: ${message}`,
+                );
+
+                if (stream) {
+                  addHistory(
+                    "error",
+                    stream,
+                    message,
+                  );
+                }
+              }}
+            />
+          </View>
+        );
+      })}
+    </View>
+
+    {/* KONTROL LIVE */}
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>
+        Kontrol Live
+      </Text>
+
+      <View style={styles.buttonRow}>
+        <Pressable
+          focusable={true}
+          style={[
+            styles.primaryButton,
+            styles.flexButton,
+          ]}
+          onPress={connectManual}
+        >
+          <Text style={styles.primaryButtonText}>
+            ▶ Tampilkan Live
+          </Text>
+        </Pressable>
+
+        <Pressable
+          focusable={true}
+          style={[
+            styles.secondaryButton,
+            styles.flexButton,
+          ]}
+          onPress={disconnect}
+          disabled={!activeStream}
+        >
+          <Text
+            style={[
+              styles.secondaryButtonText,
+              !activeStream &&
+                styles.disabledText,
+            ]}
+          >
+            ■ Stop
+          </Text>
+        </Pressable>
+      </View>
+
+      {/* KONTROL VIDEO */}
+      <View style={styles.switchRow}>
+        <View style={styles.switchTextWrap}>
+          <Text style={styles.switchTitle}>
+            Kontrol video
+          </Text>
+
+          <Text style={styles.switchDescription}>
+            Tampilkan kontrol bawaan pemutar video.
+          </Text>
+        </View>
+
+        <Switch
+          value={nativeControls}
+          onValueChange={setNativeControls}
+        />
+      </View>
+
+      {/* SUARA CCTV */}
+      <View style={styles.switchRow}>
+        <View style={styles.switchTextWrap}>
+          <Text style={styles.switchTitle}>
+            Suara CCTV
+          </Text>
+
+          <Text style={styles.switchDescription}>
+            Aktifkan atau matikan suara dari kamera.
+          </Text>
+        </View>
+
+        <Switch
+          value={!muted}
+          onValueChange={(value) =>
+            setMuted(!value)
+          }
+        />
+      </View>
+    </View>
+
+    {/* STATUS */}
+    {statusText ? (
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>
+          Status
+        </Text>
+
+        <Text style={styles.statusText}>
+          {statusText}
+        </Text>
+      </View>
+    ) : null}
+  </ScrollView>
+);
       contentContainerStyle={styles.contentContainer}
     >
       <View style={styles.sectionHeader}>
