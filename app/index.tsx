@@ -834,69 +834,40 @@ setActiveStream(target);
         </View>
       </View>
 
-      <View style={styles.cameraGrid}>
-  {Array.from({ length: cameraCount }).map(
-    (_, index) => {
-      const stream =
-        index === 0 ? activeStream : "";
+<View style={styles.card}>
+  <Text style={styles.cardTitle}>
+    Tata Letak Kamera
+  </Text>
 
-      return (
-        <View
-          key={index}
-          style={styles.cameraSlot}
+  <View style={styles.layoutRow}>
+    {[1, 2, 4, 6, 9].map((count) => (
+      <Pressable
+        key={count}
+        focusable={true}
+        onPress={() => setCameraCount(count)}
+        style={[
+          styles.layoutButton,
+          cameraCount === count &&
+            styles.layoutButtonActive,
+        ]}
+      >
+        <Text
+          style={[
+            styles.layoutButtonText,
+            cameraCount === count &&
+              styles.layoutButtonTextActive,
+          ]}
         >
-          <View style={styles.cameraSlotHeader}>
-            <Text style={styles.cameraSlotTitle}>
-              Kamera {index + 1}
-            </Text>
+          {count}
+        </Text>
+      </Pressable>
+    ))}
+  </View>
 
-            <Text style={styles.cameraSlotStatus}>
-  {index === 0 && playerConnected
-    ? "LIVE"
-    : stream
-      ? "MEMBUKA..."
-      : "BELUM TERHUBUNG"}
-</Text>
+  <Text style={styles.layoutHint}>
+    Pilih jumlah tampilan: 1, 2, 4, 6 atau 9 kamera.
+  </Text>
 </View>
-
-<CameraVideo
-  url={stream}
-  nativeControls={nativeControls}
-  muted={muted}
-  onLoad={() => {
-    setPlayerConnected(true);
-    setTesting(false);
-
-    setStatusText(
-      `ONLINE • Kamera ${index + 1} berhasil dibuka oleh native player.`,
-    );
-
-    if (stream) {
-      addHistory(
-        "connected",
-        stream,
-        `Kamera ${index + 1} berhasil dibuka oleh native player.`,
-      );
-    }
-  }}
-  onError={(message) => {
-    setPlayerConnected(false);
-    setTesting(false);
-
-    setStatusText(
-      `OFFLINE • Kamera ${index + 1}: ${message}`,
-    );
-
-    if (stream) {
-      addHistory(
-        "error",
-        stream,
-        message,
-      );
-    }
-  }}
-/>
-        </View>
       );
     },
   )}
