@@ -342,14 +342,19 @@ const [cameras, setCameras] =
 const [selectedCamera, setSelectedCamera] =
     useState<DiscoveredCamera | null>(null);
 
-const [activeStream, setActiveStream] =
-    useState("");
+const [activeStream, setActiveStream] = useState("");
 
 const [playerConnected, setPlayerConnected] =
   useState(false);
+
 useEffect(() => {
+  // Setiap URL stream berubah, player dianggap
+  // belum terhubung sampai Video.onLoad terpanggil.
   setPlayerConnected(false);
 }, [activeStream]);
+
+const [manualUrl, setManualUrl] =
+  useState("rtsp://192.168.1.20:554/stream1");
 
 const [manualUrl, setManualUrl] =
     useState(
