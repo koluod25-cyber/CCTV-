@@ -1512,10 +1512,39 @@ const renderLive = () => (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.app}>
         <View style={styles.header}>
-          <View style={styles.headerTitleWrap}>
-            <Text style={styles.appTitle}>
-              CCTV Universal Monitor
-            </Text>
+
+<View style={styles.headerTitleWrap}>
+  <View
+    style={{
+      overflow: "hidden",
+      width: "100%",
+    }}
+  >
+    <Animated.Text
+      style={[
+        styles.appSubtitle,
+        {
+          transform: [
+            {
+              translateX: marqueeX,
+            },
+          ],
+        },
+      ]}
+      numberOfLines={1}
+    >
+      {ownerText}
+    </Animated.Text>
+  </View>
+
+  <Text style={styles.appTitle}>
+    CCTV Universal Monitor
+  </Text>
+
+  <Text style={styles.appSubtitle}>
+    ONVIF • RTSP • HTTP
+  </Text>
+</View>
 
             <Text style={styles.appSubtitle}>
               ONVIF • RTSP • HTTP
