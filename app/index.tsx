@@ -2090,6 +2090,7 @@ const styles = StyleSheet.create({
 
 cameraSlot: {
   marginBottom: 0,
+  width: "100%",
 },
 
   cameraSlotHeader: {
