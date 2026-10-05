@@ -132,8 +132,13 @@ function CameraVideo({
     <View style={styles.videoBox}>
       <Video
         source={{
-          uri: url,
-        }}
+  uri: url,
+  type:
+    url.toLowerCase().startsWith("rtsp://") ||
+    url.toLowerCase().startsWith("rtsps://")
+      ? "rtsp"
+      : undefined,
+}}
         style={styles.video}
         controls={nativeControls}
         muted={muted}
