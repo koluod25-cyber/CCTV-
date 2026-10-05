@@ -1,4 +1,4 @@
-import {
+aaimport {
   useEffect,
   useMemo,
   useRef,
@@ -130,17 +130,23 @@ function CameraVideo({
 
   return (
     <View style={styles.videoBox}>
-      <Video
-        source={{
-  uri: url,
-  type:
-    url.toLowerCase().startsWith("rtsp://") ||
-    url.toLowerCase().startsWith("rtsps://")
-      ? "rtsp"
-      : undefined,
-}}
-        style={styles.video}
-        controls={nativeControls}
+     <Video
+       focusable={true}
+       source={{
+       uri: url,
+       type:
+      url.toLowerCase().startsWith("rtsp://") ||
+      url.toLowerCase().startsWith("rtsps://")
+        ? "rtsp"
+        : undefined,
+  }}
+  style={styles.video}
+  controls={nativeControls}
+  controlsStyles={{
+    hideFullscreen: false,
+    hideSeekBar: true,
+    liveLabel: "LIVE",
+  }}
         muted={muted}
         resizeMode="contain"
         paused={false}
