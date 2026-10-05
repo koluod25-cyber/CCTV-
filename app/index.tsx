@@ -2038,6 +2038,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#0d151e",
   },
 
+  logoPreview: {
+    width: 120,
+    height: 80,
+    marginTop: 10,
+    borderRadius: 8,
+    backgroundColor: "#111923",
+  },
+
     cameraGrid: {
   width: "100%",
   flexDirection: "row",
