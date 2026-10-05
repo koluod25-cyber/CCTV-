@@ -885,7 +885,11 @@ setActiveStream(target);
     }
   }}
 />
-</View>
+        </View>
+      );
+    },
+  )}
+      </View>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>
