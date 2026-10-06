@@ -153,7 +153,6 @@ function CameraVideo({
           const errorCode = errorObject?.errorCode || "";
           const errorString = errorObject?.errorString || "";
           const errorException = errorObject?.errorException || "";
-
           const detail = [
             errorCode ? `Code: ${errorCode}` : "",
             errorString ? `Detail: ${errorString}` : "",
@@ -328,6 +327,7 @@ export default function HomeScreen() {
     if (firstEmpty >= 0) return firstEmpty;
     return cameraStreams.length < 9 ? cameraStreams.length : -1;
   };
+
   const setCameraZoomValue = (slot: number, value: number) => {
     const nextValue = Math.max(1, Math.min(2, value));
 
@@ -418,7 +418,6 @@ export default function HomeScreen() {
       ].slice(0, 100),
     );
   };
-
   const pickLogoFromGallery = async () => {
     try {
       const permission =
@@ -509,6 +508,7 @@ export default function HomeScreen() {
         (camera.xaddrs ?? []).filter((item) => /^https?:\/\//i.test(item)),
       ),
     );
+
     const key = `${camera.host}:${camera.port}`;
 
     if (!endpoints.length) {
@@ -772,6 +772,7 @@ export default function HomeScreen() {
                   : columns === 2
                     ? "48.5%"
                     : "32%";
+
               return (
                 <View
                   key={index}
@@ -1020,7 +1021,8 @@ export default function HomeScreen() {
                 <View style={styles.cameraCardHeader}>
                   <View style={styles.cameraIconBox}>
                     <Text style={styles.cameraIcon}>📹</Text>
-                  </View 
+                  </View>
+
                   <View style={styles.cameraCardInfo}>
                     <Text style={styles.cameraName}>
                       {camera.name || "Kamera ONVIF"}
@@ -1161,7 +1163,6 @@ export default function HomeScreen() {
           Pilih logo dari galeri HP. Logo akan tampil di sudut kanan
           atas header.
         </Text>
-
         <View style={styles.logoActionRow}>
           <Pressable
             onPress={pickLogoFromGallery}
@@ -1354,6 +1355,7 @@ export default function HomeScreen() {
             </Text>
           </View>
         ) : null}
+
         <View style={styles.main}>
           {activeTab === "live"
             ? renderLive()
@@ -2041,4 +2043,3 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
 });
-
