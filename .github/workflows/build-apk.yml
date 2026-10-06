@@ -31,6 +31,47 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Setup Android NDK
+        shell: bash
+        run: |
+          set -e
+
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -n 1)"
+          fi
+
+          echo "Using sdkmanager: $SDKMANAGER"
+
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+
+          rm -rf "$ANDROID_HOME/ndk/27.1.12297006"
+
+          for attempt in 1 2 3; do
+            echo "Installing NDK attempt $attempt..."
+
+            rm -rf "$ANDROID_HOME/ndk/27.1.12297006"
+
+            if "$SDKMANAGER" --install "ndk;27.1.12297006"; then
+              if [ -f "$ANDROID_HOME/ndk/27.1.12297006/source.properties" ]; then
+                echo "NDK 27.1.12297006 installed successfully."
+                break
+              fi
+            fi
+
+            if [ "$attempt" -eq 3 ]; then
+              echo "NDK installation failed after 3 attempts."
+              exit 1
+            fi
+
+            echo "Retrying NDK installation..."
+            sleep 10
+          done
+
+          echo "Installed NDK:"
+          cat "$ANDROID_HOME/ndk/27.1.12297006/source.properties"
+
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
