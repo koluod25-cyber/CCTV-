@@ -754,4 +754,34 @@ async function getStreamUri(
             <tt:Transport>
               <tt:Protocol>RTSP</tt:Protocol>
             </tt:Transport>
-          </trt:StreamSetu
+          </trt:StreamSetu>
+<trt:GetStreamUri>
+  <trt:StreamSetup>
+    <tt:Stream>RTP-Unicast</tt:Stream>
+    <tt:Transport>
+      <tt:Protocol>RTSP</tt:Protocol>
+    </tt:Transport>
+  </trt:StreamSetup>
+  <trt:ProfileToken>${escapeXml(profileToken)}</trt:ProfileToken>
+</trt:GetStreamUri>`
+      ;
+
+  const response = await soapRequest(
+    mediaUrl,
+    MEDIA1_GET_STREAM_URI,
+    body,
+    credentials,
+  );
+
+  const streamUri =
+    getTag(response, "Uri") ||
+    getTag(response, "URI") ||
+    getTag(response, "Url") ||
+    getTag(response, "URL");
+
+  if (!streamUri) {
+    throw new Error("ONVIF tidak mengembalikan RTSP Stream URI.");
+  }
+
+  return streamUri.trim();
+}
