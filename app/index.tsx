@@ -786,6 +786,74 @@ export default function HomeScreen() {
                       {connected ? "LIVE" : "MEMBUKA..."}
                     </Text>
                   </View>
+function PtzSwipeControl({
+  enabled,
+  onMove,
+  onStop,
+}: {
+  enabled: boolean;
+  onMove: (direction: "up" | "down" | "left" | "right") => void;
+  onStop: () => void;
+}) {
+  const startX = useRef(0);
+  const startY = useRef(0);
+
+  const responder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => enabled,
+        onMoveShouldSetPanResponder: () => enabled,
+        onPanResponderGrant: (event) => {
+          startX.current = event.nativeEvent.pageX;
+          startY.current = event.nativeEvent.pageY;
+        },
+        onPanResponderRelease: (event) => {
+          if (!enabled) return;
+
+          const dx = event.nativeEvent.pageX - startX.current;
+          const dy = event.nativeEvent.pageY - startY.current;
+
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < 35) {
+            onStop();
+            return;
+          }
+
+          if (Math.abs(dx) > Math.abs(dy)) {
+            onMove(dx > 0 ? "right" : "left");
+          } else {
+            onMove(dy > 0 ? "down" : "up");
+          }
+
+          onStop();
+        },
+        onPanResponderTerminate: () => {
+          onStop();
+        },
+        onPanResponderTerminationRequest: () => true,
+      }),
+    [enabled, onMove, onStop],
+  );
+
+  if (!enabled) {
+    return null;
+  }
+
+  return (
+    <View
+      pointerEvents="box-only"
+      style={styles.ptzSwipeOverlay}
+      {...responder.panHandlers}
+    >
+      <View style={styles.ptzSwipeHint}>
+        <Text style={styles.ptzSwipeHintText}>
+          Geser layar untuk PTZ
+        </Text>
+      </View>
+    </View>
+  );
+}
 
                   <CameraVideo
                     url={stream}
@@ -807,7 +875,18 @@ export default function HomeScreen() {
                     }}
                   />
 
-                  {cameraControlsVisible[index] ? (
+<PtzSwipeControl
+  enabled={Boolean(cameraPtzConfig[index])}
+  onMove={(direction) => {
+    void sendPtz(index, {
+      type: "move",
+      direction,
+      speed: 0.5,
+    });
+  }}
+  onStop={() => stopPtz(index)}
+/>
+              {cameraControlsVisible[index] ? (
                     <View style={styles.cameraControlsOverlay}>
                       <Pressable
                         onPress={() =>
@@ -1522,6 +1601,29 @@ const styles = StyleSheet.create({
     backgroundColor: "#020609",
     borderWidth: 1,
     borderColor: "#25313e",
+  ptzSwipeOverlay: {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  alignItems: "center",
+  justifyContent: "flex-end",
+  paddingBottom: 8,
+},
+
+ptzSwipeHint: {
+  paddingHorizontal: 10,
+  paddingVertical: 5,
+  borderRadius: 10,
+  backgroundColor: "rgba(8,13,18,0.55)",
+},
+
+ptzSwipeHintText: {
+  color: "#fff",
+  fontSize: 10,
+  fontWeight: "700",
+},
   },
   video: {
     width: "100%",
