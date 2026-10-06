@@ -271,10 +271,10 @@ export default function HomeScreen() {
   const [settingsSaved, setSettingsSaved] = useState(false);
 
   const marqueeX = useRef(new Animated.Value(0)).current;
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const isLandscape = windowWidth > windowHeight;
   const [marqueeClipWidth, setMarqueeClipWidth] = useState(0);
   const [marqueeTextWidth, setMarqueeTextWidth] = useState(0);
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isLandscape = windowWidth > windowHeight;
 
   const displayedLogo = logoUri.trim() || savedLogoUri;
   const displayedOwner =
@@ -331,7 +331,6 @@ export default function HomeScreen() {
 
   const setCameraZoomValue = (slot: number, value: number) => {
     const nextValue = Math.max(1, Math.min(2, value));
-
     setCameraZoom((items) => {
       const next = [...items];
       next[slot] = Number(nextValue.toFixed(1));
@@ -700,8 +699,8 @@ export default function HomeScreen() {
     setCameraStreams([]);
     setCameraConnected([]);
     setCameraMuted([]);
-    setCameraControlsVisible([]);
     setCameraZoom([]);
+    setCameraControlsVisible([]);
     setActiveStream("");
     setSelectedCamera(null);
     setProfile(null);
@@ -752,33 +751,31 @@ export default function HomeScreen() {
           ]}
         >
           {cameraStreams
-            .map((stream, index) => ({
-              stream: stream || "",
-              index,
-            }))
-            .filter((item) => item.stream.trim())
-            .map(({ stream, index }, _activeIndex, activeItems) => {
+            .map((stream, index) => ({ stream, index }))
+            .filter(({ stream }) => Boolean(stream?.trim()))
+            .map(({ stream, index }, activeIndex, activeItems) => {
               const connected = Boolean(cameraConnected[index]);
               const activeCount = activeItems.length;
-
-              const columns =
+              const widthStyle =
                 activeCount === 1
-                  ? 1
-                  : isLandscape && activeCount >= 7
-                    ? 3
-                    : 2;
-
-              const width =
-                columns === 1
                   ? "100%"
-                  : columns === 2
-                    ? "48.5%"
-                    : "32%";
+                  : activeCount === 2
+                    ? isLandscape
+                      ? "49%"
+                      : "100%"
+                    : activeCount === 3
+                      ? isLandscape
+                        ? "32%"
+                        : "48%"
+                      : activeCount === 4
+                        ? "48%"
+                        : "32%";
+              const zoom = cameraZoom[index] ?? 1;
 
               return (
                 <View
                   key={index}
-                  style={[styles.cameraSlot, { width }]}
+                  style={[styles.cameraSlot, { width: widthStyle }]}
                   onTouchStart={() => showCameraControls(index)}
                 >
                   <View style={styles.cameraSlotHeader}>
@@ -794,7 +791,7 @@ export default function HomeScreen() {
                     url={stream}
                     nativeControls={nativeControls}
                     muted={cameraMuted[index] ?? muted}
-                    zoom={cameraZoom[index] ?? 1}
+                    zoom={zoom}
                     onLoad={() => {
                       setCameraSlotConnected(index, true);
                       setTesting(false);
@@ -806,51 +803,38 @@ export default function HomeScreen() {
                       setStatusText(
                         `OFFLINE • Kamera ${index + 1}: ${message}`,
                       );
-                      if (stream) {
-                        addHistory("error", stream, message);
-                      }
+                      addHistory("error", stream, message);
                     }}
                   />
 
                   {cameraControlsVisible[index] ? (
                     <View style={styles.cameraControlsOverlay}>
                       <Pressable
-                        onPress={() => {
-                          setCameraZoomValue(
-                            index,
-                            (cameraZoom[index] ?? 1) - 0.1,
-                          );
-                          showCameraControls(index);
-                        }}
+                        onPress={() =>
+                          setCameraZoomValue(index, zoom - 0.1)
+                        }
                         style={styles.micButton}
                       >
                         <Text style={styles.micButtonText}>−</Text>
                       </Pressable>
-
                       <View style={styles.zoomLabel}>
                         <Text style={styles.zoomLabelText}>
-                          {Math.round((cameraZoom[index] ?? 1) * 100)}%
+                          {Math.round(zoom * 100)}%
                         </Text>
                       </View>
-
                       <Pressable
-                        onPress={() => {
-                          setCameraZoomValue(
-                            index,
-                            (cameraZoom[index] ?? 1) + 0.1,
-                          );
-                          showCameraControls(index);
-                        }}
+                        onPress={() =>
+                          setCameraZoomValue(index, zoom + 0.1)
+                        }
                         style={styles.micButton}
                       >
                         <Text style={styles.micButtonText}>+</Text>
                       </Pressable>
-
                       <Pressable
                         onPress={() => {
                           setCameraMuted((items) => {
                             const next = [...items];
-                            next[index] = !(next[index] ?? muted);
+                            next[index] = !(next[index] ?? false);
                             return next;
                           });
                           showCameraControls(index);
@@ -872,7 +856,7 @@ export default function HomeScreen() {
           <Text style={styles.bigIcon}>📹</Text>
           <Text style={styles.emptyTitle}>Belum ada kamera aktif</Text>
           <Text style={styles.centerText}>
-            Hubungkan kamera dari halaman CCTV atau masukkan URL RTSP.
+            Hubungkan kamera dari menu CCTV atau masukkan URL RTSP.
           </Text>
         </View>
       )}
@@ -1642,22 +1626,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  zoomLabel: {
-    minWidth: 48,
-    height: 42,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 6,
-    borderRadius: 8,
-    backgroundColor: "rgba(17,25,35,0.88)",
-    borderWidth: 1,
-    borderColor: "#516274",
-  },
-  zoomLabelText: {
-    color: "#fff",
-    fontSize: 11,
-    fontWeight: "800",
-  },
   micButton: {
     width: 42,
     height: 42,
@@ -1739,20 +1707,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 8,
     marginBottom: 6,
-  },
-  cameraGridLandscape: {
-    alignContent: "flex-start",
-  },
-  emptyLiveArea: {
-    minHeight: 260,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
-    marginBottom: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#25313e",
-    backgroundColor: "#111923",
   },
   cameraSlot: {
     marginBottom: 2,
