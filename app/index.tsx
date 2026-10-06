@@ -2140,6 +2140,60 @@ const renderHistory = () => (
             </Text>
           </View>
         </View>
+        {showInfo && statusText ? (
+          <View style={styles.topStatus}>
+            <Text
+              style={styles.topStatusText}
+              numberOfLines={2}
+            >
+              {statusText}
+            </Text>
+          </View>
+        ) : null}
+
+        <View style={styles.main}>
+          {activeTab === "live"
+            ? renderLive()
+            : activeTab === "cctv"
+              ? renderCctv()
+              : activeTab === "history"
+                ? renderHistory()
+                : renderSettings()}
+        </View>
+
+        <View style={styles.bottomTabs}>
+          <TabButton
+            icon="▶"
+            label="Live CCTV"
+            active={activeTab === "live"}
+            onPress={() => setActiveTab("live")}
+          />
+
+          <TabButton
+            icon="📹"
+            label="CCTV"
+            active={activeTab === "cctv"}
+            onPress={() => setActiveTab("cctv")}
+          />
+
+          <TabButton
+            icon="🕘"
+            label="Riwayat"
+            active={activeTab === "history"}
+            onPress={() => setActiveTab("history")}
+          />
+
+          <TabButton
+            icon="⚙"
+            label="Pengaturan"
+            active={activeTab === "settings"}
+            onPress={() => setActiveTab("settings")}
+          />
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
