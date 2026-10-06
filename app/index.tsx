@@ -1946,11 +1946,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 28,
   },
-loadingBox: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 28,
-  },
   loadingText: {
     marginTop: 10,
     color: "#8793a2",
