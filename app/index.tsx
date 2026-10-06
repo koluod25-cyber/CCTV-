@@ -1,18 +1,9 @@
 import {
-  Alert,
-  Dimensions,
-  Image,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  useWindowDimensions,
-} from "react-native";
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -27,6 +18,7 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
 import Video from "react-native-video";
 import * as ImagePicker from "expo-image-picker";
@@ -262,7 +254,7 @@ export default function HomeScreen() {
   const [nativeControls, setNativeControls] = useState(true);
   const [muted, setMuted] = useState(false);
 
-const [cameraCount, setCameraCount] = useState(1);
+  const [cameraCount, setCameraCount] = useState(1);
   const [cameraStreams, setCameraStreams] = useState<string[]>([]);
   const [cameraConnected, setCameraConnected] = useState<boolean[]>([]);
   const [cameraMuted, setCameraMuted] = useState<boolean[]>([]);
@@ -336,7 +328,6 @@ const [cameraCount, setCameraCount] = useState(1);
     if (firstEmpty >= 0) return firstEmpty;
     return cameraStreams.length < 9 ? cameraStreams.length : -1;
   };
-
   const setCameraZoomValue = (slot: number, value: number) => {
     const nextValue = Math.max(1, Math.min(2, value));
 
@@ -462,6 +453,7 @@ const [cameraCount, setCameraCount] = useState(1);
       );
     }
   };
+
   const clearLogo = () => {
     setLogoUri("");
     setSettingsSaved(false);
@@ -517,7 +509,6 @@ const [cameraCount, setCameraCount] = useState(1);
         (camera.xaddrs ?? []).filter((item) => /^https?:\/\//i.test(item)),
       ),
     );
-
     const key = `${camera.host}:${camera.port}`;
 
     if (!endpoints.length) {
@@ -781,7 +772,6 @@ const [cameraCount, setCameraCount] = useState(1);
                   : columns === 2
                     ? "48.5%"
                     : "32%";
-
               return (
                 <View
                   key={index}
@@ -852,7 +842,8 @@ const [cameraCount, setCameraCount] = useState(1);
                       >
                         <Text style={styles.micButtonText}>+</Text>
                       </Pressable>
-                     <Pressable
+
+                      <Pressable
                         onPress={() => {
                           setCameraMuted((items) => {
                             const next = [...items];
@@ -1029,8 +1020,7 @@ const [cameraCount, setCameraCount] = useState(1);
                 <View style={styles.cameraCardHeader}>
                   <View style={styles.cameraIconBox}>
                     <Text style={styles.cameraIcon}>📹</Text>
-                  </View>
-
+                  </View 
                   <View style={styles.cameraCardInfo}>
                     <Text style={styles.cameraName}>
                       {camera.name || "Kamera ONVIF"}
@@ -1276,6 +1266,7 @@ const [cameraCount, setCameraCount] = useState(1);
           editable={false}
           style={styles.input}
         />
+
         <Text style={styles.switchDescription}>Kamera ONVIF</Text>
         <Text style={styles.statusText}>
           {selectedCamera
@@ -1363,7 +1354,6 @@ const [cameraCount, setCameraCount] = useState(1);
             </Text>
           </View>
         ) : null}
-
         <View style={styles.main}>
           {activeTab === "live"
             ? renderLive()
@@ -2051,3 +2041,4 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
 });
+
