@@ -153,6 +153,7 @@ function CameraVideo({
           const errorCode = errorObject?.errorCode || "";
           const errorString = errorObject?.errorString || "";
           const errorException = errorObject?.errorException || "";
+
           const detail = [
             errorCode ? `Code: ${errorCode}` : "",
             errorString ? `Detail: ${errorString}` : "",
@@ -418,6 +419,7 @@ export default function HomeScreen() {
       ].slice(0, 100),
     );
   };
+
   const pickLogoFromGallery = async () => {
     try {
       const permission =
@@ -1163,6 +1165,7 @@ export default function HomeScreen() {
           Pilih logo dari galeri HP. Logo akan tampil di sudut kanan
           atas header.
         </Text>
+
         <View style={styles.logoActionRow}>
           <Pressable
             onPress={pickLogoFromGallery}
@@ -1939,6 +1942,11 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   loadingBox: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 28,
+  },
+loadingBox: {
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 28,
