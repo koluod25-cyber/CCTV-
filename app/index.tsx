@@ -1591,7 +1591,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
   },
-  videoBox: {
+    videoBox: {
     position: "relative",
     width: "100%",
     aspectRatio: 16 / 9,
@@ -1601,29 +1601,28 @@ const styles = StyleSheet.create({
     backgroundColor: "#020609",
     borderWidth: 1,
     borderColor: "#25313e",
+  },
+
   ptzSwipeOverlay: {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  alignItems: "center",
-  justifyContent: "flex-end",
-  paddingBottom: 8,
-},
-
-ptzSwipeHint: {
-  paddingHorizontal: 10,
-  paddingVertical: 5,
-  borderRadius: 10,
-  backgroundColor: "rgba(8,13,18,0.55)",
-},
-
-ptzSwipeHintText: {
-  color: "#fff",
-  fontSize: 10,
-  fontWeight: "700",
-},
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "flex-end",
+    paddingBottom: 8,
+  },
+  ptzSwipeHint: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    backgroundColor: "rgba(8,13,18,0.55)",
+  },
+  ptzSwipeHintText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
   },
   video: {
     width: "100%",
