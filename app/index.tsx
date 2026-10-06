@@ -1544,6 +1544,18 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     fontSize: 30,
   },
+  emptyLiveArea: {
+    width: "100%",
+    minHeight: 220,
+    marginBottom: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#25313e",
+    backgroundColor: "#111923",
+  },
   emptyBox: {
     alignItems: "center",
     justifyContent: "center",
@@ -1639,6 +1651,23 @@ const styles = StyleSheet.create({
   micButtonText: {
     fontSize: 19,
   },
+  zoomLabel: {
+    minWidth: 48,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 4,
+    paddingHorizontal: 8,
+    borderRadius: 21,
+    backgroundColor: "rgba(17,25,35,0.88)",
+    borderWidth: 1,
+    borderColor: "#516274",
+  },
+  zoomLabelText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "800",
+  },
   statusPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -1702,6 +1731,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   cameraGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: 8,
+    marginBottom: 6,
+  
+  },
+ cameraGridLandscape: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
