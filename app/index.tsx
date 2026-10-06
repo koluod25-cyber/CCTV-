@@ -71,8 +71,15 @@ function addCredentials(
 
   try {
     const url = new URL(value.trim());
-    if (username) url.username = username;
-    if (password) url.password = password;
+
+    if (username) {
+      url.username = username;
+    }
+
+    if (password) {
+      url.password = password;
+    }
+
     return url.toString();
   } catch {
     return value.trim();
@@ -106,7 +113,11 @@ function CameraVideo({
     return (
       <View style={styles.emptyVideo}>
         <Text style={styles.bigIcon}>📹</Text>
-        <Text style={styles.emptyTitle}>Belum ada kamera aktif</Text>
+
+        <Text style={styles.emptyTitle}>
+          Belum ada kamera aktif
+        </Text>
+
         <Text style={styles.centerText}>
           Pilih kamera atau masukkan URL RTSP/HTTP/HTTPS.
         </Text>
@@ -147,24 +158,34 @@ function CameraVideo({
         }}
         onError={(videoError) => {
           const errorObject = videoError?.error;
-          const errorCode = errorObject?.errorCode || "";
-          const errorString = errorObject?.errorString || "";
-          const errorException = errorObject?.errorException || "";
+
+          const errorCode =
+            errorObject?.errorCode || "";
+
+          const errorString =
+            errorObject?.errorString || "";
+
+          const errorException =
+            errorObject?.errorException || "";
 
           const detail = [
             errorCode ? `Code: ${errorCode}` : "",
             errorString ? `Detail: ${errorString}` : "",
-            errorException ? `Exception: ${errorException}` : "",
+            errorException
+              ? `Exception: ${errorException}`
+              : "",
           ]
             .filter(Boolean)
             .join(" • ");
 
           const finalDetail =
-            detail || "ExoPlayer gagal membuka stream CCTV.";
+            detail ||
+            "ExoPlayer gagal membuka stream CCTV.";
 
           setLoaded(false);
           setError(true);
           setErrorDetail(finalDetail);
+
           onError?.(finalDetail);
         }}
         bufferConfig={{
@@ -177,18 +198,34 @@ function CameraVideo({
 
       {!loaded && !error ? (
         <View style={styles.overlay}>
-          <ActivityIndicator size="large" color="#fff" />
-          <Text style={styles.overlayText}>Menghubungkan ke CCTV...</Text>
+          <ActivityIndicator
+            size="large"
+            color="#fff"
+          />
+
+          <Text style={styles.overlayText}>
+            Menghubungkan ke CCTV...
+          </Text>
         </View>
       ) : null}
 
       {error ? (
         <View style={styles.overlay}>
-          <Text style={styles.errorIcon}>⚠</Text>
-          <Text style={styles.overlayTitle}>Video tidak dapat diputar</Text>
-          <Text style={styles.overlayText}>{errorDetail}</Text>
+          <Text style={styles.errorIcon}>
+            ⚠
+          </Text>
+
+          <Text style={styles.overlayTitle}>
+            Video tidak dapat diputar
+          </Text>
+
           <Text style={styles.overlayText}>
-            Periksa URL RTSP, codec, username/password, dan jaringan.
+            {errorDetail}
+          </Text>
+
+          <Text style={styles.overlayText}>
+            Periksa URL RTSP, codec,
+            username/password, dan jaringan.
           </Text>
         </View>
       ) : null}
@@ -196,7 +233,10 @@ function CameraVideo({
       {loaded && !error ? (
         <View style={styles.liveBadge}>
           <View style={styles.liveDot} />
-          <Text style={styles.liveText}>LIVE</Text>
+
+          <Text style={styles.liveText}>
+            LIVE
+          </Text>
         </View>
       ) : null}
     </View>
@@ -217,10 +257,21 @@ function TabButton({
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.tab, active && styles.tabActive]}
+      style={[
+        styles.tab,
+        active && styles.tabActive,
+      ]}
     >
-      <Text style={styles.tabIcon}>{icon}</Text>
-      <Text style={[styles.tabText, active && styles.tabTextActive]}>
+      <Text style={styles.tabIcon}>
+        {icon}
+      </Text>
+
+      <Text
+        style={[
+          styles.tabText,
+          active && styles.tabTextActive,
+        ]}
+      >
         {label}
       </Text>
     </Pressable>
@@ -228,154 +279,327 @@ function TabButton({
 }
 
 export default function HomeScreen() {
-  const [activeTab, setActiveTab] = useState<TabName>("live");
-  const [cameras, setCameras] = useState<DiscoveredCamera[]>([]);
+  const [activeTab, setActiveTab] =
+    useState<TabName>("live");
+
+  const [cameras, setCameras] =
+    useState<DiscoveredCamera[]>([]);
+
   const [selectedCamera, setSelectedCamera] =
     useState<DiscoveredCamera | null>(null);
-  const [activeStream, setActiveStream] = useState("");
-  const [playerConnected, setPlayerConnected] = useState(false);
+
+  const [activeStream, setActiveStream] =
+    useState("");
+
+  const [playerConnected, setPlayerConnected] =
+    useState(false);
+
   const [manualUrl, setManualUrl] = useState(
     "rtsp://192.168.1.20:554/stream1",
   );
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [vendor, setVendor] =
-    useState<(typeof CCTV_VENDORS)[number]>("Generic / ONVIF");
-  const [searching, setSearching] = useState(false);
-  const [connecting, setConnecting] = useState<string | null>(null);
-  const [testing, setTesting] = useState(false);
-  const [statusText, setStatusText] = useState("");
-  const [profile, setProfile] = useState<OnvifMediaProfile | null>(null);
-  const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [showInfo, setShowInfo] = useState(true);
-  const [nativeControls, setNativeControls] = useState(true);
-  const [muted, setMuted] = useState(false);
 
-  const [cameraCount, setCameraCount] = useState(1);
-  const [cameraStreams, setCameraStreams] = useState<string[]>([]);
-  const [cameraConnected, setCameraConnected] = useState<boolean[]>([]);
-  const [cameraMuted, setCameraMuted] = useState<boolean[]>([]);
-  const [cameraControlsVisible, setCameraControlsVisible] = useState<boolean[]>([]);
-  const cameraControlsTimers = useRef<Array<ReturnType<typeof setTimeout> | null>>([]);
+  const [username, setUsername] =
+    useState("");
+
+  const [password, setPassword] =
+    useState("");
+
+  const [vendor, setVendor] =
+    useState<(typeof CCTV_VENDORS)[number]>(
+      "Generic / ONVIF",
+    );
+
+  const [searching, setSearching] =
+    useState(false);
+
+  const [connecting, setConnecting] =
+    useState<string | null>(null);
+
+  const [testing, setTesting] =
+    useState(false);
+
+  const [statusText, setStatusText] =
+    useState("");
+
+  const [profile, setProfile] =
+    useState<OnvifMediaProfile | null>(null);
+
+  const [history, setHistory] =
+    useState<HistoryItem[]>([]);
+
+  const [showInfo, setShowInfo] =
+    useState(true);
+
+  const [nativeControls, setNativeControls] =
+    useState(true);
+
+  const [muted, setMuted] =
+    useState(false);
+
+  const [cameraCount, setCameraCount] =
+    useState(1);
+
+  const [cameraStreams, setCameraStreams] =
+    useState<string[]>([]);
+
+  const [cameraConnected, setCameraConnected] =
+    useState<boolean[]>([]);
+
+  const [cameraMuted, setCameraMuted] =
+    useState<boolean[]>([]);
+
+  const [cameraControlsVisible, setCameraControlsVisible] =
+    useState<boolean[]>([]);
+
+  const cameraControlsTimers =
+    useRef<
+      Array<ReturnType<typeof setTimeout> | null>
+    >([]);
 
   const [ownerText, setOwnerText] =
-    useState("Pemilik: CCTV Universal Monitor");
-  const [logoUri, setLogoUri] = useState("");
+    useState(
+      "Pemilik: CCTV Universal Monitor",
+    );
+
+  const [logoUri, setLogoUri] =
+    useState("");
+
   const [savedOwnerText, setSavedOwnerText] =
-    useState("Pemilik: CCTV Universal Monitor");
-  const [savedLogoUri, setSavedLogoUri] = useState("");
-  const [settingsSaved, setSettingsSaved] = useState(false);
+    useState(
+      "Pemilik: CCTV Universal Monitor",
+    );
 
-  const marqueeX = useRef(new Animated.Value(0)).current;
-  const [marqueeClipWidth, setMarqueeClipWidth] = useState(0);
-  const [marqueeTextWidth, setMarqueeTextWidth] = useState(0);
+  const [savedLogoUri, setSavedLogoUri] =
+    useState("");
 
-  const displayedLogo = logoUri.trim() || savedLogoUri;
+  const [settingsSaved, setSettingsSaved] =
+    useState(false);
+
+  const marqueeX =
+    useRef(new Animated.Value(0)).current;
+
+  const [marqueeClipWidth, setMarqueeClipWidth] =
+    useState(0);
+
+  const [marqueeTextWidth, setMarqueeTextWidth] =
+    useState(0);
+
+  const displayedLogo =
+    logoUri.trim() || savedLogoUri;
+
   const displayedOwner =
-    ownerText.trim() || savedOwnerText || "Pemilik: CCTV Universal Monitor";
+    ownerText.trim() ||
+    savedOwnerText ||
+    "Pemilik: CCTV Universal Monitor";
 
   useEffect(() => {
     setPlayerConnected(false);
   }, [activeStream]);
 
   useEffect(() => {
-    if (!marqueeClipWidth || !marqueeTextWidth) return;
+    if (
+      !marqueeClipWidth ||
+      !marqueeTextWidth
+    ) {
+      return;
+    }
 
     marqueeX.stopAnimation();
-    marqueeX.setValue(marqueeClipWidth);
 
-    const travelDistance = marqueeTextWidth + marqueeClipWidth;
-    const moveDuration = Math.max(7000, travelDistance * 28);
-
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(marqueeX, {
-          toValue: -marqueeTextWidth,
-          duration: moveDuration,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-        Animated.delay(1500),
-        Animated.timing(marqueeX, {
-          toValue: marqueeClipWidth,
-          duration: 0,
-          useNativeDriver: true,
-        }),
-        Animated.delay(500),
-      ]),
+    marqueeX.setValue(
+      marqueeClipWidth,
     );
 
+    const travelDistance =
+      marqueeTextWidth +
+      marqueeClipWidth;
+
+    const moveDuration =
+      Math.max(
+        7000,
+        travelDistance * 28,
+      );
+
+    const animation =
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(
+            marqueeX,
+            {
+              toValue:
+                -marqueeTextWidth,
+              duration:
+                moveDuration,
+              easing:
+                Easing.linear,
+              useNativeDriver:
+                true,
+            },
+          ),
+
+          Animated.delay(1500),
+
+          Animated.timing(
+            marqueeX,
+            {
+              toValue:
+                marqueeClipWidth,
+              duration: 0,
+              useNativeDriver:
+                true,
+            },
+          ),
+
+          Animated.delay(500),
+        ]),
+      );
+
     animation.start();
-    return () => animation.stop();
-  }, [marqueeClipWidth, marqueeTextWidth, displayedOwner, marqueeX]);
+
+    return () =>
+      animation.stop();
+  }, [
+    marqueeClipWidth,
+    marqueeTextWidth,
+    displayedOwner,
+    marqueeX,
+  ]);
 
   const suggestedUrl = useMemo(
-    () => makeRtspUrl(vendor, "192.168.1.20"),
+    () =>
+      makeRtspUrl(
+        vendor,
+        "192.168.1.20",
+      ),
     [vendor],
   );
 
   const findNextCameraSlot = () => {
-    const firstEmpty = cameraStreams.findIndex(
-      (stream, index) => index < 9 && !stream.trim(),
-    );
+    const firstEmpty =
+      cameraStreams.findIndex(
+        (stream, index) =>
+          index < 9 &&
+          !stream.trim(),
+      );
 
-    if (firstEmpty >= 0) return firstEmpty;
-    return cameraStreams.length < 9 ? cameraStreams.length : -1;
+    if (firstEmpty >= 0) {
+      return firstEmpty;
+    }
+
+    return cameraStreams.length < 9
+      ? cameraStreams.length
+      : -1;
   };
 
-  const setCameraStream = (slot: number, stream: string) => {
-    setCameraStreams((items) => {
-      const next = [...items];
-      next[slot] = stream;
-      return next;
-    });
+  const setCameraStream = (
+    slot: number,
+    stream: string,
+  ) => {
+    setCameraStreams(
+      (items) => {
+        const next = [...items];
 
-    setCameraConnected((items) => {
-      const next = [...items];
-      next[slot] = false;
-      return next;
-    });
+        next[slot] = stream;
 
-    setCameraMuted((items) => {
-      const next = [...items];
-      next[slot] = false;
-      return next;
-    });
+        return next;
+      },
+    );
+
+    setCameraConnected(
+      (items) => {
+        const next = [...items];
+
+        next[slot] = false;
+
+        return next;
+      },
+    );
+
+    setCameraMuted(
+      (items) => {
+        const next = [...items];
+
+        next[slot] = false;
+
+        return next;
+      },
+    );
 
     const requiredLayout =
-      slot === 0 ? 1 : slot === 1 ? 2 : slot < 4 ? 4 : slot < 6 ? 6 : 9;
+      slot === 0
+        ? 1
+        : slot === 1
+          ? 2
+          : slot < 4
+            ? 4
+            : slot < 6
+              ? 6
+              : 9;
 
-    setCameraCount((current) =>
-      current < requiredLayout ? requiredLayout : current,
+    setCameraCount(
+      (current) =>
+        current < requiredLayout
+          ? requiredLayout
+          : current,
     );
   };
 
-  const setCameraSlotConnected = (slot: number, connected: boolean) => {
-    setCameraConnected((items) => {
-      const next = [...items];
-      next[slot] = connected;
-      return next;
-    });
-    setPlayerConnected(connected);
+  const setCameraSlotConnected = (
+    slot: number,
+    connected: boolean,
+  ) => {
+    setCameraConnected(
+      (items) => {
+        const next = [...items];
+
+        next[slot] = connected;
+
+        return next;
+      },
+    );
+
+    setPlayerConnected(
+      connected,
+    );
   };
 
-  const showCameraControls = (slot: number) => {
-    const oldTimer = cameraControlsTimers.current[slot];
-    if (oldTimer) clearTimeout(oldTimer);
+  const showCameraControls = (
+    slot: number,
+  ) => {
+    const oldTimer =
+      cameraControlsTimers
+        .current[slot];
 
-    setCameraControlsVisible((items) => {
-      const next = [...items];
-      next[slot] = true;
-      return next;
-    });
+    if (oldTimer) {
+      clearTimeout(oldTimer);
+    }
 
-    cameraControlsTimers.current[slot] = setTimeout(() => {
-      setCameraControlsVisible((items) => {
+    setCameraControlsVisible(
+      (items) => {
         const next = [...items];
-        next[slot] = false;
+
+        next[slot] = true;
+
         return next;
-      });
-      cameraControlsTimers.current[slot] = null;
+      },
+    );
+
+    cameraControlsTimers.current[
+      slot
+    ] = setTimeout(() => {
+      setCameraControlsVisible(
+        (items) => {
+          const next = [...items];
+
+          next[slot] = false;
+
+          return next;
+        },
+      );
+
+      cameraControlsTimers.current[
+        slot
+      ] = null;
     }, 4000);
   };
 
@@ -384,241 +608,147 @@ export default function HomeScreen() {
     url: string,
     message: string,
   ) => {
-    setHistory((items) =>
-      [
-        {
-          id: `${Date.now()}-${Math.random()}`,
-          url: hideCredentials(url),
-          action,
-          message,
-          time: new Date().toLocaleTimeString("id-ID"),
-        },
-        ...items,
-      ].slice(0, 100),
+    setHistory(
+      (items) =>
+        [
+          {
+            id: `${Date.now()}-${Math.random()}`,
+            url: hideCredentials(url),
+            action,
+            message,
+            time: new Date().toLocaleTimeString(
+              "id-ID",
+            ),
+          },
+          ...items,
+        ].slice(0, 100),
     );
   };
 
-  const pickLogoFromGallery = async () => {
-    try {
-      const permission =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const pickLogoFromGallery =
+    async () => {
+      try {
+        const permission =
+          await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-      if (!permission.granted) {
+        if (!permission.granted) {
+          Alert.alert(
+            "Izin galeri diperlukan",
+            "Izinkan aplikasi mengakses galeri HP untuk memilih logo.",
+          );
+          return;
+        }
+
+        const result =
+          await ImagePicker.launchImageLibraryAsync(
+            {
+              mediaTypes: ["images"],
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 1,
+            },
+          );
+
+        if (
+          !result.canceled &&
+          result.assets?.[0]?.uri
+        ) {
+          setLogoUri(
+            result.assets[0].uri,
+          );
+
+          setSettingsSaved(false);
+
+          setStatusText(
+            "Logo dipilih. Tekan Simpan Pengaturan.",
+          );
+        }
+      } catch (error) {
         Alert.alert(
-          "Izin galeri diperlukan",
-          "Izinkan aplikasi mengakses galeri HP untuk memilih logo.",
+          "Ganti logo gagal",
+          error instanceof Error
+            ? error.message
+            : "Gagal memilih logo dari galeri.",
         );
-        return;
       }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
-      });
-
-      if (!result.canceled && result.assets?.[0]?.uri) {
-        setLogoUri(result.assets[0].uri);
-        setSettingsSaved(false);
-        setStatusText("Logo dipilih. Tekan Simpan Pengaturan.");
-      }
-    } catch (error) {
-      Alert.alert(
-        "Ganti logo gagal",
-        error instanceof Error
-          ? error.message
-          : "Gagal memilih logo dari galeri.",
-      );
-    }
-  };
+    };
 
   const clearLogo = () => {
     setLogoUri("");
     setSettingsSaved(false);
-    setStatusText("Logo dihapus dari pengaturan. Tekan Simpan Pengaturan.");
+
+    setStatusText(
+      "Logo dihapus dari pengaturan. Tekan Simpan Pengaturan.",
+    );
   };
 
   const saveSettings = () => {
-    setSavedOwnerText(ownerText.trim() || "Pemilik: CCTV Universal Monitor");
-    setSavedLogoUri(logoUri.trim());
-    setSettingsSaved(true);
-    setStatusText("Pengaturan berhasil disimpan.");
-    Alert.alert("Berhasil", "Pengaturan identitas dan logo telah disimpan.");
-  };
-
-  const searchCameras = async () => {
-    if (searching) return;
-
-    setSearching(true);
-    setStatusText("");
-
-    try {
-      const found = await discoverOnvifCameras(7000);
-      setCameras(found);
-      setStatusText(
-        found.length
-          ? `${found.length} kamera ditemukan melalui ONVIF.`
-          : "Tidak ada kamera ONVIF yang ditemukan.",
-      );
-      setActiveTab("cctv");
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Pencarian CCTV gagal.";
-      setStatusText(message);
-      Alert.alert("Pencarian gagal", message);
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  const connectOnvif = async (camera: DiscoveredCamera) => {
-    const slot = findNextCameraSlot();
-
-    if (slot < 0) {
-      Alert.alert(
-        "Slot kamera penuh",
-        "Maksimal 9 kamera dapat ditampilkan.",
-      );
-      return;
-    }
-
-    const endpoints = Array.from(
-      new Set(
-        (camera.xaddrs ?? []).filter((item) => /^https?:\/\//i.test(item)),
-      ),
+    setSavedOwnerText(
+      ownerText.trim() ||
+        "Pemilik: CCTV Universal Monitor",
     );
 
-    const key = `${camera.host}:${camera.port}`;
+    setSavedLogoUri(
+      logoUri.trim(),
+    );
 
-    if (!endpoints.length) {
-      Alert.alert(
-        "Endpoint tidak tersedia",
-        "Kamera tidak memberikan endpoint ONVIF HTTP/HTTPS.",
-      );
-      return;
-    }
+    setSettingsSaved(true);
 
-    setConnecting(key);
-    setSelectedCamera(camera);
-    setPlayerConnected(false);
-    setStatusText(`Menghubungkan ke ${camera.host}...`);
+    setStatusText(
+      "Pengaturan berhasil disimpan.",
+    );
 
-    const credentials = {
-      username: username.trim() || undefined,
-      password: password || undefined,
-    };
+    Alert.alert(
+      "Berhasil",
+      "Pengaturan identitas dan logo telah disimpan.",
+    );
+  };
 
-    let lastMessage =
-      "Kamera terdeteksi, tetapi Media Profile ONVIF belum berhasil diperoleh.";
+  const searchCameras =
+    async () => {
+      if (searching) return;
 
-    let lastEndpoint = endpoints[0];
+      setSearching(true);
+      setStatusText("");
 
-    try {
-      for (let index = 0; index < endpoints.length; index += 1) {
-        const endpoint = endpoints[index];
-        lastEndpoint = endpoint;
+      try {
+        const found =
+          await discoverOnvifCameras(
+            7000,
+          );
+
+        setCameras(found);
+
         setStatusText(
-          `Mencoba endpoint ONVIF ${index + 1}/${endpoints.length}...`,
+          found.length
+            ? `${found.length} kamera ditemukan melalui ONVIF.`
+            : "Tidak ada kamera ONVIF yang ditemukan.",
         );
 
-        try {
-          const result = await getOnvifStreamUri(endpoint, credentials);
+        setActiveTab("cctv");
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Pencarian CCTV gagal.";
 
-          if (result.ok && result.streamUri) {
-            const streamUri = addCredentials(
-              result.streamUri,
-              username.trim(),
-              password,
-            );
+        setStatusText(message);
 
-            setCameraStream(slot, streamUri);
-            setActiveStream(streamUri);
-            setManualUrl(hideCredentials(result.streamUri));
-            setProfile(result.profile ?? null);
-            setTesting(true);
-            setStatusText(
-              `Kamera ${slot + 1}: URI RTSP berhasil diperoleh. Membuka video...`,
-            );
-            setActiveTab("live");
-
-            addHistory(
-              "connected",
-              endpoint,
-              `Kamera ${slot + 1}: Media Profile ONVIF dan URI RTSP berhasil diperoleh.`,
-            );
-            return;
-          }
-
-          lastMessage = result.message;
-        } catch (error) {
-          lastMessage =
-            error instanceof Error
-              ? error.message
-              : "Endpoint ONVIF gagal diakses.";
-        }
+        Alert.alert(
+          "Pencarian gagal",
+          message,
+        );
+      } finally {
+        setSearching(false);
       }
+    };
 
-      setStatusText(lastMessage);
-      addHistory("error", lastEndpoint, lastMessage);
-      Alert.alert(
-        "Gagal mengambil stream",
-        `${lastMessage}\n\nEndpoint yang dicoba: ${endpoints.length}`,
-      );
-    } finally {
-      setConnecting(null);
-    }
-  };
-
-  const connectManual = () => {
-    const value = manualUrl.trim();
-
-    if (!isCameraUrl(value)) {
-      Alert.alert(
-        "URL tidak valid",
-        "Gunakan rtsp://, rtsps://, http:// atau https://.",
-      );
-      return;
-    }
-
-    const slot = findNextCameraSlot();
-
-    if (slot < 0) {
-      Alert.alert(
-        "Slot kamera penuh",
-        "Maksimal 9 kamera dapat ditampilkan.",
-      );
-      return;
-    }
-
-    const target = addCredentials(value, username.trim(), password);
-
-    setSelectedCamera(null);
-    setProfile(null);
-    setPlayerConnected(false);
-    setCameraStream(slot, target);
-    setActiveStream(target);
-    setTesting(true);
-    setStatusText(`Membuka Kamera ${slot + 1}...`);
-    setActiveTab("live");
-  };
-
-  const testConnection = async () => {
-    const value = manualUrl.trim();
-    const endpoint = getEndpointDetails(value);
-
-    if (!isCameraUrl(value) || !endpoint) {
-      Alert.alert("URL tidak valid", "Masukkan URL kamera yang benar.");
-      return;
-    }
-
-    const target = addCredentials(value, username.trim(), password);
-
-    if (
-      endpoint.protocol === "RTSP" ||
-      endpoint.protocol === "ONVIF"
-    ) {
-      const slot = findNextCameraSlot();
+  const connectOnvif =
+    async (
+      camera: DiscoveredCamera,
+    ) => {
+      const slot =
+        findNextCameraSlot();
 
       if (slot < 0) {
         Alert.alert(
@@ -628,122 +758,439 @@ export default function HomeScreen() {
         return;
       }
 
-      setTesting(true);
-      setSelectedCamera(null);
-      setProfile(null);
+      const endpoints =
+        Array.from(
+          new Set(
+            (camera.xaddrs ?? []).filter(
+              (item) =>
+                /^https?:\/\//i.test(
+                  item,
+                ),
+            ),
+          ),
+        );
+
+      const key =
+        `${camera.host}:${camera.port}`;
+
+      if (!endpoints.length) {
+        Alert.alert(
+          "Endpoint tidak tersedia",
+          "Kamera tidak memberikan endpoint ONVIF HTTP/HTTPS.",
+        );
+        return;
+      }
+
+      setConnecting(key);
+      setSelectedCamera(camera);
       setPlayerConnected(false);
-      setCameraStream(slot, target);
-      setActiveStream(target);
-      setStatusText(`Menguji Kamera ${slot + 1} melalui native player...`);
-      setActiveTab("live");
+
+      setStatusText(
+        `Menghubungkan ke ${camera.host}...`,
+      );
+
+      const credentials = {
+        username:
+          username.trim() ||
+          undefined,
+        password:
+          password ||
+          undefined,
+      };
+
+      let lastMessage =
+        "Kamera terdeteksi, tetapi Media Profile ONVIF belum berhasil diperoleh.";
+
+      let lastEndpoint =
+        endpoints[0];
+
+      try {
+        for (
+          let index = 0;
+          index < endpoints.length;
+          index += 1
+        ) {
+          const endpoint =
+            endpoints[index];
+
+          lastEndpoint =
+            endpoint;
+
+          setStatusText(
+            `Mencoba endpoint ONVIF ${index + 1}/${endpoints.length}...`,
+          );
+
+          try {
+            const result =
+              await getOnvifStreamUri(
+                endpoint,
+                credentials,
+              );
+
+            if (
+              result.ok &&
+              result.streamUri
+            ) {
+              const streamUri =
+                addCredentials(
+                  result.streamUri,
+                  username.trim(),
+                  password,
+                );
+
+              setCameraStream(
+                slot,
+                streamUri,
+              );
+
+              setActiveStream(
+                streamUri,
+              );
+
+              setManualUrl(
+                hideCredentials(
+                  result.streamUri,
+                ),
+              );
+
+              setProfile(
+                result.profile ??
+                  null,
+              );
+
+              setTesting(true);
+
+              setStatusText(
+                `Kamera ${slot + 1}: URI RTSP berhasil diperoleh. Membuka video...`,
+              );
+
+              setActiveTab(
+                "live",
+              );
+
+              addHistory(
+                "connected",
+                endpoint,
+                `Kamera ${slot + 1}: Media Profile ONVIF dan URI RTSP berhasil diperoleh.`,
+              );
+
+              return;
+            }
+
+            lastMessage =
+              result.message;
+          } catch (error) {
+            lastMessage =
+              error instanceof Error
+                ? error.message
+                : "Endpoint ONVIF gagal diakses.";
+          }
+        }
+
+        setStatusText(
+          lastMessage,
+        );
+
+        addHistory(
+          "error",
+          lastEndpoint,
+          lastMessage,
+        );
+
+        Alert.alert(
+          "Gagal mengambil stream",
+          `${lastMessage}\n\nEndpoint yang dicoba: ${endpoints.length}`,
+        );
+      } finally {
+        setConnecting(null);
+      }
+    };
+
+  const connectManual = () => {
+    const value =
+      manualUrl.trim();
+
+    if (!isCameraUrl(value)) {
+      Alert.alert(
+        "URL tidak valid",
+        "Gunakan rtsp://, rtsps://, http:// atau https://.",
+      );
       return;
     }
 
-    setTesting(true);
+    const slot =
+      findNextCameraSlot();
 
-    try {
-      const camera: CameraNetworkConfig = {
-        id: "manual-camera",
-        name: "Camera manual",
-        url: value,
-        vendor,
-        username: username.trim() || undefined,
-        password: password || undefined,
-      };
-
-      const result = await testCameraConnection(camera);
-      const message =
-        `${result.status.toUpperCase()} • ${result.message}` +
-        (result.latencyMs ? ` • ${result.latencyMs}ms` : "");
-
-      setStatusText(message);
-      addHistory(result.ok ? "connected" : "error", value, result.message);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Tes koneksi gagal.";
-      setStatusText(message);
-      addHistory("error", value, message);
-    } finally {
-      setTesting(false);
-    }
-  };
-
-  const disconnect = () => {
-    if (activeStream) {
-      addHistory("disconnected", activeStream, "Stream CCTV dihentikan.");
+    if (slot < 0) {
+      Alert.alert(
+        "Slot kamera penuh",
+        "Maksimal 9 kamera dapat ditampilkan.",
+      );
+      return;
     }
 
-    setTesting(false);
-    setPlayerConnected(false);
-    setCameraStreams([]);
-    setCameraConnected([]);
-    setCameraMuted([]);
-    setCameraControlsVisible([]);
-    setActiveStream("");
+    const target =
+      addCredentials(
+        value,
+        username.trim(),
+        password,
+      );
+
     setSelectedCamera(null);
     setProfile(null);
-    setStatusText("CCTV telah diputus.");
+    setPlayerConnected(false);
+
+    setCameraStream(
+      slot,
+      target,
+    );
+
+    setActiveStream(
+      target,
+    );
+
+    setTesting(true);
+
+    setStatusText(
+      `Membuka Kamera ${slot + 1}...`,
+    );
+
+    setActiveTab(
+      "live",
+    );
   };
 
-  const renderLive = () => (
+  const testConnection =
+    async () => {
+      const value =
+        manualUrl.trim();
+
+      const endpoint =
+        getEndpointDetails(
+          value,
+        );
+
+      if (
+        !isCameraUrl(value) ||
+        !endpoint
+      ) {
+        Alert.alert(
+          "URL tidak valid",
+          "Masukkan URL kamera yang benar.",
+        );
+        return;
+      }
+
+      const target =
+        addCredentials(
+          value,
+          username.trim(),
+          password,
+        );
+
+      if (
+        endpoint.protocol ===
+          "RTSP" ||
+        endpoint.protocol ===
+          "ONVIF"
+      ) {
+        const slot = findNextCameraSlot();
+
+if (slot < 0) {
+  Alert.alert(
+    "Slot kamera penuh",
+    "Maksimal 9 kamera dapat ditampilkan.",
+  );
+  return;
+}
+
+setTesting(true);
+setSelectedCamera(null);
+setProfile(null);
+setPlayerConnected(false);
+setCameraStream(slot, target);
+setActiveStream(target);
+setStatusText(
+  `Menguji Kamera ${slot + 1} melalui native player...`,
+);
+setActiveTab("live");
+return;
+}
+
+setTesting(true);
+
+try {
+  const camera: CameraNetworkConfig = {
+    id: "manual-camera",
+    name: "Camera manual",
+    url: value,
+    vendor,
+    username: username.trim() || undefined,
+    password: password || undefined,
+  };
+
+  const result = await testCameraConnection(camera);
+
+  const message =
+    `${result.status.toUpperCase()} • ${result.message}` +
+    (result.latencyMs
+      ? ` • ${result.latencyMs}ms`
+      : "");
+
+  setStatusText(message);
+
+  addHistory(
+    result.ok ? "connected" : "error",
+    value,
+    result.message,
+  );
+} catch (error) {
+  const message =
+    error instanceof Error
+      ? error.message
+      : "Tes koneksi gagal.";
+
+  setStatusText(message);
+
+  addHistory(
+    "error",
+    value,
+    message,
+  );
+} finally {
+  setTesting(false);
+}
+};
+
+const disconnect = () => {
+  if (activeStream) {
+    addHistory(
+      "disconnected",
+      activeStream,
+      "Stream CCTV dihentikan.",
+    );
+  }
+
+  setTesting(false);
+  setPlayerConnected(false);
+  setCameraStreams([]);
+  setCameraConnected([]);
+  setCameraMuted([]);
+  setCameraControlsVisible([]);
+  setActiveStream("");
+  setSelectedCamera(null);
+  setProfile(null);
+  setStatusText("CCTV telah diputus.");
+};
+
+/*
+ * LIVE CCTV
+ *
+ * Hanya menampilkan kamera yang benar-benar memiliki stream.
+ * Slot kosong tidak lagi mengambil tempat.
+ *
+ * 1 kamera  = 1 kolom
+ * 2-4       = 2 kolom
+ * 5-9       = 3 kolom
+ */
+const renderLive = () => {
+  const activeCameraIndexes = cameraStreams
+    .map((stream, index) =>
+      stream.trim() ? index : -1,
+    )
+    .filter((index) => index >= 0);
+
+  const activeCount =
+    activeCameraIndexes.length;
+
+  const visibleIndexes =
+    activeCount > 0
+      ? activeCameraIndexes
+      : [];
+
+  const columns =
+    activeCount <= 1
+      ? 1
+      : activeCount <= 4
+        ? 2
+        : 3;
+
+  const slotWidth =
+    columns === 1
+      ? "100%"
+      : columns === 2
+        ? "48.5%"
+        : "31.5%";
+
+  return (
     <ScrollView
       style={styles.content}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={[
+        styles.contentContainer,
+        styles.liveContentContainer,
+      ]}
     >
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Tata Letak Kamera</Text>
+      {activeCount === 0 ? (
+        <View style={styles.liveEmptyHeader}>
+          <Text style={styles.liveEmptyIcon}>
+            📹
+          </Text>
 
-        <View style={styles.layoutRow}>
-          {[1, 2, 4, 6, 9].map((count) => (
-            <Pressable
-              key={count}
-              onPress={() => setCameraCount(count)}
-              style={[
-                styles.layoutButton,
-                cameraCount === count && styles.layoutButtonActive,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.layoutButtonText,
-                  cameraCount === count &&
-                    styles.layoutButtonTextActive,
-                ]}
-              >
-                {count}
-              </Text>
-            </Pressable>
-          ))}
+          <Text style={styles.cardTitle}>
+            Live CCTV
+          </Text>
+
+          <Text style={styles.centerText}>
+            Belum ada kamera aktif.
+            {"\n"}
+            Hubungkan kamera dari menu CCTV.
+          </Text>
         </View>
-
-        <Text style={styles.layoutHint}>
-          Pilih 1, 2, 4, 6 atau 9 tampilan kamera.
-        </Text>
-      </View>
+      ) : null}
 
       <View style={styles.cameraGrid}>
-        {Array.from({ length: cameraCount }).map((_, index) => {
-          const stream = cameraStreams[index] || "";
-          const connected = Boolean(cameraConnected[index]);
+        {visibleIndexes.map((index) => {
+          const stream =
+            cameraStreams[index] || "";
+
+          const connected =
+            Boolean(
+              cameraConnected[index],
+            );
 
           return (
             <View
               key={index}
               style={[
                 styles.cameraSlot,
-                cameraCount === 1 && { width: "100%" },
-                cameraCount === 2 && { width: "48%" },
-                cameraCount === 4 && { width: "48%" },
-                cameraCount === 6 && { width: "31%" },
-                cameraCount === 9 && { width: "31%" },
+                {
+                  width: slotWidth,
+                },
+                visibleIndexes.length === 1 &&
+                  styles.cameraSlotSingle,
               ]}
-              onTouchStart={() => showCameraControls(index)}
+              onTouchStart={() =>
+                showCameraControls(index)
+              }
             >
-              <View style={styles.cameraSlotHeader}>
-                <Text style={styles.cameraSlotTitle}>
+              <View
+                style={
+                  styles.cameraSlotHeader
+                }
+              >
+                <Text
+                  style={
+                    styles.cameraSlotTitle
+                  }
+                >
                   Kamera {index + 1}
                 </Text>
-                <Text style={styles.cameraSlotStatus}>
+
+                <Text
+                  style={
+                    styles.cameraSlotStatus
+                  }
+                >
                   {connected
                     ? "LIVE"
                     : stream
@@ -754,40 +1201,96 @@ export default function HomeScreen() {
 
               <CameraVideo
                 url={stream}
-                nativeControls={nativeControls}
-                muted={cameraMuted[index] ?? muted}
+                nativeControls={
+                  nativeControls
+                }
+                muted={
+                  cameraMuted[index] ??
+                  muted
+                }
                 onLoad={() => {
-                  setCameraSlotConnected(index, true);
+                  setCameraSlotConnected(
+                    index,
+                    true,
+                  );
+
                   setTesting(false);
-                  setStatusText(`Kamera ${index + 1} LIVE.`);
+
+                  setStatusText(
+                    `Kamera ${index + 1} LIVE.`,
+                  );
                 }}
                 onError={(message) => {
-                  setCameraSlotConnected(index, false);
-                  setTesting(false);
-                  setStatusText(
-                    `OFFLINE • Kamera ${index + 1}: ${message}`,
+                  setCameraSlotConnected(
+                    index,
+                    false,
                   );
+
+                  setTesting(false);
+
+                  setStatusText(
+                    `OFFLINE • Kamera ${
+                      index + 1
+                    }: ${message}`,
+                  );
+
                   if (stream) {
-                    addHistory("error", stream, message);
+                    addHistory(
+                      "error",
+                      stream,
+                      message,
+                    );
                   }
                 }}
               />
 
-              {stream && cameraControlsVisible[index] ? (
-                <View style={styles.cameraControlsOverlay}>
+              {stream &&
+              cameraControlsVisible[
+                index
+              ] ? (
+                <View
+                  style={
+                    styles.cameraControlsOverlay
+                  }
+                >
                   <Pressable
                     onPress={() => {
-                      setCameraMuted((items) => {
-                        const next = [...items];
-                        next[index] = !(next[index] ?? false);
-                        return next;
-                      });
-                      showCameraControls(index);
+                      setCameraMuted(
+                        (items) => {
+                          const next = [
+                            ...items,
+                          ];
+
+                          next[index] =
+                            !(
+                              next[index] ??
+                              false
+                            );
+
+                          return next;
+                        },
+                      );
+
+                      showCameraControls(
+                        index,
+                      );
                     }}
-                    style={styles.micButton}
+                    style={
+                      styles.micButton
+                    }
                   >
-                    <Text style={styles.micButtonText}>
-                      {(cameraMuted[index] ?? muted) ? "🔇" : "🎙️"}
+                    <Text
+                      style={
+                        styles.micButtonText
+                      }
+                    >
+                      {(
+                        cameraMuted[
+                          index
+                        ] ?? muted
+                      )
+                        ? "🔇"
+                        : "🎙️"}
                     </Text>
                   </Pressable>
                 </View>
@@ -797,255 +1300,474 @@ export default function HomeScreen() {
         })}
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Koneksi Manual</Text>
-
-        <Text style={styles.fieldLabel}>URL CCTV</Text>
-        <TextInput
-          value={manualUrl}
-          onChangeText={setManualUrl}
-          autoCapitalize="none"
-          autoCorrect={false}
-          placeholder="rtsp://..."
-          placeholderTextColor="#667483"
-          style={styles.input}
-        />
-
-        <View style={styles.buttonRow}>
-          <Pressable
-            style={[styles.primaryButton, styles.flexButton]}
-            onPress={connectManual}
-          >
-            <Text style={styles.primaryButtonText}>
-              ▶ Tampilkan Live
-            </Text>
-          </Pressable>
-
-          <Pressable
-            style={[styles.secondaryButton, styles.flexButton]}
-            onPress={testConnection}
-          >
-            <Text style={styles.secondaryButtonText}>
-              Tes Koneksi
-            </Text>
-          </Pressable>
-        </View>
-
-        <Pressable
-          style={styles.secondaryButton}
-          onPress={disconnect}
-          disabled={!activeStream && cameraStreams.length === 0}
+      {activeCount > 0 ? (
+        <View
+          style={styles.liveGridInfo}
         >
           <Text
-            style={[
-              styles.secondaryButtonText,
-              !activeStream &&
-                cameraStreams.length === 0 &&
-                styles.disabledText,
-            ]}
+            style={styles.layoutHint}
           >
-            ■ Putuskan Semua Kamera
+            {activeCount} kamera aktif
+            {" • "}
+            {columns} kolom otomatis
           </Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Kontrol Video</Text>
-
-        <View style={styles.switchRow}>
-          <View style={styles.switchTextWrap}>
-            <Text style={styles.switchTitle}>Kontrol video</Text>
-            <Text style={styles.switchDescription}>
-              Tampilkan kontrol bawaan pemutar video.
-            </Text>
-          </View>
-          <Switch value={nativeControls} onValueChange={setNativeControls} />
         </View>
-
-        <View style={styles.switchRow}>
-          <View style={styles.switchTextWrap}>
-            <Text style={styles.switchTitle}>Suara CCTV</Text>
-            <Text style={styles.switchDescription}>
-              Aktifkan atau matikan suara kamera.
-            </Text>
-          </View>
-          <Switch
-            value={!muted}
-            onValueChange={(value) => setMuted(!value)}
-          />
-        </View>
-      </View>
+      ) : null}
 
       {statusText ? (
         <View style={styles.infoBox}>
-          <Text style={styles.infoText}>{statusText}</Text>
+          <Text style={styles.infoText}>
+            {statusText}
+          </Text>
         </View>
       ) : null}
     </ScrollView>
   );
+};
 
-  const renderCctv = () => (
-    <ScrollView
-      style={styles.content}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <View style={styles.sectionHeader}>
-        <View style={styles.sectionHeaderText}>
-          <Text style={styles.sectionTitle}>CCTV</Text>
-          <Text style={styles.sectionSubtitle}>
-            Cari kamera ONVIF di jaringan lokal.
-          </Text>
-        </View>
+/*
+ * MENU CCTV
+ *
+ * Pengaturan jumlah tampilan dan
+ * koneksi manual dipindahkan ke sini.
+ * Halaman Live tetap bersih.
+ */
+const renderCctv = () => (
+  <ScrollView
+    style={styles.content}
+    contentContainerStyle={
+      styles.contentContainer
+    }
+  >
+    <View style={styles.sectionHeader}>
+      <View
+        style={styles.sectionHeaderText}
+      >
+        <Text style={styles.sectionTitle}>
+          CCTV
+        </Text>
 
-        <Pressable
-          style={styles.primaryButtonSmall}
-          onPress={searchCameras}
-          disabled={searching}
+        <Text
+          style={styles.sectionSubtitle}
         >
-          {searching ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.primaryButtonText}>🔍 Cari CCTV</Text>
-          )}
-        </Pressable>
+          Cari kamera ONVIF atau tambahkan
+          kamera secara manual.
+        </Text>
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Kamera Ditemukan</Text>
-
+      <Pressable
+        style={styles.primaryButtonSmall}
+        onPress={searchCameras}
+        disabled={searching}
+      >
         {searching ? (
-          <View style={styles.loadingBox}>
-            <ActivityIndicator size="large" />
-            <Text style={styles.loadingText}>
-              Mencari kamera CCTV...
-            </Text>
-          </View>
-        ) : cameras.length === 0 ? (
-          <View style={styles.emptyBox}>
-            <Text style={styles.emptyIcon}>📷</Text>
-            <Text style={styles.emptyTitle}>Belum ada kamera</Text>
-            <Text style={styles.centerText}>
-              Tekan "Cari CCTV" untuk mencari kamera ONVIF.
-            </Text>
-          </View>
+          <ActivityIndicator
+            size="small"
+            color="#fff"
+          />
         ) : (
-          cameras.map((camera) => {
-            const key = `${camera.host}:${camera.port}`;
-            const endpoint = camera.xaddrs?.find((item) =>
-              /^https?:\/\//i.test(item),
-            );
+          <Text
+            style={
+              styles.primaryButtonText
+            }
+          >
+            🔍 Cari CCTV
+          </Text>
+        )}
+      </Pressable>
+    </View>
 
-            return (
-              <View
-                key={camera.id || key}
-                style={styles.cameraCard}
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>
+        Tata Letak Kamera
+      </Text>
+
+      <View style={styles.layoutRow}>
+        {[1, 2, 4, 6, 9].map(
+          (count) => (
+            <Pressable
+              key={count}
+              onPress={() =>
+                setCameraCount(
+                  count,
+                )
+              }
+              style={[
+                styles.layoutButton,
+                cameraCount ===
+                  count &&
+                  styles.layoutButtonActive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.layoutButtonText,
+                  cameraCount ===
+                    count &&
+                    styles.layoutButtonTextActive,
+                ]}
               >
-                <View style={styles.cameraCardHeader}>
-                  <View style={styles.cameraIconBox}>
-                    <Text style={styles.cameraIcon}>📹</Text>
-                  </View>
-
-                  <View style={styles.cameraCardInfo}>
-                    <Text style={styles.cameraName}>
-                      {camera.name || "Kamera ONVIF"}
-                    </Text>
-                    <Text style={styles.cameraMeta}>
-                      {camera.host}
-                      {camera.port ? `:${camera.port}` : ""}
-                    </Text>
-                    {endpoint ? (
-                      <Text
-                        style={styles.endpointText}
-                        numberOfLines={1}
-                      >
-                        {endpoint}
-                      </Text>
-                    ) : null}
-                  </View>
-                </View>
-
-                <Pressable
-                  style={styles.primaryButton}
-                  onPress={() => connectOnvif(camera)}
-                  disabled={connecting === key}
-                >
-                  {connecting === key ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={styles.primaryButtonText}>
-                      Hubungkan ke Slot Berikutnya
-                    </Text>
-                  )}
-                </Pressable>
-              </View>
-            );
-          })
+                {count}
+              </Text>
+            </Pressable>
+          ),
         )}
       </View>
 
-      {statusText ? (
-        <View style={styles.infoBox}>
-          <Text style={styles.infoText}>{statusText}</Text>
-        </View>
-      ) : null}
-    </ScrollView>
-  );
+      <Text
+        style={styles.layoutHint}
+      >
+        Pilihan layout maksimum 1, 2, 4,
+        6 atau 9 kamera. Ukuran kamera
+        tetap otomatis mengikuti jumlah
+        kamera yang aktif.
+      </Text>
+    </View>
 
-  const renderHistory = () => (
-    <ScrollView
-      style={styles.content}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <View style={styles.sectionHeader}>
-        <View>
-          <Text style={styles.sectionTitle}>Riwayat</Text>
-          <Text style={styles.sectionSubtitle}>
-            Riwayat koneksi dan aktivitas CCTV.
-          </Text>
-        </View>
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>
+        Koneksi Manual
+      </Text>
 
+      <Text style={styles.fieldLabel}>
+        URL CCTV
+      </Text>
+
+      <TextInput
+        value={manualUrl}
+        onChangeText={setManualUrl}
+        autoCapitalize="none"
+        autoCorrect={false}
+        placeholder="rtsp://..."
+        placeholderTextColor="#667483"
+        style={styles.input}
+      />
+
+      <View style={styles.buttonRow}>
         <Pressable
-          style={styles.secondaryButton}
-          onPress={() => setHistory([])}
-          disabled={!history.length}
+          style={[
+            styles.primaryButton,
+            styles.flexButton,
+          ]}
+          onPress={connectManual}
         >
           <Text
-            style={[
-              styles.secondaryButtonText,
-              !history.length && styles.disabledText,
-            ]}
+            style={
+              styles.primaryButtonText
+            }
           >
-            Hapus Riwayat
+            ▶ Tampilkan Live
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={[
+            styles.secondaryButton,
+            styles.flexButton,
+          ]}
+          onPress={testConnection}
+        >
+          <Text
+            style={
+              styles.secondaryButtonText
+            }
+          >
+            Tes Koneksi
           </Text>
         </Pressable>
       </View>
 
-      {!history.length ? (
+      <Pressable
+        style={
+          styles.secondaryButton
+        }
+        onPress={disconnect}
+        disabled={
+          !activeStream &&
+          cameraStreams.length === 0
+        }
+      >
+        <Text
+          style={[
+            styles.secondaryButtonText,
+            !activeStream &&
+              cameraStreams.length === 0 &&
+              styles.disabledText,
+          ]}
+        >
+          ■ Putuskan Semua Kamera
+        </Text>
+      </Pressable>
+    </View>
+
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>
+        Kamera Ditemukan
+      </Text>
+
+      {searching ? (
+        <View style={styles.loadingBox}>
+          <ActivityIndicator
+            size="large"
+          />
+
+          <Text
+            style={styles.loadingText}
+          >
+            Mencari kamera CCTV...
+          </Text>
+        </View>
+      ) : cameras.length === 0 ? (
         <View style={styles.emptyBox}>
-          <Text style={styles.emptyIcon}>🕘</Text>
-          <Text style={styles.emptyTitle}>Belum ada riwayat</Text>
-          <Text style={styles.centerText}>
-            Aktivitas koneksi CCTV akan tampil di sini.
+          <Text
+            style={styles.emptyIcon}
+          >
+            📷
+          </Text>
+
+          <Text
+            style={styles.emptyTitle}
+          >
+            Belum ada kamera
+          </Text>
+
+          <Text
+            style={styles.centerText}
+          >
+            Tekan "Cari CCTV" untuk
+            mencari kamera ONVIF.
           </Text>
         </View>
       ) : (
-        history.map((item) => (
-          <View key={item.id} style={styles.card}>
-            <Text style={styles.cardTitle}>
-              {item.action === "connected"
-                ? "✓ Terhubung"
-                : item.action === "disconnected"
-                  ? "■ Terputus"
-                  : "⚠ Error"}
-            </Text>
-            <Text style={styles.statusText}>{item.message}</Text>
-            <Text style={styles.endpointText}>{item.url}</Text>
-            <Text style={styles.cameraMeta}>{item.time}</Text>
-          </View>
-        ))
+        cameras.map((camera) => {
+          const key =
+            `${camera.host}:${camera.port}`;
+
+          const endpoint =
+            camera.xaddrs?.find(
+              (item) =>
+                /^https?:\/\//i.test(
+                  item,
+                ),
+            );
+
+          return (
+            <View
+              key={
+                camera.id || key
+              }
+              style={
+                styles.cameraCard
+              }
+            >
+              <View
+                style={
+                  styles.cameraCardHeader
+                }
+              >
+                <View
+                  style={
+                    styles.cameraIconBox
+                  }
+                >
+                  <Text
+                    style={
+                      styles.cameraIcon
+                    }
+                  >
+                    📹
+                  </Text>
+                </View>
+
+                <View
+                  style={
+                    styles.cameraCardInfo
+                  }
+                >
+                  <Text
+                    style={
+                      styles.cameraName
+                    }
+                  >
+                    {camera.name ||
+                      "Kamera ONVIF"}
+                  </Text>
+
+                  <Text
+                    style={
+                      styles.cameraMeta
+                    }
+                  >
+                    {camera.host}
+                    {camera.port
+                      ? `:${camera.port}`
+                      : ""}
+                  </Text>
+
+                  {endpoint ? (
+                    <Text
+                      style={
+                        styles.endpointText
+                      }
+                      numberOfLines={1}
+                    >
+                      {endpoint}
+                    </Text>
+                  ) : null}
+                </View>
+              </View>
+
+              <Pressable
+                style={
+                  styles.primaryButton
+                }
+                onPress={() =>
+                  connectOnvif(
+                    camera,
+                  )
+                }
+                disabled={
+                  connecting === key
+                }
+              >
+                {connecting === key ? (
+                  <ActivityIndicator
+                    size="small"
+                    color="#fff"
+                  />
+                ) : (
+                  <Text
+                    style={
+                      styles.primaryButtonText
+                    }
+                  >
+                    Hubungkan ke Slot Berikutnya
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          );
+        })
       )}
-    </ScrollView>
-  );
+    </View>
+
+    {statusText ? (
+      <View style={styles.infoBox}>
+        <Text
+          style={styles.infoText}
+        >
+          {statusText}
+        </Text>
+      </View>
+    ) : null}
+  </ScrollView>
+);
+
+const renderHistory = () => (
+  <ScrollView
+    style={styles.content}
+    contentContainerStyle={
+      styles.contentContainer
+    }
+  >
+    <View style={styles.sectionHeader}>
+      <View>
+        <Text
+          style={styles.sectionTitle}
+        >
+          Riwayat
+        </Text>
+
+        <Text
+          style={styles.sectionSubtitle}
+        >
+          Riwayat koneksi dan aktivitas
+          CCTV.
+        </Text>
+      </View>
+
+      <Pressable
+        style={
+          styles.secondaryButton
+        }
+        onPress={() =>
+          setHistory([])
+        }
+        disabled={!history.length}
+      >
+        <Text
+          style={[
+            styles.secondaryButtonText,
+            !history.length &&
+              styles.disabledText,
+          ]}
+        >
+          Hapus Riwayat
+        </Text>
+      </Pressable>
+    </View>
+
+    {!history.length ? (
+      <View style={styles.emptyBox}>
+        <Text
+          style={styles.emptyIcon}
+        >
+          🕘
+        </Text>
+
+        <Text
+          style={styles.emptyTitle}
+        >
+          Belum ada riwayat
+        </Text>
+
+        <Text
+          style={styles.centerText}
+        >
+          Aktivitas koneksi CCTV akan
+          tampil di sini.
+        </Text>
+      </View>
+    ) : (
+      history.map((item) => (
+        <View
+          key={item.id}
+          style={styles.card}
+        >
+          <Text
+            style={styles.cardTitle}
+          >
+            {item.action ===
+            "connected"
+              ? "✓ Terhubung"
+              : item.action ===
+                  "disconnected"
+                ? "■ Terputus"
+                : "⚠ Error"}
+          </Text>
+
+          <Text
+            style={styles.statusText}
+          >
+            {item.message}
+          </Text>
+
+          <Text
+            style={styles.endpointText}
+          >
+            {item.url}
+          </Text>
+
+          <Text
+            style={styles.cameraMeta}
+          >
+            {item.time}
+          </Text>
+        </View>
+      ))
+    )}
+  </ScrollView>
+);
 
   const renderSettings = () => (
     <ScrollView
@@ -1448,6 +2170,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
   },
+
   videoBox: {
     position: "relative",
     width: "100%",
@@ -1503,6 +2226,7 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     textAlign: "center",
   },
+
   overlay: {
     position: "absolute",
     left: 0,
@@ -1532,6 +2256,7 @@ const styles = StyleSheet.create({
     color: "#ff8d8d",
     fontSize: 34,
   },
+
   liveBadge: {
     position: "absolute",
     top: 8,
@@ -1555,6 +2280,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "900",
   },
+
   cameraControlsOverlay: {
     position: "absolute",
     right: 8,
@@ -1575,7 +2301,7 @@ const styles = StyleSheet.create({
   micButtonText: {
     fontSize: 19,
   },
-  statusPill: {
+      statusPill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
@@ -1757,7 +2483,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 13,
   },
-  switchRow: {
+    switchRow: {
     minHeight: 62,
     flexDirection: "row",
     alignItems: "center",
@@ -1853,7 +2579,7 @@ const styles = StyleSheet.create({
     gap: 9,
     marginTop: 5,
   },
-  logoPreview: {
+    logoPreview: {
     width: 120,
     height: 80,
     marginTop: 12,
@@ -1936,3 +2662,5 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
 });
+   
+   
