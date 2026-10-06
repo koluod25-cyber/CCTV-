@@ -198,6 +198,10 @@ export default function HomeScreen() {
   const [cameraStreams, setCameraStreams] = useState<string[]>([]);
   const [cameraConnected, setCameraConnected] = useState<boolean[]>([]);
   const [cameraMuted, setCameraMuted] = useState<boolean[]>([]);
+const [cameraControlsVisible, setCameraControlsVisible] = useState<boolean[]>([]);
+const cameraControlsTimers = useRef<Array<ReturnType<typeof setTimeout> | null>>([]);
+const [cameraControlsVisible, setCameraControlsVisible] = useState<boolean[]>([]);
+const cameraControlsTimers = useRef<Array<ReturnType<typeof setTimeout> | null>>([]);
 
   const [ownerText, setOwnerText] = useState("Pemilik: CCTV Universal Monitor");
   const [logoUri, setLogoUri] = useState("");
@@ -225,7 +229,93 @@ export default function HomeScreen() {
   };
 
   const setCameraStream = (slot: number, stream: string) => {
+  setCameraStreams(items => {
+    const next = [...items];
+    next[slot] = stream;
+    return next;
+  });
+const showCameraControls = (slot: number) => {
+  const oldTimer = cameraControlsTimers.current[slot];
+
+  if (oldTimer) {
+    clearTimeout(oldTimer);
+  }
+
+  setCameraControlsVisible(items => {
+    const next = [...items];
+    next[slot] = true;
+    return next;
+  });
+
+  cameraControlsTimers.current[slot] = setTimeout(() => {
+    setCameraControlsVisible(items => {
+      const next = [...items];
+      next[slot] = false;
+      return next;
+    });
+
+    cameraControlsTimers.current[slot] = null;
+  }, 4000);
+};
+
+  setCameraConnected(items => {
+    const next = [...items];
+    next[slot] = false;
+    return next;
+  });
+
+  setCameraMuted(items => {
+    const next = [...items];
+    next[slot] = false;
+    return next;
+  });
+
+  setCameraControlsVisible(items => {
+    const next = [...items];
+    next[slot] = false;
+    return next;
+  });
+
+  const oldTimer = cameraControlsTimers.current[slot];
+  if (oldTimer) {
+    clearTimeout(oldTimer);
+    cameraControlsTimers.current[slot] = null;
+  }
+
+  const requiredLayout =
+    slot === 0 ? 1 :
+    slot === 1 ? 2 :
+    slot < 4 ? 4 :
+    slot < 6 ? 6 : 9;
+
+  setCameraCount(current =>
+    current < requiredLayout ? requiredLayout : current,
+  );
+};
     setCameraStreams(items => { const next = [...items]; next[slot] = stream; return next; });
+   const showCameraControls = (slot: number) => {
+  const oldTimer = cameraControlsTimers.current[slot];
+
+  if (oldTimer) {
+    clearTimeout(oldTimer);
+  }
+
+  setCameraControlsVisible(items => {
+    const next = [...items];
+    next[slot] = true;
+    return next;
+  });
+
+  cameraControlsTimers.current[slot] = setTimeout(() => {
+    setCameraControlsVisible(items => {
+      const next = [...items];
+      next[slot] = false;
+      return next;
+    });
+
+    cameraControlsTimers.current[slot] = null;
+  }, 4000);
+};
     setCameraConnected(items => { const next = [...items]; next[slot] = false; return next; });
     setCameraMuted(items => { const next = [...items]; next[slot] = false; return next; });
     const requiredLayout = slot === 0 ? 1 : slot === 1 ? 2 : slot < 4 ? 4 : slot < 6 ? 6 : 9;
@@ -391,8 +481,10 @@ export default function HomeScreen() {
           return (
             <View key={index} style={[styles.cameraSlot, cameraCount === 1 && { width: "100%" }, cameraCount === 2 && { width: "48%" }, cameraCount === 4 && { width: "48%" }, cameraCount === 6 && { width: "31%" }, cameraCount === 9 && { width: "31%" }]}>
               <View style={styles.cameraSlotHeader}><Text style={styles.cameraSlotTitle}>Kamera {index + 1}</Text><Text style={styles.cameraSlotStatus}>{connected ? "LIVE" : stream ? "MEMBUKA..." : "BELUM TERHUBUNG"}</Text></View>
-              <View style={styles.liveCameraFrame}>
-                <CameraVideo url={stream} nativeControls={nativeControls} muted={audioMuted} onLoad={() => { setCameraSlotConnected(index, true); setStatusText(`Kamera ${index + 1} LIVE.`); }} onError={message => { setCameraSlotConnected(index, false); setStatusText(`OFFLINE • Kamera ${index + 1}: ${message}`); if (stream) addHistory("error", stream, message); }} />
+            <View
+  style={styles.liveCameraFrame}
+  onTouchStart={() => showCameraControls(index)}
+> }} onError={message => { setCameraSlotConnected(index, false); setStatusText(`OFFLINE • Kamera ${index + 1}: ${message}`); if (stream) addHistory("error", stream, message); }} />
                 {stream ? <View style={styles.cameraControlsOverlay}>
                   <Pressable style={[styles.cameraControlButton, !audioMuted && styles.cameraControlButtonActive]} onPress={() => setCameraMuted(items => { const next = [...items]; next[index] = !Boolean(next[index]); return next; })}>
                     <Text style={styles.cameraControlIcon}>{audioMuted ? "🔇" : "🎙️"}</Text><Text style={styles.cameraControlText}>{audioMuted ? "Mic OFF" : "Mic ON"}</Text>
@@ -403,7 +495,7 @@ export default function HomeScreen() {
           );
         })}
       </View>
-      {!cameraStreams.some(Boolean) ? <View style={styles.card}><Text style={styles.emptyTitle}>Belum ada kamera aktif</Text><Text style={styles.centerText}>Hubungkan kamera terlebih dahulu dari halaman CCTV.</Text></View> : null}
+      {!cameraStreams.some(Boolean) ? <View style={styles.iconmic}><Text style={styles.emptyTitle}>Belum ada kamera aktif</Text><Text style={styles.centerText}>Hubungkan kamera terlebih dahulu dari halaman CCTV.</Text></View> : null}
     </ScrollView>
   );
 
@@ -504,7 +596,7 @@ const styles = StyleSheet.create({
   headerLogo: { width: 48, height: 48, marginHorizontal: 8, borderRadius: 8 },
   appTitle: { color: "#fff", fontSize: 19, fontWeight: "800" },
   appSubtitle: { marginTop: 3, color: "#8d99a8", fontSize: 12 },
-  headerStatus: { flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 9, paddingVertical: 7, borderRadius: 20, backgroundColor: "#18222d" },
+  headerstatus: { flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 9, paddingVertical: 7, borderRadius: 20, backgroundColor: "#18222d" },
   headerStatusDot: { width: 8, height: 8, borderRadius: 4 }, headerStatusOnline: { backgroundColor: "#36d399" }, headerStatusOffline: { backgroundColor: "#687585" }, headerStatusText: { color: "#dbe4ee", fontSize: 10, fontWeight: "800" },
   topStatus: { marginHorizontal: 14, marginTop: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: "#142333", borderWidth: 1, borderColor: "#23405b" }, topStatusText: { color: "#bcdcff", fontSize: 12, lineHeight: 18 },
   main: { flex: 1 }, content: { flex: 1 }, contentContainer: { padding: 16, paddingBottom: 30 },
