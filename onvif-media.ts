@@ -754,21 +754,15 @@ async function getStreamUri(
             <tt:Transport>
               <tt:Protocol>RTSP</tt:Protocol>
             </tt:Transport>
-          </trt:StreamSetu>
-<trt:GetStreamUri>
-  <trt:StreamSetup>
-    <tt:Stream>RTP-Unicast</tt:Stream>
-    <tt:Transport>
-      <tt:Protocol>RTSP</tt:Protocol>
-    </tt:Transport>
-  </trt:StreamSetup>
-  <trt:ProfileToken>${escapeXml(profileToken)}</trt:ProfileToken>
-</trt:GetStreamUri>`
-      ;
+          </trt:StreamSetup>
+          <trt:ProfileToken>${escapeXml(profileToken)}</trt:ProfileToken>
+        </trt:GetStreamUri>`;
 
   const response = await soapRequest(
     mediaUrl,
-    MEDIA1_GET_STREAM_URI,
+    mediaVersion === 2
+      ? MEDIA2_GET_STREAM_URI
+      : MEDIA1_GET_STREAM_URI,
     body,
     credentials,
   );
@@ -784,4 +778,95 @@ async function getStreamUri(
   }
 
   return streamUri.trim();
+}
+
+export async function getOnvifStreamUri(
+  deviceUrl: string,
+  credentials: OnvifCredentials,
+): Promise<OnvifMediaResult> {
+  try {
+    const capabilitiesXml = await getCapabilities(
+      deviceUrl,
+      credentials,
+    );
+
+    const mediaCandidates = getMediaServiceCandidates(
+      capabilitiesXml,
+      deviceUrl,
+    );
+
+    const errors: string[] = [];
+
+    for (const mediaUrl of mediaCandidates) {
+      const mediaVersions: Array<1 | 2> = [1, 2];
+
+      for (const mediaVersion of mediaVersions) {
+        try {
+          const profilesXml = await getProfiles(
+            mediaUrl,
+            credentials,
+            mediaVersion,
+          );
+
+          const profiles = parseProfiles(profilesXml);
+
+          if (!profiles.length) {
+            errors.push(
+              `${mediaUrl} Media${mediaVersion}: tidak ada media profile.`,
+            );
+            continue;
+          }
+
+          const selectedProfile = chooseProfile(profiles);
+
+          if (!selectedProfile) {
+            errors.push(
+              `${mediaUrl} Media${mediaVersion}: profile tidak dapat dipilih.`,
+            );
+            continue;
+          }
+
+          const streamUri = await getStreamUri(
+            mediaUrl,
+            selectedProfile.token,
+            credentials,
+            mediaVersion,
+          );
+
+          return {
+            ok: true,
+            mediaServiceUrl: mediaUrl,
+            profile: selectedProfile,
+            streamUri,
+            message:
+              `Media${mediaVersion} profile "${selectedProfile.name}" berhasil diperoleh.`,
+          };
+        } catch (error) {
+          errors.push(
+            `${mediaUrl} Media${mediaVersion}: ${
+              error instanceof Error
+                ? error.message
+                : "Gagal memperoleh media profile."
+            }`,
+          );
+        }
+      }
+    }
+
+    return {
+      ok: false,
+      message:
+        errors.length > 0
+          ? errors.join(" | ")
+          : "ONVIF tidak mengembalikan media profile atau RTSP URI.",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Gagal memperoleh ONVIF media profile.",
+    };
+  }
 }
