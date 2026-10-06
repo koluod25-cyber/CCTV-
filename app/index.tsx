@@ -1585,13 +1585,14 @@ const styles = StyleSheet.create({
     borderColor: "#202b37",
     backgroundColor: "#111923",
   },
-  cardTitle: {
+    cardTitle: {
     marginBottom: 12,
     color: "#fff",
     fontSize: 16,
     fontWeight: "800",
   },
-    videoBox: {
+
+  videoBox: {
     position: "relative",
     width: "100%",
     aspectRatio: 16 / 9,
@@ -1613,17 +1614,20 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     paddingBottom: 8,
   },
+
   ptzSwipeHint: {
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 10,
     backgroundColor: "rgba(8,13,18,0.55)",
   },
+
   ptzSwipeHintText: {
     color: "#fff",
     fontSize: 10,
     fontWeight: "700",
   },
+
   video: {
     width: "100%",
     height: "100%",
