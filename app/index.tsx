@@ -3,6 +3,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useWindowDimensions,
 } from "react";
 import {
   ActivityIndicator,
@@ -83,12 +84,14 @@ function CameraVideo({
   url,
   nativeControls,
   muted,
+  zoom,
   onLoad,
   onError,
 }: {
   url: string;
   nativeControls: boolean;
   muted: boolean;
+  zoom: number;
   onLoad?: () => void;
   onError?: (message: string) => void;
 }) {
@@ -126,7 +129,7 @@ function CameraVideo({
               ? "rtsp"
               : undefined,
         }}
-        style={styles.video}
+        style={[styles.video, { transform: [{ scale: zoom }] }]}
         controls={nativeControls}
         controlsStyles={{
           hideFullscreen: false,
@@ -250,10 +253,12 @@ export default function HomeScreen() {
   const [showInfo, setShowInfo] = useState(true);
   const [nativeControls, setNativeControls] = useState(true);
   const [muted, setMuted] = useState(false);
+
 const [cameraCount, setCameraCount] = useState(1);
   const [cameraStreams, setCameraStreams] = useState<string[]>([]);
   const [cameraConnected, setCameraConnected] = useState<boolean[]>([]);
   const [cameraMuted, setCameraMuted] = useState<boolean[]>([]);
+  const [cameraZoom, setCameraZoom] = useState<number[]>([]);
   const [cameraControlsVisible, setCameraControlsVisible] = useState<boolean[]>([]);
   const cameraControlsTimers = useRef<Array<ReturnType<typeof setTimeout> | null>>([]);
 
@@ -266,6 +271,8 @@ const [cameraCount, setCameraCount] = useState(1);
   const [settingsSaved, setSettingsSaved] = useState(false);
 
   const marqueeX = useRef(new Animated.Value(0)).current;
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isLandscape = windowWidth > windowHeight;
   const [marqueeClipWidth, setMarqueeClipWidth] = useState(0);
   const [marqueeTextWidth, setMarqueeTextWidth] = useState(0);
 
@@ -312,13 +319,24 @@ const [cameraCount, setCameraCount] = useState(1);
     () => makeRtspUrl(vendor, "192.168.1.20"),
     [vendor],
   );
-const findNextCameraSlot = () => {
+
+  const findNextCameraSlot = () => {
     const firstEmpty = cameraStreams.findIndex(
       (stream, index) => index < 9 && !stream.trim(),
     );
 
     if (firstEmpty >= 0) return firstEmpty;
     return cameraStreams.length < 9 ? cameraStreams.length : -1;
+  };
+
+  const setCameraZoomValue = (slot: number, value: number) => {
+    const nextValue = Math.max(1, Math.min(2, value));
+
+    setCameraZoom((items) => {
+      const next = [...items];
+      next[slot] = Number(nextValue.toFixed(1));
+      return next;
+    });
   };
 
   const setCameraStream = (slot: number, stream: string) => {
@@ -337,6 +355,12 @@ const findNextCameraSlot = () => {
     setCameraMuted((items) => {
       const next = [...items];
       next[slot] = false;
+      return next;
+    });
+
+    setCameraZoom((items) => {
+      const next = [...items];
+      next[slot] = 1;
       return next;
     });
 
@@ -430,7 +454,6 @@ const findNextCameraSlot = () => {
       );
     }
   };
-
   const clearLogo = () => {
     setLogoUri("");
     setSettingsSaved(false);
@@ -529,6 +552,7 @@ const findNextCameraSlot = () => {
               username.trim(),
               password,
             );
+
             setCameraStream(slot, streamUri);
             setActiveStream(streamUri);
             setManualUrl(hideCredentials(result.streamUri));
@@ -676,6 +700,7 @@ const findNextCameraSlot = () => {
     setCameraConnected([]);
     setCameraMuted([]);
     setCameraControlsVisible([]);
+    setCameraZoom([]);
     setActiveStream("");
     setSelectedCamera(null);
     setProfile(null);
@@ -718,81 +743,137 @@ const findNextCameraSlot = () => {
         </Text>
       </View>
 
-      <View style={styles.cameraGrid}>
-        {Array.from({ length: cameraCount }).map((_, index) => {
-          const stream = cameraStreams[index] || "";
-          const connected = Boolean(cameraConnected[index]);
+      {cameraStreams.some((stream) => Boolean(stream?.trim())) ? (
+        <View
+          style={[
+            styles.cameraGrid,
+            isLandscape && styles.cameraGridLandscape,
+          ]}
+        >
+          {cameraStreams
+            .map((stream, index) => ({
+              stream: stream || "",
+              index,
+            }))
+            .filter((item) => item.stream.trim())
+            .map(({ stream, index }, _activeIndex, activeItems) => {
+              const connected = Boolean(cameraConnected[index]);
+              const activeCount = activeItems.length;
 
-          return (
-            <View
-              key={index}
-              style={[
-                styles.cameraSlot,
-                cameraCount === 1 && { width: "100%" },
-                cameraCount === 2 && { width: "48%" },
-                cameraCount === 4 && { width: "48%" },
-                cameraCount === 6 && { width: "31%" },
-                cameraCount === 9 && { width: "31%" },
-              ]}
-              onTouchStart={() => showCameraControls(index)}
-            >
-              <View style={styles.cameraSlotHeader}>
-                <Text style={styles.cameraSlotTitle}>
-                  Kamera {index + 1}
-                </Text>
-                <Text style={styles.cameraSlotStatus}>
-                  {connected
-                    ? "LIVE"
-                    : stream
-                      ? "MEMBUKA..."
-                      : "BELUM TERHUBUNG"}
-                </Text>
-              </View>
+              const columns =
+                activeCount === 1
+                  ? 1
+                  : isLandscape && activeCount >= 7
+                    ? 3
+                    : 2;
 
-              <CameraVideo
-                url={stream}
-                nativeControls={nativeControls}
-                muted={cameraMuted[index] ?? muted}
-                onLoad={() => {
-                  setCameraSlotConnected(index, true);
-                  setTesting(false);
-                  setStatusText(`Kamera ${index + 1} LIVE.`);
-                }}
-                onError={(message) => {
-                  setCameraSlotConnected(index, false);
-                  setTesting(false);
-                  setStatusText(
-                    `OFFLINE • Kamera ${index + 1}: ${message}`,
-                  );
-                  if (stream) {
-                    addHistory("error", stream, message);
-                  }
-                }}
-              />
+              const width =
+                columns === 1
+                  ? "100%"
+                  : columns === 2
+                    ? "48.5%"
+                    : "32%";
 
-              {stream && cameraControlsVisible[index] ? (
-                <View style={styles.cameraControlsOverlay}>
-                  <Pressable
-                    onPress={() => {
-                      setCameraMuted((items) => {
-                        const next = [...items];
-                        next[index] = !(next[index] ?? false);
-                        return next;
-                      });
-                      showCameraControls(index);
-                    }}
-                    style={styles.micButton}
-                  >
-                    <Text style={styles.micButtonText}>
-                      {(cameraMuted[index] ?? muted) ? "🔇" : "🎙️"}
+              return (
+                <View
+                  key={index}
+                  style={[styles.cameraSlot, { width }]}
+                  onTouchStart={() => showCameraControls(index)}
+                >
+                  <View style={styles.cameraSlotHeader}>
+                    <Text style={styles.cameraSlotTitle}>
+                      Kamera {index + 1}
                     </Text>
-                  </Pressable>
+                    <Text style={styles.cameraSlotStatus}>
+                      {connected ? "LIVE" : "MEMBUKA..."}
+                    </Text>
+                  </View>
+
+                  <CameraVideo
+                    url={stream}
+                    nativeControls={nativeControls}
+                    muted={cameraMuted[index] ?? muted}
+                    zoom={cameraZoom[index] ?? 1}
+                    onLoad={() => {
+                      setCameraSlotConnected(index, true);
+                      setTesting(false);
+                      setStatusText(`Kamera ${index + 1} LIVE.`);
+                    }}
+                    onError={(message) => {
+                      setCameraSlotConnected(index, false);
+                      setTesting(false);
+                      setStatusText(
+                        `OFFLINE • Kamera ${index + 1}: ${message}`,
+                      );
+                      if (stream) {
+                        addHistory("error", stream, message);
+                      }
+                    }}
+                  />
+
+                  {cameraControlsVisible[index] ? (
+                    <View style={styles.cameraControlsOverlay}>
+                      <Pressable
+                        onPress={() => {
+                          setCameraZoomValue(
+                            index,
+                            (cameraZoom[index] ?? 1) - 0.1,
+                          );
+                          showCameraControls(index);
+                        }}
+                        style={styles.micButton}
+                      >
+                        <Text style={styles.micButtonText}>−</Text>
+                      </Pressable>
+
+                      <View style={styles.zoomLabel}>
+                        <Text style={styles.zoomLabelText}>
+                          {Math.round((cameraZoom[index] ?? 1) * 100)}%
+                        </Text>
+                      </View>
+
+                      <Pressable
+                        onPress={() => {
+                          setCameraZoomValue(
+                            index,
+                            (cameraZoom[index] ?? 1) + 0.1,
+                          );
+                          showCameraControls(index);
+                        }}
+                        style={styles.micButton}
+                      >
+                        <Text style={styles.micButtonText}>+</Text>
+                      </Pressable>
+                     <Pressable
+                        onPress={() => {
+                          setCameraMuted((items) => {
+                            const next = [...items];
+                            next[index] = !(next[index] ?? muted);
+                            return next;
+                          });
+                          showCameraControls(index);
+                        }}
+                        style={styles.micButton}
+                      >
+                        <Text style={styles.micButtonText}>
+                          {(cameraMuted[index] ?? muted) ? "🔇" : "🎙️"}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  ) : null}
                 </View>
-              ) : null}
-            </View>
-          );
-        })}
-      </View>
+              );
+            })}
+        </View>
+      ) : (
+        <View style={styles.emptyLiveArea}>
+          <Text style={styles.bigIcon}>📹</Text>
+          <Text style={styles.emptyTitle}>Belum ada kamera aktif</Text>
+          <Text style={styles.centerText}>
+            Hubungkan kamera dari halaman CCTV atau masukkan URL RTSP.
+          </Text>
+        </View>
+      )}
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Koneksi Manual</Text>
@@ -872,6 +953,7 @@ const findNextCameraSlot = () => {
           />
         </View>
       </View>
+
       {statusText ? (
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>{statusText}</Text>
@@ -1186,7 +1268,6 @@ const findNextCameraSlot = () => {
           editable={false}
           style={styles.input}
         />
-
         <Text style={styles.switchDescription}>Kamera ONVIF</Text>
         <Text style={styles.statusText}>
           {selectedCamera
@@ -1266,6 +1347,7 @@ const findNextCameraSlot = () => {
             </Text>
           </View>
         </View>
+
         {showInfo && statusText ? (
           <View style={styles.topStatus}>
             <Text style={styles.topStatusText} numberOfLines={2}>
@@ -1557,6 +1639,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+  zoomLabel: {
+    minWidth: 48,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
+    borderRadius: 8,
+    backgroundColor: "rgba(17,25,35,0.88)",
+    borderWidth: 1,
+    borderColor: "#516274",
+  },
+  zoomLabelText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "800",
+  },
   micButton: {
     width: 42,
     height: 42,
@@ -1638,6 +1736,20 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 8,
     marginBottom: 6,
+  },
+  cameraGridLandscape: {
+    alignContent: "flex-start",
+  },
+  emptyLiveArea: {
+    minHeight: 260,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    marginBottom: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#25313e",
+    backgroundColor: "#111923",
   },
   cameraSlot: {
     marginBottom: 2,
