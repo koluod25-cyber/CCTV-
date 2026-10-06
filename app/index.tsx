@@ -1856,7 +1856,7 @@ const renderHistory = () => (
           Teks identitas pemilik yang berjalan di header.
         </Text>
 
-        <TextInput
+                <TextInput
           value={ownerText}
           onChangeText={(value) => {
             setOwnerText(value);
@@ -1864,7 +1864,15 @@ const renderHistory = () => (
           }}
           placeholder="Masukkan identitas pemilik"
           placeholderTextColor="#667483"
-      </View>
+          style={styles.input}
+        />
+
+        <Text style={styles.cardTitle}>Logo Header</Text>
+
+        <Text style={styles.logoHelpText}>
+          Pilih logo dari galeri HP. Logo akan tampil di sudut kanan
+          atas header.
+        </Text>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Kontrol Video</Text>
