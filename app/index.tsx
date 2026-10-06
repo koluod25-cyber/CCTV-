@@ -259,6 +259,44 @@ export default function HomeScreen() {
       Alert.alert("Ganti logo gagal", error instanceof Error ? error.message : "Gagal memilih logo dari galeri.");
     }
   };
+  const clearLogo = () => {
+    Alert.alert(
+      "Hapus Logo",
+      "Apakah Anda yakin ingin menghapus logo header?",
+      [
+        {
+          text: "Batal",
+          style: "cancel",
+        },
+        {
+          text: "Hapus",
+          style: "destructive",
+          onPress: () => {
+            setLogoUri("");
+            setSavedLogoUri("");
+            setSettingsSaved(false);
+            setStatusText("Logo dihapus. Tekan Simpan Pengaturan.");
+          },
+        },
+      ],
+    );
+  };
+
+  const saveSettings = () => {
+    const nextOwnerText =
+      ownerText.trim() || "Pemilik: CCTV Universal Monitor";
+
+    setOwnerText(nextOwnerText);
+    setSavedOwnerText(nextOwnerText);
+    setSavedLogoUri(logoUri.trim());
+    setSettingsSaved(true);
+    setStatusText("Pengaturan berhasil disimpan.");
+
+    Alert.alert(
+      "Berhasil",
+      "Pengaturan identitas pemilik dan logo berhasil disimpan.",
+    );
+  };
   const searchCameras = async () => {
     if (searching) return;
     setSearching(true); setStatusText("");
