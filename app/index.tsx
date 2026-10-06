@@ -1869,10 +1869,71 @@ const renderHistory = () => (
 
         <Text style={styles.cardTitle}>Logo Header</Text>
 
+                <Text style={styles.cardTitle}>Logo Header</Text>
+
         <Text style={styles.logoHelpText}>
           Pilih logo dari galeri HP. Logo akan tampil di sudut kanan
           atas header.
         </Text>
+
+        <View style={styles.logoActionRow}>
+          <Pressable
+            onPress={pickLogoFromGallery}
+            style={[styles.primaryButtonSmall, styles.flexButton]}
+          >
+            <Text style={styles.primaryButtonText}>
+              Pilih / Ganti Logo
+            </Text>
+          </Pressable>
+
+          {logoUri.trim() ? (
+            <Pressable
+              onPress={clearLogo}
+              style={styles.secondaryButtonSmall}
+            >
+              <Text style={styles.secondaryButtonText}>
+                Hapus
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
+
+        {logoUri.trim() ? (
+          <Image
+            source={{ uri: logoUri.trim() }}
+            style={styles.logoPreview}
+            resizeMode="contain"
+          />
+        ) : (
+          <View style={styles.logoEmptyPreview}>
+            <Text style={styles.logoEmptyText}>
+              Belum ada logo dipilih
+            </Text>
+          </View>
+        )}
+
+        <Text style={styles.logoUriText} numberOfLines={2}>
+          {logoUri.trim() || "Logo belum dipilih dari galeri."}
+        </Text>
+
+        <Pressable
+          onPress={saveSettings}
+          style={[
+            styles.saveButton,
+            settingsSaved && styles.saveButtonSaved,
+          ]}
+        >
+          <Text style={styles.saveButtonText}>
+            {settingsSaved
+              ? "✓ Pengaturan Tersimpan"
+              : "💾 Simpan Pengaturan"}
+          </Text>
+        </Pressable>
+
+        <Text style={styles.saveHint}>
+          Tekan tombol ini setelah mengganti logo atau identitas pemilik.
+        </Text>
+      </View>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Kontrol Video</Text>
