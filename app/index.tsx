@@ -3511,7 +3511,7 @@ return next;
     flex: 1,
     minWidth: 0,
   },
-});
+
   cameraIconBox: {
     width: 38,
     height: 38,
