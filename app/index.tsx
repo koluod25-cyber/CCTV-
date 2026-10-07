@@ -22,6 +22,7 @@ import {
   TextInput,
   View,
   useWindowDimensions,
+  type DimensionValue,
 } from "react-native";
 
 import Video from "react-native-video";
@@ -1754,10 +1755,10 @@ export default function HomeScreen() {
         ? 1.25
         : 1.45;
 
-  const cameraCardWidth =
-    isLandscape
-      ? `${100 / cameraGridColumns - 1}%`
-      : "100%";
+  const cameraCardWidth: DimensionValue =
+  isLandscape
+    ? `${100 / cameraGridColumns - 1}%`
+    : "100%";
 
   const cameraGridStyle = {
     flexDirection:
@@ -3404,6 +3405,55 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 2,
   },
+    layoutSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+
+  layoutButton: {
+    minWidth: 28,
+    height: 28,
+    paddingHorizontal: 6,
+    borderRadius: 7,
+    backgroundColor: "#263442",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  layoutButtonActive: {
+    backgroundColor: "#1976d2",
+  },
+
+  layoutButtonText: {
+    color: "#b5c1cd",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+
+  layoutButtonTextActive: {
+    color: "#ffffff",
+  },
+
+  emptyLiveArea: {
+    backgroundColor: "#141d27",
+    borderRadius: 12,
+    padding: 18,
+    marginBottom: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#263341",
+  },
+
+  primaryButtonSmall: {
+    minHeight: 38,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: "#1976d2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
 
   vendorRow: {
         gap: 7,
