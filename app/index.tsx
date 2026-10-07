@@ -45,12 +45,19 @@ import {
   type PtzDirection,
 } from "@/onvif-ptz";
 
-type TabName = "live" | "cctv" | "history" | "settings";
+type TabName =
+  | "live"
+  | "cctv"
+  | "history"
+  | "settings";
 
 type HistoryItem = {
   id: string;
   url: string;
-  action: "connected" | "disconnected" | "error";
+  action:
+    | "connected"
+    | "disconnected"
+    | "error";
   message: string;
   time: string;
 };
@@ -64,14 +71,18 @@ type CameraPtzConfig = {
 const MAX_CAMERAS = 9;
 
 function isCameraUrl(value: string) {
-  return /^(rtsp|rtsps|http|https):\/\/\S+$/i.test(value.trim());
+  return /^(rtsp|rtsps|http|https):\/\/\S+$/i.test(
+    value.trim(),
+  );
 }
 
 function hideCredentials(value: string) {
   try {
     const url = new URL(value);
+
     url.username = "";
     url.password = "";
+
     return url.toString();
   } catch {
     return value;
@@ -83,7 +94,9 @@ function addCredentials(
   username: string,
   password: string,
 ) {
-  if (!username && !password) return value.trim();
+  if (!username && !password) {
+    return value.trim();
+  }
 
   try {
     const url = new URL(value.trim());
@@ -117,9 +130,14 @@ function CameraVideo({
   onLoad?: () => void;
   onError?: (message: string) => void;
 }) {
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(false);
-  const [errorDetail, setErrorDetail] = useState("");
+  const [loaded, setLoaded] =
+    useState(false);
+
+  const [error, setError] =
+    useState(false);
+
+  const [errorDetail, setErrorDetail] =
+    useState("");
 
   useEffect(() => {
     setLoaded(false);
@@ -130,14 +148,17 @@ function CameraVideo({
   if (!url) {
     return (
       <View style={styles.emptyVideo}>
-        <Text style={styles.bigIcon}>📹</Text>
+        <Text style={styles.bigIcon}>
+          📹
+        </Text>
 
         <Text style={styles.emptyTitle}>
           Belum ada kamera aktif
         </Text>
 
         <Text style={styles.centerText}>
-          Pilih kamera atau masukkan URL RTSP/HTTP/HTTPS.
+          Pilih kamera atau masukkan URL
+          RTSP/HTTP/HTTPS.
         </Text>
       </View>
     );
@@ -150,8 +171,12 @@ function CameraVideo({
         source={{
           uri: url,
           type:
-            url.toLowerCase().startsWith("rtsp://") ||
-            url.toLowerCase().startsWith("rtsps://")
+            url
+              .toLowerCase()
+              .startsWith("rtsp://") ||
+            url
+              .toLowerCase()
+              .startsWith("rtsps://")
               ? "rtsp"
               : undefined,
         }}
@@ -184,16 +209,20 @@ function CameraVideo({
           onLoad?.();
         }}
         onError={(videoError) => {
-          const errorObject = videoError?.error;
+          const errorObject =
+            videoError?.error;
 
           const errorCode =
-            errorObject?.errorCode || "";
+            errorObject?.errorCode ||
+            "";
 
           const errorString =
-            errorObject?.errorString || "";
+            errorObject?.errorString ||
+            "";
 
           const errorException =
-            errorObject?.errorException || "";
+            errorObject?.errorException ||
+            "";
 
           const detail = [
             errorCode
@@ -223,7 +252,8 @@ function CameraVideo({
           minBufferMs: 1500,
           maxBufferMs: 5000,
           bufferForPlaybackMs: 500,
-          bufferForPlaybackAfterRebufferMs: 1000,
+          bufferForPlaybackAfterRebufferMs:
+            1000,
         }}
       />
 
@@ -280,7 +310,9 @@ function PtzSwipeControl({
   onStop,
 }: {
   enabled: boolean;
-  onMove: (direction: PtzDirection) => void;
+  onMove: (
+    direction: PtzDirection,
+  ) => void;
   onStop: () => void;
 }) {
   const startX = useRef(0);
@@ -295,7 +327,9 @@ function PtzSwipeControl({
         onMoveShouldSetPanResponder: () =>
           enabled,
 
-        onPanResponderGrant: (event) => {
+        onPanResponderGrant: (
+          event,
+        ) => {
           startX.current =
             event.nativeEvent.pageX;
 
@@ -303,7 +337,9 @@ function PtzSwipeControl({
             event.nativeEvent.pageY;
         },
 
-        onPanResponderRelease: (event) => {
+        onPanResponderRelease: (
+          event,
+        ) => {
           if (!enabled) {
             return;
           }
@@ -316,15 +352,20 @@ function PtzSwipeControl({
             event.nativeEvent.pageY -
             startY.current;
 
-          const distance =
-            Math.sqrt(dx * dx + dy * dy);
+          const threshold = 25;
 
-          if (distance < 35) {
+          if (
+            Math.abs(dx) < threshold &&
+            Math.abs(dy) < threshold
+          ) {
             onStop();
             return;
           }
 
-          if (Math.abs(dx) > Math.abs(dy)) {
+          if (
+            Math.abs(dx) >
+            Math.abs(dy)
+          ) {
             onMove(
               dx > 0
                 ? "right"
@@ -337,50 +378,48 @@ function PtzSwipeControl({
                 : "up",
             );
           }
-
-          onStop();
         },
 
         onPanResponderTerminate: () => {
-          onStop();
+          if (enabled) {
+            onStop();
+          }
         },
-
-        onPanResponderTerminationRequest: () =>
-          true,
       }),
     [enabled, onMove, onStop],
   );
 
-  if (!enabled) {
-    return null;
-  }
-
   return (
     <View
-      pointerEvents="box-only"
-      style={styles.ptzSwipeOverlay}
       {...responder.panHandlers}
+      style={[
+        styles.ptzSwipeOverlay,
+        !enabled &&
+          styles.ptzDisabledBox,
+      ]}
     >
-      <View style={styles.ptzSwipeHint}>
-        <Text style={styles.ptzSwipeHintText}>
-          Geser layar untuk PTZ
-        </Text>
-      </View>
+      <Text
+        style={styles.ptzSwipeHintText}
+      >
+        Geser untuk PTZ
+      </Text>
     </View>
   );
 }
+
+type TabButtonProps = {
+  icon: string;
+  label: string;
+  active: boolean;
+  onPress: () => void;
+};
 
 function TabButton({
   icon,
   label,
   active,
   onPress,
-}: {
-  icon: string;
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
+}: TabButtonProps) {
   return (
     <Pressable
       onPress={onPress}
@@ -389,14 +428,21 @@ function TabButton({
         active && styles.tabActive,
       ]}
     >
-      <Text style={styles.tabIcon}>
+      <Text
+        style={[
+          styles.tabText,
+          active &&
+            styles.tabTextActive,
+        ]}
+      >
         {icon}
       </Text>
 
       <Text
         style={[
           styles.tabText,
-          active && styles.tabTextActive,
+          active &&
+            styles.tabTextActive,
         ]}
       >
         {label}
@@ -405,260 +451,262 @@ function TabButton({
   );
 }
 
-export default function HomeScreen() {
-  const [activeTab, setActiveTab] =
-    useState<TabName>("live");
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(
+              marqueeX,
+              {
+                toValue:
+                  -marqueeTextWidth,
+                duration:
+                  moveDuration,
+                easing:
+                  Easing.linear,
+                useNativeDriver:
+                  true,
+              },
+            ),
 
-  const [cameras, setCameras] =
-    useState<DiscoveredCamera[]>([]);
+            Animated.delay(1500),
 
-  const [selectedCamera, setSelectedCamera] =
-    useState<DiscoveredCamera | null>(null);
+            Animated.timing(
+              marqueeX,
+              {
+                toValue:
+                  marqueeClipWidth,
+                duration: 0,
+                useNativeDriver:
+                  true,
+              },
+            ),
 
-  const [activeStream, setActiveStream] =
-    useState("");
-
-  const [playerConnected, setPlayerConnected] =
-    useState(false);
-
-  const [manualUrl, setManualUrl] =
-    useState(
-      "rtsp://192.168.1.20:554/stream1",
-    );
-
-  const [username, setUsername] =
-    useState("");
-
-  const [password, setPassword] =
-    useState("");
-
-  const [vendor, setVendor] =
-    useState<(typeof CCTV_VENDORS)[number]>(
-      "Generic / ONVIF",
-    );
-
-  const [searching, setSearching] =
-    useState(false);
-
-  const [connecting, setConnecting] =
-    useState<string | null>(null);
-
-  const [testing, setTesting] =
-    useState(false);
-
-  const [statusText, setStatusText] =
-    useState("");
-
-  const [profile, setProfile] =
-    useState<OnvifMediaProfile | null>(null);
-
-  const [history, setHistory] =
-    useState<HistoryItem[]>([]);
-
-  const [showInfo, setShowInfo] =
-    useState(true);
-
-  const [nativeControls, setNativeControls] =
-    useState(true);
-
-  const [muted, setMuted] =
-    useState(false);
-
-  const [cameraCount, setCameraCount] =
-    useState(1);
-
-  const [cameraStreams, setCameraStreams] =
-    useState<string[]>([]);
-
-  const [cameraConnected, setCameraConnected] =
-    useState<boolean[]>([]);
-
-  const [cameraMuted, setCameraMuted] =
-    useState<boolean[]>([]);
-
-  const [cameraZoom, setCameraZoom] =
-    useState<number[]>([]);
-
-  const [cameraControlsVisible, setCameraControlsVisible] =
-    useState<boolean[]>([]);
-
-  const [cameraPtzConfig, setCameraPtzConfig] =
-    useState<Array<CameraPtzConfig | null>>([]);
-
-  const cameraControlsTimers =
-    useRef<
-      Array<ReturnType<typeof setTimeout> | null>
-    >([]);
-
-  const [ownerText, setOwnerText] =
-    useState(
-      "Pemilik: CCTV Universal Monitor",
-    );
-
-  const [logoUri, setLogoUri] =
-    useState("");
-
-  const [savedOwnerText, setSavedOwnerText] =
-    useState(
-      "Pemilik: CCTV Universal Monitor",
-    );
-
-  const [savedLogoUri, setSavedLogoUri] =
-    useState("");
-
-  const [settingsSaved, setSettingsSaved] =
-    useState(false);
-
-  const marqueeX =
-    useRef(new Animated.Value(0)).current;
-
-  const [
-    marqueeClipWidth,
-    setMarqueeClipWidth,
-  ] = useState(0);
-
-  const [
-    marqueeTextWidth,
-    setMarqueeTextWidth,
-  ] = useState(0);
-
-  const {
-    width: windowWidth,
-    height: windowHeight,
-  } = useWindowDimensions();
-
-  const isLandscape =
-    windowWidth > windowHeight;
-
-  const displayedLogo =
-    logoUri.trim() || savedLogoUri;
-
-  const displayedOwner =
-    ownerText.trim() ||
-    savedOwnerText ||
-    "Pemilik: CCTV Universal Monitor";
-
-  useEffect(() => {
-    setPlayerConnected(false);
-  }, [activeStream]);
-
-  useEffect(() => {
-    if (
-      !marqueeClipWidth ||
-      !marqueeTextWidth
-    ) {
-      return;
-    }
-
-    marqueeX.stopAnimation();
-
-    marqueeX.setValue(
-      marqueeClipWidth,
-    );
-
-    const travelDistance =
-      marqueeTextWidth +
-      marqueeClipWidth;
-
-    const moveDuration =
-      Math.max(
-        7000,
-        travelDistance * 28,
-      );
-
-    const animation =
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(
-            marqueeX,
-            {
-              toValue:
-                -marqueeTextWidth,
-              duration:
-                moveDuration,
-              easing:
-                Easing.linear,
-              useNativeDriver:
-                true,
-            },
-          ),
-
-          Animated.delay(1500),
-
-          Animated.timing(
-            marqueeX,
-            {
-              toValue:
-                marqueeClipWidth,
-              duration: 0,
-              useNativeDriver:
-                true,
-            },
-          ),
-
-          Animated.delay(500),
-        ]),
-      );
+            Animated.delay(500),
+          ]),
+        );
 
     animation.start();
 
     return () => {
       animation.stop();
+      marqueeX.stopAnimation();
     };
   }, [
     marqueeClipWidth,
     marqueeTextWidth,
-    displayedOwner,
     marqueeX,
+    displayedOwner,
   ]);
 
-  const suggestedUrl = useMemo(
-    () =>
-      makeRtspUrl(
-        vendor,
-        "192.168.1.20",
-      ),
-    [vendor],
+  useEffect(() => {
+    return () => {
+      cameraControlsTimers.current.forEach(
+        (timer) => {
+          if (timer) {
+            clearTimeout(timer);
+          }
+        },
+      );
+    };
+  }, []);
+
+  const addHistory = useCallback(
+    (
+      action:
+        | "connected"
+        | "disconnected"
+        | "error",
+      url: string,
+      message: string,
+    ) => {
+      const item: HistoryItem = {
+        id:
+          `${Date.now()}-${Math.random()}`,
+        url,
+        action,
+        message,
+        time:
+          new Date().toLocaleString(
+            "id-ID",
+          ),
+      };
+
+      setHistory((current) => [
+        item,
+        ...current,
+      ]);
+    },
+    [],
   );
 
-  const findNextCameraSlot = () => {
-    const firstEmpty =
-      cameraStreams.findIndex(
-        (stream, index) =>
-          index < MAX_CAMERAS &&
-          !stream.trim(),
-      );
-
-    if (firstEmpty >= 0) {
-      return firstEmpty;
-    }
-
-    return cameraStreams.length <
-      MAX_CAMERAS
-      ? cameraStreams.length
-      : -1;
-  };
-
-  const setCameraZoomValue = (
-    slot: number,
-    value: number,
-  ) => {
-    const nextValue =
-      Math.max(
+  const updateCameraCount = useCallback(
+    (count: number) => {
+      const safeCount = Math.max(
         1,
-        Math.min(2, value),
+        Math.min(MAX_CAMERAS, count),
       );
 
-    setCameraZoom((items) => {
-      const next = [...items];
+      setCameraCount(safeCount);
 
-      next[slot] =
-        Number(
-          nextValue.toFixed(1),
+      setCameraStreams((current) =>
+        Array.from(
+          { length: safeCount },
+          (_, index) =>
+            current[index] || "",
+        ),
+      );
+
+      setCameraConnected((current) =>
+        Array.from(
+          { length: safeCount },
+          (_, index) =>
+            current[index] || false,
+        ),
+      );
+
+      setCameraMuted((current) =>
+        Array.from(
+          { length: safeCount },
+          (_, index) =>
+            current[index] || false,
+        ),
+      );
+
+      setCameraZoom((current) =>
+        Array.from(
+          { length: safeCount },
+          (_, index) =>
+            current[index] || 1,
+        ),
+      );
+
+      setCameraControlsVisible(
+        (current) =>
+          Array.from(
+            { length: safeCount },
+            (_, index) =>
+              current[index] || false,
+          ),
+      );
+
+      setCameraPtzConfig((current) =>
+        Array.from(
+          { length: safeCount },
+          (_, index) =>
+            current[index] || null,
+        ),
+      );
+    },
+    [],
+  );
+
+  useEffect(() => {
+    updateCameraCount(1);
+  }, [updateCameraCount]);
+
+  const setCameraStream = useCallback(
+    (
+      index: number,
+      value: string,
+    ) => {
+      setCameraStreams((current) => {
+        const next = [
+          ...current,
+        ];
+
+        while (
+          next.length <
+          cameraCount
+        ) {
+          next.push("");
+        }
+
+        next[index] = value;
+
+        return next;
+      });
+    },
+    [cameraCount],
+  );
+
+  const setCameraConnectedAt =
+    useCallback(
+      (
+        index: number,
+        value: boolean,
+      ) => {
+        setCameraConnected(
+          (current) => {
+            const next = [
+              ...current,
+            ];
+
+            while (
+              next.length <
+              cameraCount
+            ) {
+              next.push(false);
+            }
+
+            next[index] = value;
+
+            return next;
+          },
         );
+      },
+      [cameraCount],
+    );
 
-      return next;
-    });
+  const setCameraMutedAt =
+    useCallback(
+      (
+        index: number,
+        value: boolean,
+      ) => {
+        setCameraMuted(
+          (current) => {
+            const next = [
+              ...current,
+            ];
+
+            while (
+              next.length <
+              cameraCount
+            ) {
+              next.push(false);
+            }
+
+            next[index] = value;
+
+            return next;
+          },
+        );
+      },
+      [cameraCount],
+    );
+
+  const setCameraZoomAt =
+    useCallback(
+      (
+        index: number,
+        value: number,
+      ) => {
+            setCameraZoom((current) => {
+      const next = [...current];
+
+      while (next.length < cameraCount) {
+        next.push(1);
+      }
+
+      next[index] = Math.max(
+1,
+Math.min(
+3,
+(next[index] || 1) + delta,
+),
+);
+
+return next;  
+});
   };
 
   const setCameraStream = (
@@ -710,8 +758,7 @@ export default function HomeScreen() {
 
     setCameraCount(
       (current) =>
-        current <
-        requiredLayout
+        current < requiredLayout
           ? requiredLayout
           : current,
     );
@@ -724,8 +771,7 @@ export default function HomeScreen() {
     setCameraConnected((items) => {
       const next = [...items];
 
-      next[slot] =
-        connected;
+      next[slot] = connected;
 
       return next;
     });
@@ -734,6 +780,7 @@ export default function HomeScreen() {
       connected,
     );
   };
+
   const showCameraControls = (
     slot: number,
   ) => {
@@ -848,6 +895,7 @@ export default function HomeScreen() {
           config.credentials,
           command,
         );
+            );
 
       setStatusText(
         `Kamera ${
@@ -1120,26 +1168,17 @@ export default function HomeScreen() {
                 styles.ptzZoomText
               }
             >
-              − Zoom
+              −
             </Text>
           </Pressable>
 
-          <Pressable
-            onPress={() =>
-              stopPtz(slot)
-            }
+          <Text
             style={
-              styles.ptzZoomButton
+              styles.ptzPanelStatus
             }
           >
-            <Text
-              style={
-                styles.ptzZoomText
-              }
-            >
-              Stop
-            </Text>
-          </Pressable>
+            Zoom PTZ
+          </Text>
 
           <Pressable
             onPress={() =>
@@ -1157,11 +1196,13 @@ export default function HomeScreen() {
                 styles.ptzZoomText
               }
             >
-              + Zoom
+              +
             </Text>
           </Pressable>
         </View>
       </View>
+    );
+  };
     );
   };
 
@@ -1307,6 +1348,19 @@ export default function HomeScreen() {
       return;
     }
 
+    const endpoints =
+      Array.from(
+        new Set(
+          (
+            camera.xaddrs ??
+            []
+          ).filter((item) =>
+            /^https?:\/\//i.test(
+              item,
+            ),
+          ),
+        ),
+      );
     const endpoints =
       Array.from(
         new Set(
@@ -1478,6 +1532,7 @@ export default function HomeScreen() {
       setConnecting(null);
     }
   };
+
   const connectManual = () => {
     const value =
       manualUrl.trim();
@@ -1512,6 +1567,7 @@ export default function HomeScreen() {
 
     setSelectedCamera(null);
     setProfile(null);
+
     setCameraPtz(
       slot,
       null,
@@ -1548,7 +1604,6 @@ export default function HomeScreen() {
         getEndpointDetails(
           value,
         );
-
       if (
         !isCameraUrl(value) ||
         !endpoint
@@ -1589,6 +1644,7 @@ export default function HomeScreen() {
         setTesting(true);
         setSelectedCamera(null);
         setProfile(null);
+
         setCameraPtz(
           slot,
           null,
@@ -1692,6 +1748,7 @@ export default function HomeScreen() {
     }
 
     setTesting(false);
+
     setPlayerConnected(
       false,
     );
@@ -1787,10 +1844,10 @@ export default function HomeScreen() {
             length: cameraCount,
           }).map((_, index) => {
             const stream =
-              cameraStreams[
-                index
-              ] || "";
-
+              const stream =
+  cameraStreams[
+    index
+  ] || "";
             const connected =
               Boolean(
                 cameraConnected[
@@ -2027,6 +2084,12 @@ export default function HomeScreen() {
                           style={
                             styles.micButton
                           }
+                        >
+<Text
+  style={
+    styles.micButtonText
+  }
+>
                         >
                           <Text
                             style={
@@ -2272,10 +2335,13 @@ export default function HomeScreen() {
 
           <Switch
             value={!muted}
-            onValueChange={(value) =>
-              setMuted(!value)
+            onValueChange={(
+              enabled,
+            ) =>
+              setMuted(!enabled)
             }
           />
+        </View>
         </View>
       </View>
 
@@ -2292,6 +2358,7 @@ export default function HomeScreen() {
       ) : null}
     </ScrollView>
   );
+
   const renderCctv = () => (
     <ScrollView
       style={styles.content}
@@ -2516,345 +2583,108 @@ export default function HomeScreen() {
                           styles.primaryButtonText
                         }
                       >
-                        Hubungkan ke
-                        Slot Berikutnya
+                        ▶ Hubungkan Kamera
                       </Text>
                     )}
                   </Pressable>
-                </View>
-              );
-            },
-          )
-        )}
-      </View>
-
-      {statusText ? (
-        <View
-          style={styles.infoBox}
-        >
-          <Text
-            style={styles.infoText}
-          >
-            {statusText}
-          </Text>
-        </View>
-      ) : null}
-    </ScrollView>
-  );
-
-  const renderHistory = () => (
-    <ScrollView
-      style={styles.content}
-      contentContainerStyle={
-        styles.contentContainer
-      }
-    >
-      <View
-        style={styles.sectionHeader}
-      >
-        <View>
-          <Text
-            style={styles.sectionTitle}
-          >
-            Riwayat
-          </Text>
-
-          <Text
-            style={
-              styles.sectionSubtitle
-            }
-          >
-            Riwayat koneksi dan
-            aktivitas CCTV.
-          </Text>
-        </View>
-
-        <Pressable
-          style={
-            styles.secondaryButton
-          }
-          onPress={() =>
-            setHistory([])
-          }
-          disabled={
-            !history.length
-          }
-        >
-          <Text
-            style={[
-              styles.secondaryButtonText,
-              !history.length &&
-                styles.disabledText,
-            ]}
-          >
-            Hapus Riwayat
-          </Text>
-        </Pressable>
-      </View>
-
-      {!history.length ? (
         <View
           style={
-            styles.emptyBox
+            styles.logoPreviewBox
           }
         >
-          <Text
-            style={
-              styles.emptyIcon
-            }
-          >
-            🕘
-          </Text>
-
-          <Text
-            style={
-              styles.emptyTitle
-            }
-          >
-            Belum ada riwayat
-          </Text>
-
-          <Text
-            style={
-              styles.centerText
-            }
-          >
-            Aktivitas koneksi CCTV
-            akan tampil di sini.
-          </Text>
-        </View>
-      ) : (
-        history.map(
-          (item) => (
-            <View
-              key={item.id}
-              style={styles.card}
+          {displayedLogo ? (
+            <Image
+              source={{
+                uri: displayedLogo,
+              }}
+              style={
+                styles.logoPreview
+              }
+              resizeMode="contain"
+            />
+          ) : (
+            <Text
+              style={
+                styles.logoPlaceholder
+              }
             >
-              <Text
-                style={
-                  styles.cardTitle
-                }
-              >
-                {item.action ===
-                "connected"
-                  ? "✓ Terhubung"
-                  : item.action ===
-                      "disconnected"
-                    ? "■ Terputus"
-                    : "⚠ Error"}
-              </Text>
-
-              <Text
-                style={
-                  styles.statusText
-                }
-              >
-                {item.message}
-              </Text>
-
-              <Text
-                style={
-                  styles.endpointText
-                }
-              >
-                {item.url}
-              </Text>
-
-              <Text
-                style={
-                  styles.cameraMeta
-                }
-              >
-                {item.time}
-              </Text>
-            </View>
-          ),
-        )
-      )}
-    </ScrollView>
-  );
-
-  const renderSettings = () => (
-    <ScrollView
-      style={styles.content}
-      contentContainerStyle={
-        styles.contentContainer
-      }
-    >
-      <View
-        style={styles.sectionHeader}
-      >
-        <View>
-          <Text
-            style={styles.sectionTitle}
-          >
-            Pengaturan
-          </Text>
-
-          <Text
-            style={
-              styles.sectionSubtitle
-            }
-          >
-            Atur identitas, logo,
-            koneksi, dan kontrol
-            video.
-          </Text>
+              Belum ada logo
+            </Text>
+          )}
         </View>
-      </View>
-
-      <View style={styles.card}>
-        <Text
-          style={styles.cardTitle}
-        >
-          Identitas Pemilik
-        </Text>
-
-        <Text
-          style={
-            styles.switchDescription
-          }
-        >
-          Teks identitas pemilik
-          yang berjalan di header.
-        </Text>
-
-        <TextInput
-          value={ownerText}
-          onChangeText={(value) => {
-            setOwnerText(value);
-            setSettingsSaved(false);
-          }}
-          placeholder="Masukkan identitas pemilik"
-          placeholderTextColor="#667483"
-          style={styles.input}
-        />
-
-        <Text
-          style={styles.cardTitle}
-        >
-          Logo Header
-        </Text>
-
-        <Text
-          style={
-            styles.logoHelpText
-          }
-        >
-          Pilih logo dari galeri HP.
-          Logo akan tampil di sudut
-          kanan atas header.
-        </Text>
 
         <View
-          style={
-            styles.logoActionRow
-          }
+          style={styles.buttonRow}
         >
           <Pressable
+            style={[
+              styles.secondaryButton,
+              styles.flexButton,
+            ]}
             onPress={
               pickLogoFromGallery
             }
-            style={[
-              styles.primaryButtonSmall,
-              styles.flexButton,
-            ]}
           >
             <Text
               style={
-                styles.primaryButtonText
+                styles.secondaryButtonText
               }
             >
-              Pilih / Ganti Logo
+              Pilih Logo
             </Text>
           </Pressable>
 
-          {logoUri.trim() ? (
-            <Pressable
-              onPress={
-                clearLogo
-              }
-              style={
-                styles.secondaryButtonSmall
-              }
-            >
-              <Text
-                style={
-                  styles.secondaryButtonText
-                }
-              >
-                Hapus
-              </Text>
-            </Pressable>
-          ) : null}
-        </View>
-
-        {logoUri.trim() ? (
-          <Image
-            source={{
-              uri: logoUri.trim(),
-            }}
-            style={
-              styles.logoPreview
+          <Pressable
+            style={[
+              styles.secondaryButton,
+              styles.flexButton,
+            ]}
+            onPress={
+              clearLogo
             }
-            resizeMode="contain"
-          />
-        ) : (
-          <View
-            style={
-              styles.logoEmptyPreview
+            disabled={
+              !displayedLogo
             }
           >
             <Text
-              style={
-                styles.logoEmptyText
-              }
+              style={[
+                styles.secondaryButtonText,
+                !displayedLogo &&
+                  styles.disabledText,
+              ]}
             >
-              Belum ada logo dipilih
+              Hapus Logo
             </Text>
-          </View>
-        )}
-
-        <Text
-          style={
-            styles.logoUriText
-          }
-          numberOfLines={2}
-        >
-          {logoUri.trim() ||
-            "Logo belum dipilih dari galeri."}
-        </Text>
+          </Pressable>
+        </View>
 
         <Pressable
+          style={
+            styles.primaryButton
+          }
           onPress={
             saveSettings
           }
-          style={[
-            styles.saveButton,
-            settingsSaved &&
-              styles.saveButtonSaved,
-          ]}
         >
           <Text
             style={
-              styles.saveButtonText
+              styles.primaryButtonText
             }
           >
-            {settingsSaved
-              ? "✓ Pengaturan Tersimpan"
-              : "💾 Simpan Pengaturan"}
+            💾 Simpan Pengaturan
           </Text>
         </Pressable>
 
-        <Text
-          style={
-            styles.saveHint
-          }
-        >
-          Tekan tombol ini setelah
-          mengganti logo atau
-          identitas pemilik.
-        </Text>
+        {settingsSaved ? (
+          <Text
+            style={
+              styles.saveHint
+            }
+          >
+            Pengaturan sudah
+            disimpan.
+          </Text>
+        ) : null}
       </View>
 
       <View style={styles.card}>
@@ -2877,7 +2707,7 @@ export default function HomeScreen() {
                 styles.switchTitle
               }
             >
-              Kontrol video
+              Kontrol bawaan
             </Text>
 
             <Text
@@ -2885,7 +2715,7 @@ export default function HomeScreen() {
                 styles.switchDescription
               }
             >
-              Tampilkan kontrol bawaan
+              Tampilkan kontrol
               pemutar video.
             </Text>
           </View>
@@ -2921,8 +2751,8 @@ export default function HomeScreen() {
                 styles.switchDescription
               }
             >
-              Aktifkan atau matikan
-              suara kamera.
+              Aktifkan suara kamera
+              secara default.
             </Text>
           </View>
 
@@ -2933,47 +2763,13 @@ export default function HomeScreen() {
             }
           />
         </View>
-
-        <View
-          style={styles.switchRow}
-        >
-          <View
-            style={
-              styles.switchTextWrap
-            }
-          >
-            <Text
-              style={
-                styles.switchTitle
-              }
-            >
-              Informasi status
-            </Text>
-
-            <Text
-              style={
-                styles.switchDescription
-              }
-            >
-              Tampilkan informasi
-              status di bagian atas.
-            </Text>
-          </View>
-
-          <Switch
-            value={showInfo}
-            onValueChange={
-              setShowInfo
-            }
-          />
-        </View>
       </View>
 
       <View style={styles.card}>
         <Text
           style={styles.cardTitle}
         >
-          Koneksi Kamera
+          Informasi Aplikasi
         </Text>
 
         <Text
@@ -2981,48 +2777,7 @@ export default function HomeScreen() {
             styles.switchDescription
           }
         >
-          Vendor CCTV
-        </Text>
-
-        <TextInput
-          value={vendor}
-          editable={false}
-          style={styles.input}
-        />
-
-        <Text
-          style={
-            styles.switchDescription
-          }
-        >
-          URL RTSP contoh
-        </Text>
-
-        <TextInput
-          value={suggestedUrl}
-          editable={false}
-          style={styles.input}
-        />
-
-        <Text
-          style={
-            styles.switchDescription
-          }
-        >
-          Kamera ONVIF
-        </Text>
-
-        <Text
-          style={
-            styles.statusText
-          }
-        >
-          {selectedCamera
-            ? `Kamera: ${
-                selectedCamera.name ||
-                selectedCamera.host
-              }`
-            : "Belum memilih kamera ONVIF"}
+          CCTV Universal Monitor
         </Text>
 
         <Text
@@ -3030,908 +2785,573 @@ export default function HomeScreen() {
             styles.switchDescription
           }
         >
-          Status Stream
+          Mendukung kamera ONVIF
+          dan stream RTSP.
         </Text>
 
         <Text
           style={
-            styles.statusText
+            styles.switchDescription
           }
         >
-          {activeStream
-            ? "Stream aktif"
-            : "Stream belum aktif"}
+          Maksimal 9 kamera.
         </Text>
       </View>
 
-      {profile ? (
-        <View style={styles.card}>
+      {statusText ? (
+        <View
+          style={styles.infoBox}
+        >
           <Text
-            style={
-              styles.cardTitle
-            }
+            style={styles.infoText}
           >
-            Media Profile
-          </Text>
-
-          <Text
-            style={
-              styles.statusText
-            }
-          >
-            {profile.name ||
-              profile.token ||
-              "Profile ONVIF"}
+            {statusText}
           </Text>
         </View>
       ) : null}
     </ScrollView>
   );
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case "cctv":
+        return renderCctv();
+
+      case "history":
+        return renderHistory();
+
+      case "settings":
+        return renderSettings();
+
+      case "live":
+      default:
+        return renderLive();
+    }
+  };
+
   return (
     <SafeAreaView
-      style={styles.safeArea}
+      style={styles.app}
     >
-      <View style={styles.app}>
-        <View style={styles.header}>
+      <View
+        style={styles.header}
+      >
+        <View
+          style={
+            styles.headerTitleWrap
+          }
+        >
           <View
             style={
-              styles.headerTitleWrap
+              styles.marqueeClip
+            }
+            onLayout={(event) =>
+              setMarqueeClipWidth(
+                event.nativeEvent
+                  .layout.width,
+              )
             }
           >
-            <View
-              style={
-                styles.marqueeClip
-              }
-              onLayout={(event) =>
-                setMarqueeClipWidth(
-                  event.nativeEvent
-                    .layout.width,
-                )
-              }
+            <Animated.View
+              style={{
+                transform: [
+                  {
+                    translateX:
+                      marqueeX,
+                  },
+                ],
+              }}
             >
-              <Animated.Text
+              <Text
+                style={
+                  styles.headerTitle
+                }
+                numberOfLines={1}
                 onLayout={(event) =>
                   setMarqueeTextWidth(
                     event.nativeEvent
                       .layout.width,
                   )
                 }
-                style={[
-                  styles.appSubtitle,
-                  {
-                    transform: [
-                      {
-                        translateX:
-                          marqueeX,
-                      },
-                    ],
-                  },
-                ]}
-                numberOfLines={1}
               >
                 {displayedOwner}
-              </Animated.Text>
-            </View>
-
-            <Text
-              style={styles.appTitle}
-            >
-              CCTV Universal Monitor
-            </Text>
-
-            <Text
-              style={styles.appSubtitle}
-            >
-              ONVIF • RTSP • HTTP
-            </Text>
+              </Text>
+            </Animated.View>
           </View>
 
-          {displayedLogo ? (
-            <Image
-              source={{
-                uri: displayedLogo,
-              }}
-              style={
-                styles.headerLogo
-              }
-              resizeMode="contain"
-            />
-          ) : null}
-
-          <View
+          <Text
             style={
-              styles.headerStatus
+              styles.appSubtitle
             }
           >
-            <View
-              style={[
-                styles.headerStatusDot,
-                playerConnected
-                  ? styles.headerStatusOnline
-                  : styles.headerStatusOffline,
-              ]}
-            />
-
-            <Text
-              style={
-                styles.headerStatusText
-              }
-            >
-              {playerConnected
-                ? "LIVE"
-                : activeStream
-                  ? "CONNECTING"
-                  : "OFFLINE"}
-            </Text>
-          </View>
+            CCTV Universal Monitor
+          </Text>
         </View>
 
-        {showInfo &&
-        statusText ? (
-          <View
+        {displayedLogo ? (
+          <Image
+            source={{
+              uri: displayedLogo,
+            }}
             style={
-              styles.topStatus
+              styles.headerLogo
             }
-          >
-            <Text
-              style={
-                styles.topStatusText
-              }
-              numberOfLines={2}
-            >
-              {statusText}
-            </Text>
-          </View>
+            resizeMode="contain"
+          />
         ) : null}
+      </View>
 
+      <View
+        style={styles.topStatus}
+      >
         <View
-          style={styles.main}
-        >
-          {activeTab ===
-          "live"
-            ? renderLive()
-            : activeTab ===
-                "cctv"
-              ? renderCctv()
-              : activeTab ===
-                  "history"
-                ? renderHistory()
-                : renderSettings()}
-        </View>
+          style={[
+            styles.headerStatusDot,
+            playerConnected
+              ? styles.headerStatusOnline
+              : styles.headerStatusOffline,
+          ]}
+        />
 
-        <View
+        <Text
           style={
-            styles.bottomTabs
+            styles.topStatusText
           }
         >
-          <TabButton
-            icon="▶"
-            label="Live CCTV"
-            active={
-              activeTab ===
-              "live"
+          {playerConnected
+            ? "Live terhubung"
+            : activeStream
+              ? "Membuka stream..."
+              : "Belum ada stream aktif"}
+        </Text>
+      </View>
+
+      <View
+        style={styles.main}
+      >
+        {renderContent()}
+      </View>
+
+      <View
+        style={styles.bottomTabs}
+      >
+        <TabButton
+          label="Live"
+          icon="▶"
+          active={
+            activeTab === "live"
+          }
+          onPress={() =>
+            setActiveTab("live")
+          }
+        />
+
+        <TabButton
+          label="CCTV"
+          icon="📹"
+          active={
+            activeTab === "cctv"
+          }
+          onPress={() =>
+            setActiveTab("cctv")
+          }
+        />
+
+        <TabButton
+          label="Riwayat"
+          icon="🕘"
+          active={
+            activeTab === "history"
+          }
+          onPress={() =>
+            setActiveTab("history")
+          }
+        />
+
+        <TabButton
+          label="Pengaturan"
+          icon="⚙"
+          active={
+            activeTab === "settings"
+          }
+          onPress={() =>
+            setActiveTab("settings")
+          }
+        />
+      </View>
+    </SafeAreaView>
+  );
+}
+        <TextInput
+          value={manualUrl}
+          editable={false}
+          style={styles.input}
+        />
+
+        <Text
+          style={
+            styles.saveHint
+          }
+        >
+          Gunakan menu Live untuk
+          memasukkan URL RTSP kamera
+          secara manual.
+        </Text>
+      </View>
+
+      <View style={styles.card}>
+        <Text
+          style={styles.cardTitle}
+        >
+          Tentang
+        </Text>
+
+        <Text
+          style={
+            styles.switchDescription
+          }
+        >
+          CCTV Universal Monitor
+        </Text>
+
+        <Text
+          style={
+            styles.saveHint
+          }
+        >
+          Aplikasi pemantauan CCTV
+          dengan dukungan ONVIF dan
+          RTSP.
+        </Text>
+      </View>
+    </ScrollView>
+  );
+
+  return (
+    <SafeAreaView
+      style={styles.app}
+    >
+      <View
+        style={styles.header}
+      >
+        <View
+          style={
+            styles.headerTitleWrap
+          }
+        >
+          <View
+            style={
+              styles.marqueeClip
             }
-            onPress={() =>
-              setActiveTab(
-                "live",
+            onLayout={(event) =>
+              setMarqueeClipWidth(
+                event.nativeEvent
+                  .layout.width,
               )
             }
+          >
+            <Animated.View
+              style={{
+                transform: [
+                  {
+                    translateX:
+                      marqueeX,
+                  },
+                ],
+              }}
+            >
+              <Text
+                style={
+                  styles.headerTitle
+                }
+                numberOfLines={1}
+                onLayout={(event) =>
+                  setMarqueeTextWidth(
+                    event.nativeEvent
+                      .layout.width,
+                  )
+                }
+              >
+                {displayedOwner}
+              </Text>
+            </Animated.View>
+          </View>
+
+          <Text
+            style={
+              styles.appSubtitle
+            }
+          >
+            CCTV Universal Monitor
+          </Text>
+        </View>
+
+        {displayedLogo ? (
+          <Image
+            source={{
+              uri: displayedLogo,
+            }}
+            style={
+              styles.headerLogo
+            }
+            resizeMode="contain"
+          />
+        ) : null}
+      </View>
+
+      {showInfo ? (
+        <View
+          style={styles.topStatus}
+        >
+          <View
+            style={[
+              styles.headerStatusDot,
+              playerConnected
+                ? styles.headerStatusOnline
+                : styles.headerStatusOffline,
+            ]}
           />
 
-                    <TabButton
-            icon="📹"
-            label="CCTV"
-            active={activeTab === "cctv"}
-            onPress={() => setActiveTab("cctv")}
-          />
+          <Text
+            style={
+              styles.topStatusText
+            }
+          >
+            {playerConnected
+              ? "Live terhubung"
+              : activeStream
+                ? "Membuka stream..."
+                : "Belum ada stream aktif"}
+          </Text>
+        </View>
+      ) : null}
 
-          <TabButton
-            icon="📜"
-            label="Riwayat"
-            active={activeTab === "history"}
-            onPress={() => setActiveTab("history")}
-          />
+      <View
+        style={styles.main}
+      >
+        {renderContent()}
+      </View>
 
+      <View
+        style={styles.bottomTabs}
+      >
+        <TabButton
+          label="Live"
+          icon="▶"
+          active={
+            activeTab === "live"
+          }
+          onPress={() =>
+            setActiveTab("live")
+          }
+        />
+
+        <TabButton
+          label="CCTV"
+          icon="📹"
+          active={
+            activeTab === "cctv"
+          }
+          onPress={() =>
+            setActiveTab("cctv")
+          }
+        />
+
+        <TabButton
+          label="Riwayat"
+          icon="🕘"
+          active={
+            activeTab === "history"
+          }
+          onPress={() =>
+            setActiveTab("history")
+          }
+        />
+
+        <TabButton
+          label="Pengaturan"
+          icon="⚙️"
+          active={
+            activeTab === "settings"
+          }
+          onPress={() =>
+            setActiveTab("settings")
+          }
+        />
+      </View>
+    </SafeAreaView>
+  );
+}
           <TabButton
             icon="⚙️"
             label="Pengaturan"
-            active={activeTab === "settings"}
-            onPress={() => setActiveTab("settings")}
+            active={
+              activeTab ===
+              "settings"
+            }
+            onPress={() =>
+              setActiveTab(
+                "settings",
+              )
+            }
           />
         </View>
       </View>
     </SafeAreaView>
   );
-}
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#07111f",
+};
+  cameraBottomBar: {
+    position: "absolute",
+    left: 7,
+    right: 7,
+    bottom: 7,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 
-  container: {
-    flex: 1,
-    backgroundColor: "#07111f",
+  cameraBottomText: {
+    color: "#dce8f3",
+    fontSize: 10,
+    fontWeight: "700",
   },
 
-  header: {
-    minHeight: 72,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: "#0b1728",
-    borderBottomWidth: 1,
-    borderBottomColor: "#1d3047",
+  cameraControls: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 6,
   },
 
-  headerLogoBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 10,
-    overflow: "hidden",
-    backgroundColor: "#13243a",
+  cameraControlButton: {
+    minWidth: 34,
+    height: 32,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 10,
+    backgroundColor: "rgba(10,25,42,0.88)",
+    borderWidth: 1,
+    borderColor: "#29415b",
   },
 
-  headerLogo: {
-    width: 44,
-    height: 44,
-    resizeMode: "contain",
+  cameraControlButtonText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "800",
   },
 
-  headerLogoEmpty: {
-    fontSize: 23,
+  layoutRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 8,
   },
 
-  headerCenter: {
+  layoutButton: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#13243a",
+    borderWidth: 1,
+    borderColor: "#29415b",
+  },
+
+  layoutButtonActive: {
+    backgroundColor: "#1b5d91",
+    borderColor: "#3986c5",
+  },
+
+  layoutButtonText: {
+    color: "#9db2c5",
+    fontSize: 
+  flexButton: {
+    flex: 1,
+  },
+
+  disabledText: {
+    opacity: 0.45,
+  },
+
+  infoBox: {
+    backgroundColor: "#0d2032",
+    borderWidth: 1,
+    borderColor: "#24435c",
+    borderRadius: 9,
+    padding: 10,
+    marginTop: 10,
+  },
+
+  infoText: {
+    color: "#9db4c7",
+    fontSize: 11,
+    lineHeight: 17,
+  },
+
+  topStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 10,
+    backgroundColor: "#12253b",
+    marginBottom: 10,
+  },
+
+  topStatusText: {
+    color: "#9db2c5",
+    fontSize: 11,
+    lineHeight: 16,
+  },
+
+  headerStatusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 5,
+  },
+
+  headerStatusOnline: {
+    backgroundColor: "#52d38a",
+  },
+
+  headerStatusOffline: {
+    backgroundColor: "#d66a6a",
+  },
+
+  app: {
+    flex: 1,
+    backgroundColor: "#07111f",
+  },
+
+  main: {
+    flex: 1,
+    backgroundColor: "#07111f",
+  },
+
+  headerTitleWrap: {
     flex: 1,
     minWidth: 0,
     justifyContent: "center",
   },
 
-  appTitle: {
-    color: "#ffffff",
-    fontSize: 18,
-    fontWeight: "800",
-  },
-
-  ownerMarqueeBox: {
+  marqueeClip: {
     height: 22,
     overflow: "hidden",
     marginTop: 2,
   },
 
-  ownerMarqueeContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    minWidth: "100%",
-  },
-
-  ownerMarqueeText: {
+  appSubtitle: {
     color: "#8fa6bd",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
-  headerStatus: {
-    marginLeft: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 12,
-    backgroundColor: "#12253b",
-  },
-
-  headerStatusText: {
-    color: "#83a6c7",
-    fontSize: 10,
-    fontWeight: "800",
-  },
-
-  scroll: {
-    flex: 1,
-  },
-
-  content: {
-    padding: 12,
-    paddingBottom: 90,
-  },
-
-  sectionTitle: {
-    color: "#ffffff",
-    fontSize: 17,
-    fontWeight: "800",
-    marginBottom: 10,
-  },
-
-  sectionSubtitle: {
-    color: "#8095aa",
-    fontSize: 12,
-    lineHeight: 18,
-    marginBottom: 12,
-  },
-
-  card: {
-    backgroundColor: "#0d1b2c",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#1b3048",
-    padding: 12,
-    marginBottom: 12,
-  },
-
-  cameraGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginHorizontal: -4,
-  },
-
-  cameraCell: {
-    padding: 4,
-  },
-
-  cameraCell1: {
-    width: "100%",
-  },
-
-  cameraCell2: {
-    width: "50%",
-  },
-
-  cameraCell4: {
-    width: "50%",
-  },
-
-  cameraCell6: {
-    width: "33.3333%",
-  },
-
-  cameraCell9: {
-    width: "33.3333%",
-  },
-
-  videoBox: {
-    width: "100%",
-    aspectRatio: 16 / 9,
-    backgroundColor: "#02070d",
-    borderRadius: 10,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#1b2e44",
-  },
-
-  video: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: "#000000",
-  },
-
-  emptyVideo: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 12,
-  },
-
-  emptyBox: {
-    flex: 1,
-    minHeight: 150,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#02070d",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#1b2e44",
-    padding: 15,
-  },
-
-  emptyIcon: {
-    fontSize: 30,
-    marginBottom: 7,
-  },
-
-  emptyTitle: {
-    color: "#dce8f3",
-    fontSize: 13,
-    fontWeight: "800",
-    textAlign: "center",
-  },
-
-  emptyText: {
-    color: "#71869a",
     fontSize: 11,
-    textAlign: "center",
-    marginTop: 5,
-    lineHeight: 16,
-  },
-
-  cameraOverlay: {
-    position: "absolute",
-    left: 7,
-    right: 7,
-    top: 7,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
-  cameraNameBadge: {
-    backgroundColor: "rgba(0,0,0,0.72)",
-    paddingHorizontal: 7,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-
-  cameraNameText: {
-    color: "#ffffff",
-    fontSize: 10,
-    fontWeight: "800",
-  },
-
-  liveBadge: {
-    backgroundColor: "rgba(16, 117, 67, 0.9)",
-    paddingHorizontal: 7,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-
-  liveBadgeText: {
-    color: "#ffffff",
-    fontSize: 9,
-    fontWeight: "900",
-  },
-
-  offlineBadge: {
-    backgroundColor: "rgba(130, 35, 35, 0.9)",
-    paddingHorizontal: 7,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-
-  offlineBadgeText: {
-    color: "#ffffff",
-    fontSize: 9,
-    fontWeight: "900",
-  },
-
-  cameraBottomBar: {
-    position: "absolute",
-    left: 6,
-    right: 6,
-    bottom: 6,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
-  cameraControlRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-
-  smallControlButton: {
-    minWidth: 30,
-    height: 30,
-    paddingHorizontal: 7,
-    borderRadius: 7,
-    backgroundColor: "rgba(0,0,0,0.76)",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-  },
-
-  smallControlText: {
-    color: "#ffffff",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-
-  cameraLabel: {
-    color: "#dce8f3",
-    fontSize: 12,
-    fontWeight: "800",
-    marginTop: 7,
-  },
-
-  cameraUrl: {
-    color: "#657b90",
-    fontSize: 9,
+    fontWeight: "600",
     marginTop: 2,
   },
 
-  ptzCard: {
-    marginTop: 10,
-    backgroundColor: "#091522",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#1a3047",
-    padding: 10,
-  },
-
-  ptzTitle: {
-    color: "#ffffff",
+  centerText: {
+    color: "#8297aa",
     fontSize: 12,
-    fontWeight: "900",
-    marginBottom: 8,
-  },
-
-  ptzPad: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  ptzRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  ptzButton: {
-    width: 44,
-    height: 40,
-    margin: 3,
-    borderRadius: 9,
-    backgroundColor: "#13263b",
-    borderWidth: 1,
-    borderColor: "#27435e",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  ptzButtonActive: {
-    backgroundColor: "#1e4260",
-  },
-
-  ptzButtonText: {
-    color: "#ffffff",
-    fontSize: 18,
-    fontWeight: "900",
-  },
-
-  ptzStopButton: {
-    width: 48,
-    height: 40,
-    margin: 3,
-    borderRadius: 9,
-    backgroundColor: "#552b2b",
-    borderWidth: 1,
-    borderColor: "#7c3d3d",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  ptzStopText: {
-    color: "#ffffff",
-    fontSize: 11,
-    fontWeight: "900",
-  },
-
-  zoomRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 6,
-  },
-
-  zoomButton: {
-    minWidth: 48,
-    height: 34,
-    marginHorizontal: 4,
-    borderRadius: 8,
-    backgroundColor: "#14283d",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#28445e",
-  },
-
-  zoomButtonText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "900",
-  },
-
-  zoomValue: {
-    minWidth: 70,
     textAlign: "center",
-    color: "#91a8bc",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-
-  gestureHint: {
-    color: "#60768a",
-    fontSize: 9,
-    textAlign: "center",
-    marginTop: 7,
-  },
-
-  layoutRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 7,
-    marginBottom: 10,
-  },
-
-  layoutButton: {
-    minWidth: 45,
-    height: 34,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    backgroundColor: "#122338",
-    borderWidth: 1,
-    borderColor: "#203b55",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  layoutButtonActive: {
-    backgroundColor: "#1e4869",
-    borderColor: "#3d7298",
-  },
-
-  layoutButtonText: {
-    color: "#9aafc1",
-    fontSize: 11,
-    fontWeight: "800",
-  },
-
-  layoutButtonTextActive: {
-    color: "#ffffff",
-  },
-
-  fieldLabel: {
-    color: "#a8bacb",
-    fontSize: 11,
-    fontWeight: "800",
-    marginBottom: 6,
-  },
-
-  input: {
-    minHeight: 42,
-    backgroundColor: "#07111d",
-    borderWidth: 1,
-    borderColor: "#20364d",
-    borderRadius: 9,
-    paddingHorizontal: 11,
-    color: "#ffffff",
-    fontSize: 13,
-    marginBottom: 9,
-  },
-
-  multilineInput: {
-    minHeight: 80,
-    paddingTop: 10,
-    textAlignVertical: "top",
-  },
-
-  buttonRow: {
-    flexDirection: "row",
-    gap: 8,
-    flexWrap: "wrap",
-  },
-
-  primaryButton: {
-    minHeight: 42,
-    paddingHorizontal: 15,
-    borderRadius: 9,
-    backgroundColor: "#1c587f",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-    primaryButtonText: {
-    color: "#ffffff",
-    fontSize: 12,
-    fontWeight: "900",
-  },
-
-  secondaryButton: {
-    minHeight: 42,
-    paddingHorizontal: 15,
-    borderRadius: 9,
-    backgroundColor: "#13253a",
-    borderWidth: 1,
-    borderColor: "#29425a",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  secondaryButtonText: {
-    color: "#b5c7d7",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-
-  dangerButton: {
-    minHeight: 42,
-    paddingHorizontal: 15,
-    borderRadius: 9,
-    backgroundColor: "#552b2b",
-    borderWidth: 1,
-    borderColor: "#754040",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  dangerButtonText: {
-    color: "#ffffff",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-
-  disabledButton: {
-    opacity: 0.45,
-  },
-
-  loadingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-
-  loadingText: {
-    color: "#8da3b7",
-    fontSize: 11,
-    marginLeft: 8,
-  },
-
-  statusBox: {
-    padding: 10,
-    borderRadius: 9,
-    backgroundColor: "#091827",
-    borderWidth: 1,
-    borderColor: "#1b334a",
-    marginTop: 8,
-  },
-
-  statusText: {
-    color: "#9db2c5",
-    fontSize: 11,
-    lineHeight: 17,
-  },
-
-  successText: {
-    color: "#77c99b",
-  },
-
-  errorText: {
-    color: "#ef8d8d",
-  },
-
-  infoText: {
-    color: "#82b6df",
-  },
-
-  cameraList: {
-    marginTop: 8,
-  },
-
-  discoveredCamera: {
-    padding: 10,
-    borderRadius: 9,
-    backgroundColor: "#091827",
-    borderWidth: 1,
-    borderColor: "#1b334a",
-    marginBottom: 7,
-  },
-
-  discoveredTitle: {
-    color: "#ffffff",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-
-  discoveredAddress: {
-    color: "#73899d",
-    fontSize: 10,
-    marginTop: 3,
-  },
-
-  discoveredButton: {
-    alignSelf: "flex-start",
-    marginTop: 8,
-    paddingHorizontal: 11,
-    minHeight: 32,
-    borderRadius: 7,
-    backgroundColor: "#173653",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  discoveredButtonText: {
-    color: "#c8d9e7",
-    fontSize: 10,
-    fontWeight: "800",
-  },
-
-  historyItem: {
-    padding: 11,
-    borderRadius: 10,
-    backgroundColor: "#091827",
-    borderWidth: 1,
-    borderColor: "#1b334a",
-    marginBottom: 8,
-  },
-
-  historyTitle: {
-    color: "#ffffff",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-
-  historyDetail: {
-    color: "#7890a5",
-    fontSize: 10,
-    lineHeight: 16,
-    marginTop: 4,
-  },
-
-  settingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    minHeight: 45,
-    borderBottomWidth: 1,
-    borderBottomColor: "#152a40",
-  },
-
-  settingLabel: {
-    color: "#d3e0eb",
-    fontSize: 12,
-    fontWeight: "700",
-    flex: 1,
-    paddingRight: 10,
-  },
-
-  settingValue: {
-    color: "#7f96aa",
-    fontSize: 11,
-  },
-
-  logoPreviewBox: {
-    width: 86,
-    height: 86,
-    borderRadius: 12,
-    backgroundColor: "#07111d",
-    borderWidth: 1,
-    borderColor: "#223b53",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-    marginBottom: 10,
-  },
-
-  logoPreview: {
-    width: 80,
-    height: 80,
-    resizeMode: "contain",
-  },
-
-  logoPlaceholder: {
-    color: "#62788c",
-    fontSize: 10,
-    textAlign: "center",
-  },
-
-  saveButton: {
-    minHeight: 44,
-    borderRadius: 9,
-    backgroundColor: "#216448",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 8,
-  },
-
-  saveButtonText: {
-    color: "#ffffff",
-    fontSize: 12,
-    fontWeight: "900",
+    lineHeight: 18,
   },
 
   saveHint: {
@@ -3941,588 +3361,63 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
 
-  bottomTabs: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    minHeight: 66,
-    backgroundColor: "#0b1728",
-    borderTopWidth: 1,
-    borderTopColor: "#1d3047",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-    paddingHorizontal: 5,
-    paddingBottom: 4,
-  },
-
-  tabButton: {
-    flex: 1,
-    minHeight: 58,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 9,
-    marginHorizontal: 2,
-  },
-
-  tabButtonActive: {
-    backgroundColor: "#132b43",
-  },
-
-  tabIcon: {
-    fontSize: 18,
-    marginBottom: 2,
-  },
-
-  tabLabel: {
-    color: "#6f8599",
-    fontSize: 9,
-    fontWeight: "800",
-  },
-
-  tabLabelActive: {
-    color: "#ffffff",
-  },
-
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-  },
-
-      centeredText: {
-    color: "#8297aa",
-    fontSize: 12,
-    textAlign: "center",
-    lineHeight: 18,
-  },
-
-  // ===== STYLE TAMBAHAN PTZ =====
-  ptzSwipeOverlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    alignItems: "center",
-    justifyContent: "flex-end",
-    paddingBottom: 10,
-  },
-
-  ptzSwipeHint: {
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    borderRadius: 7,
-    backgroundColor: "rgba(0,0,0,0.58)",
-  },
-
-  ptzSwipeHintText: {
-    color: "#d7e4ef",
-    fontSize: 9,
-    fontWeight: "700",
-  },
-
-  ptzDisabledBox: {
-    padding: 12,
-    borderRadius: 10,
-    backgroundColor: "#0a1522",
-    borderWidth: 1,
-    borderColor: "#26384a",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  ptzDisabledText: {
-    color: "#71869a",
-    fontSize: 11,
-    textAlign: "center",
-    lineHeight: 16,
-  },
-
-  ptzPanel: {
-    marginTop: 10,
-    padding: 10,
-    borderRadius: 12,
-    backgroundColor: "#091522",
-    borderWidth: 1,
-    borderColor: "#1a3047",
-  },
-
-  ptzPanelHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-
-  ptzPanelTitle: {
-    color: "#ffffff",
-    fontSize: 13,
-    fontWeight: "900",
-  },
-
-  ptzPanelStatus: {
-    color: "#7790a5",
-    fontSize: 10,
-  },
-
-  ptzSpacer: {
-    width: 44,
-    height: 40,
-    margin: 3,
-  },
-
-  ptzZoomRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 8,
-  },
-
-  ptzZoomButton: {
-    minWidth: 52,
-    height: 36,
-    marginHorizontal: 4,
-    borderRadius: 8,
-    backgroundColor: "#14283d",
-    borderWidth: 1,
-    borderColor: "#28445e",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  ptzZoomText: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "900",
-  },
-
-  // ===== STYLE TAB ALIAS =====
-  tab: {
-    flex: 1,
-    minHeight: 58,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 9,
-    marginHorizontal: 2,
-  },
-
-  tabActive: {
-    backgroundColor: "#132b43",
-  },
-
-  tabText: {
-    color: "#6f8599",
-    fontSize: 9,
-    fontWeight: "800",
-  },
-
-  tabTextActive: {
-    color: "#ffffff",
-  },
-
-  // ===== STYLE GRID CAMERA =====
-  contentContainer: {
-    padding: 12,
-    paddingBottom: 90,
-  },
-
-  bigIcon: {
-    fontSize: 34,
-    marginBottom: 8,
-  },
-
-    centeredText: {
-    color: "#8297aa",
-    fontSize: 12,
-    textAlign: "center",
-    lineHeight: 18,
-  },
-
-  // ===== CAMERA EMPTY SLOT =====
-  emptyCameraSlot: {
-    flex: 1,
-    minHeight: 150,
-    backgroundColor: "#02070d",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#1b2e44",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 15,
-  },
-
-  emptySlotIcon: {
-    fontSize: 28,
-    marginBottom: 8,
-  },
-
-  emptySlotText: {
-    color: "#dce8f3",
-    fontSize: 12,
-    fontWeight: "800",
-    textAlign: "center",
-  },
-
-  emptySlotHint: {
-    color: "#71869a",
-    fontSize: 10,
-    lineHeight: 15,
-    textAlign: "center",
-    marginTop: 5,
-  },
-
-  emptyLiveArea: {
-    flex: 1,
-    minHeight: 180,
-    backgroundColor: "#02070d",
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 15,
-  },
-
-  // ===== BUTTONS =====
-  flexButton: {
-    flex: 1,
-    minWidth: 120,
-  },
-
-  disabledText: {
-    color: "#657b90",
-    fontSize: 11,
-    textAlign: "center",
-  },
-
-  // ===== SWITCH / SETTINGS =====
-  switchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-  },
-
-  switchTextWrap: {
-    flex: 1,
-    paddingRight: 12,
-  },
-
-  switchTitle: {
-    color: "#dce8f3",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-
-  switchDescription: {
-    color: "#71869a",
-    fontSize: 10,
-    lineHeight: 15,
-    marginTop: 3,
-  },
-
-  // ===== INFO / SECTION HEADER =====
-  infoBox: {
-    padding: 11,
-    borderRadius: 10,
-    backgroundColor: "#091827",
-    borderWidth: 1,
-    borderColor: "#1b334a",
-    marginBottom: 10,
-  },
-
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-
-  sectionHeaderText: {
-    color: "#ffffff",
-    fontSize: 13,
-    fontWeight: "900",
-  },
-
-  // ===== SMALL BUTTONS =====
-  primaryButtonSmall: {
-    minHeight: 34,
-    paddingHorizontal: 11,
-    borderRadius: 7,
-    backgroundColor: "#1c587f",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  secondaryButtonSmall: {
-    minHeight: 34,
-    paddingHorizontal: 11,
-    borderRadius: 7,
-    backgroundColor: "#13253a",
-    borderWidth: 1,
-    borderColor: "#29425a",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  // ===== LOADING =====
-  loadingBox: {
-    minHeight: 90,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 15,
-    backgroundColor: "#091827",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#1b334a",
-  },
-
-  // ===== CAMERA CARD =====
-  cameraCard: {
-    backgroundColor: "#0d1b2c",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#1b3048",
-    padding: 10,
-    marginBottom: 10,
-  },
-
-  cameraCardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 9,
-  },
-
-  cameraIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 9,
-    backgroundColor: "#13263b",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 9,
-  },
-
-  cameraIcon: {
-    fontSize: 19,
-  },
-
-  cameraCardInfo: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  cameraName: {
-    color: "#ffffff",
-    fontSize: 13,
-    fontWeight: "800",
-  },
-
-  cameraMeta: {
-    color: "#71869a",
-    fontSize: 10,
-    lineHeight: 15,
-    marginTop: 2,
-  },
-
-  endpointText: {
-    color: "#60768a",
-    fontSize: 9,
-    lineHeight: 14,
-    marginTop: 3,
-  },
-
-  // ===== LOGO SETTINGS =====
-  logoHelpText: {
-    color: "#71869a",
-    fontSize: 10,
-    lineHeight: 15,
-    marginTop: 5,
-    marginBottom: 8,
-  },
-
   logoActionRow: {
     flexDirection: "row",
     gap: 8,
-    flexWrap: "wrap",
+    alignItems: "center",
     marginTop: 8,
   },
 
-  logoEmptyPreview: {
-    width: 80,
+  logoPreview: {
+    width: 120,
     height: 80,
-    borderRadius: 10,
-    backgroundColor: "#07111d",
+    marginTop: 10,
+    alignSelf: "center",
+  },
+
+  logoEmptyPreview: {
+    height: 80,
+    marginTop: 10,
+    borderRadius: 9,
     borderWidth: 1,
-    borderColor: "#223b53",
+    borderColor: "#20364d",
+    backgroundColor: "#07111d",
     alignItems: "center",
     justifyContent: "center",
   },
 
   logoEmptyText: {
-    color: "#62788c",
-    fontSize: 10,
-    textAlign: "center",
-    paddingHorizontal: 8,
+    color: "#667483",
+    fontSize: 11,
   },
 
   logoUriText: {
-    color: "#60768a",
+    color: "#667f94",
     fontSize: 9,
     lineHeight: 14,
-    marginTop: 6,
+    marginTop: 7,
+  },
+
+  saveButton: {
+    minHeight: 44,
+    marginTop: 10,
+    borderRadius: 9,
+    backgroundColor: "#1c587f",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 15,
   },
 
   saveButtonSaved: {
-    backgroundColor: "#216448",
+    backgroundColor: "#245f46",
   },
 
-
-  cardTitle: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "800",
-    marginBottom: 8,
-  },
-
-  layoutHint: {
-    color: "#6f8599",
-    fontSize: 10,
-    lineHeight: 15,
-    marginTop: 4,
-  },
-
-  cameraGridLandscape: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginHorizontal: -4,
-  },
-
-  cameraSlot: {
-    width: "100%",
-    backgroundColor: "#0d1b2c",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#1b3048",
-    padding: 8,
-    marginBottom: 8,
-  },
-
-  cameraSlotHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-
-  cameraSlotTitle: {
-    flex: 1,
+  saveButtonText: {
     color: "#ffffff",
     fontSize: 12,
-    fontWeight: "800",
-  },
-
-  cameraSlotStatus: {
-    color: "#77c99b",
-    fontSize: 9,
-    fontWeight: "800",
-  },
-
-  // ===== STYLE LIVE / OVERLAY =====
-  overlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 15,
-  },
-
-  overlayTitle: {
-    color: "#ffffff",
-    fontSize: 13,
-    fontWeight: "800",
-    textAlign: "center",
-    marginBottom: 5,
-  },
-
-  overlayText: {
-    color: "#9db2c5",
-    fontSize: 10,
-    lineHeight: 15,
-    textAlign: "center",
-  },
-
-  errorIcon: {
-    fontSize: 28,
-    marginBottom: 8,
-  },
-
-  liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#52d38a",
-    marginRight: 5,
-  },
-
-  liveText: {
-    color: "#77c99b",
-    fontSize: 10,
-    fontWeight: "800",
-  },
-
-  // ===== STYLE CAMERA CONTROLS =====
-  cameraControlsOverlay: {
-    position: "absolute",
-    left: 7,
-    right: 7,
-    bottom: 7,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 5,
-  },
-
-  micButton: {
-    minWidth: 34,
-    height: 32,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    backgroundColor: "rgba(0,0,0,0.75)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  micButtonText: {
-    color: "#ffffff",
-    fontSize: 13,
     fontWeight: "900",
   },
 
-  zoomLabel: {
-    height: 32,
-    minWidth: 55,
-    paddingHorizontal: 7,
-    borderRadius: 8,
-    backgroundColor: "rgba(0,0,0,0.75)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  zoomLabelText: {
-    color: "#ffffff",
-    fontSize: 10,
-    fontWeight: "800",
-  },
-});
 
 
-  
+
