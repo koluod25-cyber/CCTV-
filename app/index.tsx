@@ -97,6 +97,7 @@ const CAMERA_STORAGE_KEY =
 type SavedCameraState = {
   cameraCount: number;
   cameraStreams: string[];
+  cameraIds: string[];
   cameraMuted: boolean[];
   cameraMicrophone: boolean[];
   cameraZoom: number[];
@@ -595,20 +596,10 @@ export default function HomeScreen() {
     setMuted,
   ] = useState(false);
 
-  const [
-    cameraCount,
-    setCameraCount,
-  ] = useState(1);
-
-  const [
-    cameraStreams,
-    setCameraStreams,
-  ] = useState<string[]>([]);
-
-  const [
-    cameraConnected,
-    setCameraConnected,
-  ] = useState<boolean[]>([]);
+const [cameraCount, setCameraCount] = useState(1);
+const [cameraStreams, setCameraStreams] = useState<string[]>([]);
+const [cameraIds, setCameraIds] = useState<string[]>([]);
+const [cameraConnected, setCameraConnected] = useState<boolean[]>([]);
 
   const [
     cameraMuted,
@@ -795,108 +786,120 @@ useEffect(() => {
       [],
     );
 
-  const resetCameraArrays =
-    useCallback(
-      (count: number) => {
-        const safeCount =
-          Math.max(
-            1,
-            Math.min(
-              MAX_CAMERAS,
-              Math.floor(count),
-            ),
-          );
+const resetCameraArrays = useCallback(
+  (count: number) => {
+    const safeCount =
+      Math.max(
+        1,
+        Math.min(
+          MAX_CAMERAS,
+          Math.floor(count),
+        ),
+      );
 
-        setCameraStreams(
-          (current) =>
-            Array.from(
-              {
-                length:
-                  safeCount,
-              },
-              (_, index) =>
-                current[index] || "",
-            ),
-        );
-
-        setCameraConnected(
-          (current) =>
-            Array.from(
-              {
-                length:
-                  safeCount,
-              },
-              (_, index) =>
-                current[index] ||
-                false,
-            ),
-        );
-
-        setCameraMuted(
-          (current) =>
-            Array.from(
-              {
-                length:
-                  safeCount,
-              },
-              (_, index) =>
-                current[index] ||
-                false,
-            ),
-        );
-        
-        setCameraMicrophone(
-  (current) =>
-    Array.from(
-      {
-        length: safeCount,
-      },
-      (_, index) =>
-        current[index] ?? false,
-    ),
-);
-
-        setCameraZoom(
-          (current) =>
-            Array.from(
-              {
-                length:
-                  safeCount,
-              },
-              (_, index) =>
-                current[index] ||
-                1,
-            ),
-        );
-
-        setCameraControlsVisible(
-          (current) =>
-            Array.from(
-              {
-                length:
-                  safeCount,
-              },
-              (_, index) =>
-                current[index] ||
-                false,
-            ),
-        );
-
-        setCameraPtzConfig(
-          (current) =>
-            Array.from(
-              {
-                length:
-                  safeCount,
-              },
-              (_, index) =>
-                current[index] ||
-                null,
-            ),
-        );
-      },
-      [],
+    setCameraStreams(
+      (current) =>
+        Array.from(
+          {
+            length:
+              safeCount,
+          },
+          (_, index) =>
+            current[index] || "",
+        ),
     );
+
+    setCameraIds(
+      (current) =>
+        Array.from(
+          {
+            length:
+              safeCount,
+          },
+          (_, index) =>
+            current[index] || "",
+        ),
+    );
+
+    setCameraConnected(
+      (current) =>
+        Array.from(
+          {
+            length:
+              safeCount,
+          },
+          (_, index) =>
+            current[index] ||
+            false,
+        ),
+    );
+
+    setCameraMuted(
+      (current) =>
+        Array.from(
+          {
+            length:
+              safeCount,
+          },
+          (_, index) =>
+            current[index] ||
+            false,
+        ),
+    );
+
+    setCameraMicrophone(
+      (current) =>
+        Array.from(
+          {
+            length:
+              safeCount,
+        },
+          (_, index) =>
+            current[index] ?? false,
+        ),
+    );
+
+    setCameraZoom(
+      (current) =>
+        Array.from(
+          {
+            length:
+              safeCount,
+          },
+          (_, index) =>
+            current[index] ||
+            1,
+        ),
+    );
+
+    setCameraControlsVisible(
+      (current) =>
+        Array.from(
+          {
+            length:
+              safeCount,
+          },
+          (_, index) =>
+            current[index] ||
+            false,
+        ),
+    );
+
+    setCameraPtzConfig(
+      (current) =>
+        Array.from(
+          {
+            length:
+              safeCount,
+          },
+          (_, index) =>
+            current[index] ||
+            null,
+        ),
+    );
+  },
+  [],
+);
 
   useEffect(() => {
     resetCameraArrays(
@@ -943,6 +946,10 @@ useEffect(() => {
       if (Array.isArray(saved.cameraStreams)) {
         setCameraStreams(saved.cameraStreams);
       }
+
+if (Array.isArray(saved.cameraIds)) {
+  setCameraIds(saved.cameraIds);
+}
 
       if (Array.isArray(saved.cameraMuted)) {
         setCameraMuted(saved.cameraMuted);
@@ -1010,6 +1017,7 @@ useEffect(() => {
       const state: SavedCameraState = {
         cameraCount,
         cameraStreams,
+        cameraIds,
         cameraMuted,
         cameraMicrophone,
         cameraZoom,
@@ -1034,6 +1042,7 @@ useEffect(() => {
 }, [
   cameraCount,
   cameraStreams,
+  cameraIds,
   cameraMuted,
   cameraMicrophone,
   cameraZoom,
@@ -1365,127 +1374,194 @@ useEffect(() => {
     );
 
   const connectCamera =
-    useCallback(
-      async (
-        camera: DiscoveredCamera,
-      ) => {
-        const deviceUrl =
-          camera.xaddrs[0] ||
-          camera.address;
+  useCallback(
+    async (
+      camera: DiscoveredCamera,
+      targetSlot?: number,
+    ) => {
+      const deviceUrl =
+        camera.xaddrs[0] ||
+        camera.address;
 
-        if (!deviceUrl) {
-          setStatusText(
-            "Alamat layanan ONVIF kamera tidak tersedia.",
-          );
-          return;
-        }
-
-        setConnecting(camera.id);
+      if (!deviceUrl) {
         setStatusText(
-          `Menghubungkan ke ${
-            camera.name || camera.host
-          }...`,
+          "Alamat layanan ONVIF kamera tidak tersedia.",
+        );
+        return;
+      }
+
+      // Cegah satu kamera ONVIF dipasang
+      // pada lebih dari satu channel.
+      const existingSlot =
+        cameraIds.findIndex(
+          (id) =>
+            id === camera.id,
         );
 
-        const credentials: OnvifPtzCredentials = {
-          username,
-          password,
-        };
+      if (
+        existingSlot >= 0 &&
+        existingSlot !== targetSlot
+      ) {
+        Alert.alert(
+          "Kamera sudah digunakan",
+          `${
+            camera.name ||
+            camera.host ||
+            "Kamera"
+          } sudah terpasang pada Kamera ${
+            existingSlot + 1
+          }.`,
+        );
+        return;
+      }
 
-        try {
-          const result =
-            await getOnvifStreamUri(
-              deviceUrl,
-              credentials,
-            );
+      let slot =
+        typeof targetSlot === "number"
+          ? targetSlot
+          : findNextCameraSlot();
 
-          if (
-            !result.ok ||
-            !result.streamUri
-          ) {
-            throw new Error(
-              result.message ||
-                "Kamera tidak mengembalikan media profile ONVIF.",
-            );
-          }
+      if (
+        slot < 0 ||
+        slot >= cameraCount
+      ) {
+        Alert.alert(
+          "Channel penuh",
+          "Semua channel kamera yang aktif sudah digunakan.",
+        );
+        return;
+      }
 
-          const streamUri =
-            addCredentials(
-              result.streamUri,
-              username,
-              password,
-            );
+      setConnecting(camera.id);
+      setStatusText(
+        `Menghubungkan ke ${
+          camera.name ||
+          camera.host
+        }...`,
+      );
 
-          setSelectedCamera(camera);
-          setProfile(
-            result.profile || null,
-          );
-          setActiveStream(streamUri);
-          setManualUrl(streamUri);
-
-          const slot =
-            findNextCameraSlot();
-
-          if (slot >= 0) {
-            setCameraStream(
-              slot,
-              streamUri,
-            );
-
-            if (
-              result.mediaServiceUrl &&
-              result.profile?.token
-            ) {
-              setCameraPtz(
-                slot,
-                {
-                  deviceServiceUrl:
-                    deviceUrl,
-                  profileToken:
-                    result.profile.token,
-                  credentials,
-                },
-              );
-            }
-          }
-
-          setActiveTab("live");
-          setStatusText(
-            result.message ||
-              `Kamera terhubung: ${
-                camera.name || camera.host
-              }`,
-          );
-
-          addHistory(
-            "connected",
-            streamUri,
-            "Kamera ONVIF berhasil terhubung.",
-          );
-        } catch (error) {
-          const message =
-            formatError(error);
-
-          setStatusText(message);
-
-          addHistory(
-            "error",
-            deviceUrl,
-            message,
-          );
-        } finally {
-          setConnecting(null);
-        }
-      },
-      [
+      const credentials: OnvifPtzCredentials = {
         username,
         password,
-        findNextCameraSlot,
-        setCameraStream,
-        setCameraPtz,
-        addHistory,
-      ],
-    );
+      };
+
+      try {
+        const result =
+          await getOnvifStreamUri(
+            deviceUrl,
+            credentials,
+          );
+
+        if (
+          !result.ok ||
+          !result.streamUri
+        ) {
+          throw new Error(
+            result.message ||
+              "Kamera tidak mengembalikan media profile ONVIF.",
+          );
+        }
+
+        const streamUri =
+          addCredentials(
+            result.streamUri,
+            username,
+            password,
+          );
+
+        setSelectedCamera(camera);
+        setProfile(
+          result.profile || null,
+        );
+        setActiveStream(streamUri);
+        setManualUrl(streamUri);
+
+        // Simpan kamera ke channel
+        // yang dipilih.
+        setCameraIds(
+          (current) => {
+            const next = [
+              ...current,
+            ];
+
+            next[slot] =
+              camera.id;
+
+            return next;
+          },
+        );
+
+        setCameraStream(
+          slot,
+          streamUri,
+        );
+
+        if (
+          result.mediaServiceUrl &&
+          result.profile?.token
+        ) {
+          setCameraPtz(
+            slot,
+            {
+              deviceServiceUrl:
+                deviceUrl,
+              profileToken:
+                result.profile.token,
+              credentials,
+            },
+          );
+        } else {
+          setCameraPtz(
+            slot,
+            null,
+          );
+        }
+
+        setActiveTab("live");
+
+        setStatusText(
+          `Kamera ${
+            camera.name ||
+            camera.host
+          } terhubung ke Kamera ${
+            slot + 1
+          }.`,
+        );
+
+        addHistory(
+          "connected",
+          streamUri,
+          `Kamera ONVIF terhubung ke Kamera ${
+            slot + 1
+          }.`,
+        );
+      } catch (error) {
+        const message =
+          formatError(error);
+
+        setStatusText(
+          message,
+        );
+
+        addHistory(
+          "error",
+          deviceUrl,
+          message,
+        );
+      } finally {
+        setConnecting(null);
+      }
+    },
+    [
+      username,
+      password,
+      cameraIds,
+      cameraCount,
+      findNextCameraSlot,
+      setCameraStream,
+      setCameraPtz,
+      addHistory,
+    ],
+  );
 
   const connectManual =
     useCallback(
