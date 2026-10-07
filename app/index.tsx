@@ -29,6 +29,7 @@ import Video from "react-native-video";
 import * as ImagePicker from "expo-image-picker";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
+"@react-native-async-storage/async-storage": "^2.2.0"
 
 import {
   CCTV_VENDORS,
@@ -861,8 +862,7 @@ export default function HomeScreen() {
             ),
         );
         
-        setCameraMicrophone(
-  (current) =>
+        setCameraMicrophone((current: boolean[]) => {
     Array.from(
       {
         length: safeCount,
