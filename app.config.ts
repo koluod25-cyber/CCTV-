@@ -6,7 +6,7 @@ const config: ExpoConfig = {
   name: "CCTV Universal Monitor",
   slug: "cctv-universal-monitor",
   version: "1.0.0",
-  orientation: "portrait",
+  orientation: "default",
   scheme: "cctvuniversalmonitor",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
