@@ -241,12 +241,13 @@ function CameraVideo({
       ],
     },
   ]}
-  controls={nativeControls}
-  controlsStyles={{
-    hideFullscreen: true,
-    hideSeekBar: true,
-    liveLabel: "LIVE",
-  }}
+
+controls={nativeControls}
+controlsStyles={{
+  hideFullscreen: false,
+  hideSeekBar: true,
+  liveLabel: "LIVE",
+}}
         muted={muted}
         resizeMode="contain"
         paused={false}
@@ -3471,8 +3472,13 @@ const styles = StyleSheet.create({
   },
 
   cameraTouchArea: {
-    ...StyleSheet.absoluteFillObject,
-  },
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  zIndex: 1,
+},
 
   cameraControls: {
   position: "absolute",
