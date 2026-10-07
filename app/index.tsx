@@ -610,6 +610,9 @@ export default function HomeScreen() {
     cameraMuted,
     setCameraMuted,
   ] = useState<boolean[]>([]);
+  
+  const [cameraMicrophone, setCameraMicrophone] =
+  useState<boolean[]>([]);
 
   const [
     cameraZoom,
