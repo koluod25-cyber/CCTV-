@@ -168,6 +168,7 @@ function CameraVideo({
   zoom,
   onLoad,
   onError,
+  videoRef,
 }: {
   url: string;
   nativeControls: boolean;
@@ -222,6 +223,8 @@ function CameraVideo({
       <Video
         key={url}
         focusable
+ref={videoRef}
+viewType="textureView"
         source={{
           uri: url,
           ...(isRtsp
@@ -240,7 +243,7 @@ function CameraVideo({
         ]}
         controls={nativeControls}
         controlsStyles={{
-          hideFullscreen: false,
+       videoRef.current.setFullScreen(true)
           hideSeekBar: true,
           liveLabel: "LIVE",
         }}
@@ -703,77 +706,57 @@ export default function HomeScreen() {
   useEffect(() => {
     setPlayerConnected(false);
   }, [activeStream]);
+useEffect(() => {
+  if (
+    !marqueeClipWidth ||
+    !marqueeTextWidth ||
+    !displayedOwner.trim()
+  ) {
+    return;
+  }
 
-  useEffect(() => {
-    if (
-      !marqueeClipWidth ||
-      !marqueeTextWidth
-    ) {
-      return;
-    }
+  marqueeX.stopAnimation();
 
+  const startX = marqueeClipWidth;
+  const endX = -marqueeTextWidth;
+
+  const travelDistance =
+    marqueeClipWidth + marqueeTextWidth;
+
+  const moveDuration = Math.max(
+    8000,
+    travelDistance * 32,
+  );
+
+  // Mulai benar-benar dari luar sisi kanan
+  marqueeX.setValue(startX);
+
+  const animation = Animated.loop(
+    Animated.timing(
+      marqueeX,
+      {
+        toValue: endX,
+        duration: moveDuration,
+        easing: Easing.linear,
+        useNativeDriver: true,
+        isInteraction: false,
+      },
+    ),
+  );
+
+  animation.start();
+
+  return () => {
+    animation.stop();
     marqueeX.stopAnimation();
-
-    marqueeX.setValue(
-      marqueeClipWidth,
-    );
-
-    const travelDistance =
-      marqueeTextWidth +
-      marqueeClipWidth;
-
-    const moveDuration =
-      Math.max(
-        7000,
-        travelDistance * 28,
-      );
-
-    const animation =
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(
-            marqueeX,
-            {
-              toValue:
-                -marqueeTextWidth,
-              duration:
-                moveDuration,
-              easing:
-                Easing.linear,
-              useNativeDriver:
-                true,
-            },
-          ),
-
-          Animated.delay(1500),
-
-          Animated.timing(
-            marqueeX,
-            {
-              toValue:
-                marqueeClipWidth,
-              duration: 0,
-              useNativeDriver:
-                true,
-            },
-          ),
-
-          Animated.delay(500),
-        ]),
-      );
-
-    animation.start();
-
-    return () => {
-      animation.stop();
-      marqueeX.stopAnimation();
-    };
-  }, [
-    marqueeClipWidth,
-    marqueeTextWidth,
-    marqueeX,
-  ]);
-
+  };
+}, [
+  marqueeClipWidth,
+  marqueeTextWidth,
+  displayedOwner,
+  marqueeX,
+]);
+  
   useEffect(() => {
     return () => {
       cameraControlsTimers.current.forEach(
