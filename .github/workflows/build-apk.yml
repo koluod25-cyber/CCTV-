@@ -31,10 +31,9 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-       - name: Setup Android NDK
-         shell: bash
-         run: |
-          set -euo pipefail
+      - name: Setup Android NDK
+        shell: bash
+        run: |
 
           NDK_VERSION="27.1.12297006"
           NDK_DIR="$ANDROID_HOME/ndk/$NDK_VERSION"
