@@ -176,6 +176,7 @@ function CameraVideo({
   zoom: number;
   onLoad?: () => void;
   onError?: (message: string) => void;
+  videoRef?: (ref: any) => void;
 }) {
   const [loaded, setLoaded] =
     useState(false);
@@ -220,33 +221,33 @@ function CameraVideo({
 
   return (
     <View style={styles.videoBox}>
-      <Video
-        key={url}
-        focusable
-ref={videoRef}
-viewType="textureView"
-        source={{
-          uri: url,
-          ...(isRtsp
-            ? { type: "rtsp" }
-            : {}),
-        }}
-        style={[
-          styles.video,
-          {
-            transform: [
-              {
-                scale: zoom,
-              },
-            ],
-          },
-        ]}
-        controls={nativeControls}
-        controlsStyles={{
-       videoRef.current.setFullScreen(true)
-          hideSeekBar: true,
-          liveLabel: "LIVE",
-        }}
+  <Video
+  key={url}
+  focusable
+  ref={videoRef}
+  viewType="textureView"
+  source={{
+    uri: url,
+    ...(isRtsp
+      ? { type: "rtsp" }
+      : {}),
+  }}
+  style={[
+    styles.video,
+    {
+      transform: [
+        {
+          scale: zoom,
+        },
+      ],
+    },
+  ]}
+  controls={nativeControls}
+  controlsStyles={{
+    hideFullscreen: true,
+    hideSeekBar: true,
+    liveLabel: "LIVE",
+  }}
         muted={muted}
         resizeMode="contain"
         paused={false}
