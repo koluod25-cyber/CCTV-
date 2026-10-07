@@ -3418,6 +3418,496 @@ return next;
     fontWeight: "900",
   },
 
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
 
+  sectionHeaderText: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  cameraMeta: {
+    color: "#6f8599",
+    fontSize: 9,
+    marginTop: 4,
+  },
+
+  endpointText: {
+    color: "#7890a5",
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 5,
+  },
+
+  primaryButtonSmall: {
+    minHeight: 36,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: "#1c587f",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  secondaryButtonSmall: {
+    minHeight: 36,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: "#13253a",
+    borderWidth: 1,
+    borderColor: "#29425a",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  switchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 9,
+    borderBottomWidth: 1,
+    borderBottomColor: "#152a40",
+  },
+
+  switchTextWrap: {
+    flex: 1,
+    paddingRight: 12,
+  },
+
+  switchTitle: {
+    color: "#d3e0eb",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+
+  switchDescription: {
+    color: "#71869a",
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 3,
+  },
+
+  logoHelpText: {
+    color: "#71869a",
+    fontSize: 10,
+    lineHeight: 15,
+    marginBottom: 8,
+  },
+
+  layoutHint: {
+    color: "#71869a",
+    fontSize: 10,
+    lineHeight: 15,
+  },
+
+  contentContainer: {
+    paddingBottom: 90,
+  },
+
+  sectionHeaderTextWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+});
+  cameraIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 9,
+    backgroundColor: "#13263b",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 9,
+  },
+
+  cameraIcon: {
+    fontSize: 18,
+  },
+
+  cameraHeaderText: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  cameraTitle: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "900",
+  },
+
+  cameraSubtitle: {
+    color: "#71869a",
+    fontSize: 9,
+    marginTop: 2,
+  },
+
+  cameraStatus: {
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: "#12253b",
+  },
+
+  cameraStatusText: {
+    color: "#8fa6bd",
+    fontSize: 9,
+    fontWeight: "800",
+  },
+
+  cameraStatusOnline: {
+    color: "#67d39a",
+  },
+
+  cameraStatusOffline: {
+    color: "#d98787",
+  },
+
+  cameraVideoWrap: {
+    width: "100%",
+    aspectRatio: 16 / 9,
+    backgroundColor: "#02070d",
+    borderRadius: 10,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#1b2e44",
+  },
+
+  cameraVideo: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#000000",
+  },
+
+  cameraLoading: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.35)",
+  },
+
+  cameraLoadingText: {
+    color: "#c8d9e7",
+    fontSize: 10,
+    marginTop: 7,
+  },
+
+  cameraControls: {
+    position: "absolute",
+    left: 7,
+    right: 7,
+    bottom: 7,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  cameraControlButton: {
+    minWidth: 34,
+    height: 32,
+    paddingHorizontal: 8,
+    borderRadius: 7,
+    backgroundColor: "rgba(0,0,0,0.75)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  cameraControlText: {
+    color: "#ffffff",
+    fontSize: 11,
+    fontWeight: "800",
+  },
+
+  cameraControlGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+
+  cameraZoomText: {
+    color: "#b5c7d7",
+    fontSize: 9,
+    fontWeight: "800",
+    marginHorizontal: 4,
+  },
+
+  cameraFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 7,
+  },
+
+  cameraFooterText: {
+    flex: 1,
+    color: "#71869a",
+    fontSize: 9,
+  },
+
+  cameraFooterStatus: {
+    color: "#77c99b",
+    fontSize: 9,
+    fontWeight: "800",
+  },
+
+  cameraFooterStatusOffline: {
+    color: "#d98787",
+  },
+
+  urlText: {
+    color: "#667f94",
+    fontSize: 9,
+    lineHeight: 14,
+  },
+
+  cardTitle: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "900",
+    marginBottom: 8,
+  },
+
+  cardDescription: {
+    color: "#71869a",
+    fontSize: 10,
+    lineHeight: 15,
+    marginBottom: 8,
+  },
+
+  searchButton: {
+    minHeight: 42,
+    paddingHorizontal: 15,
+    borderRadius: 9,
+    backgroundColor: "#1c587f",
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+  },
+
+  searchButtonText: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  cameraIcon: {
+    fontSize: 19,
+  },
+
+  cameraCardInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  cameraName: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+
+  cameraMeta: {
+    color: "#71869a",
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 2,
+  },
+
+  endpointText: {
+    color: "#60768a",
+    fontSize: 9,
+    lineHeight: 14,
+    marginTop: 3,
+  },
+
+  logoHelpText: {
+    color: "#71869a",
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 5,
+    marginBottom: 8,
+  },
+
+  logoActionRow: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+    marginTop: 8,
+  },
+
+  logoEmptyPreview: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+    backgroundColor: "#07111d",
+    borderWidth: 1,
+    borderColor: "#223b53",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  logoEmptyText: {
+    color: "#62788c",
+    fontSize: 10,
+    textAlign: "center",
+    paddingHorizontal: 8,
+  },
+
+  logoUriText: {
+    color: "#60768a",
+    fontSize: 9,
+    lineHeight: 14,
+    marginTop: 6,
+  },
+
+  saveButtonSaved: {
+    backgroundColor: "#216448",
+  },
+
+  cardTitle: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "800",
+    marginBottom: 8,
+  },
+
+  layoutHint: {
+    color: "#6f8599",
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 4,
+  },
+
+  cameraGridLandscape: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginHorizontal: -4,
+  },
+
+  cameraSlot: {
+    width: "100%",
+    backgroundColor: "#0d1b2c",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#1b3048",
+    padding: 8,
+    marginBottom: 8,
+  },
+
+  cameraSlotHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+
+  cameraSlotTitle: {
+    flex: 1,
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  cameraSlotStatus: {
+    color: "#77c99b",
+    fontSize: 9,
+    fontWeight: "800",
+  },
+  overlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 15,
+  },
+
+  overlayTitle: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 5,
+  },
+
+  overlayText: {
+    color: "#9db2c5",
+    fontSize: 10,
+    lineHeight: 15,
+    textAlign: "center",
+  },
+
+  errorIcon: {
+    fontSize: 28,
+    marginBottom: 8,
+  },
+
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#52d38a",
+    marginRight: 5,
+  },
+
+  liveText: {
+    color: "#77c99b",
+    fontSize: 10,
+    fontWeight: "800",
+  },
+
+  cameraControlsOverlay: {
+    position: "absolute",
+    left: 7,
+    right: 7,
+    bottom: 7,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 5,
+  },
+
+  micButton: {
+    minWidth: 34,
+    height: 32,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: "rgba(0,0,0,0.75)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  micButtonText: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "900",
+  },
+
+  zoomLabel: {
+    height: 32,
+    minWidth: 55,
+    paddingHorizontal: 7,
+    borderRadius: 8,
+    backgroundColor: "rgba(0,0,0,0.75)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  zoomLabelText: {
+    color: "#ffffff",
+    fontSize: 10,
+    fontWeight: "800",
+  },
+});
 
 
