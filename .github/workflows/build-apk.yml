@@ -31,9 +31,9 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Setup Android 
-        shell: bash
-        run: |
+       - name: Setup Android NDK
+         shell: bash
+         run: |
           set -euo pipefail
 
           NDK_VERSION="27.1.12297006"
