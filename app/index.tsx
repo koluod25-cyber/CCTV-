@@ -3992,11 +3992,297 @@ const styles = StyleSheet.create({
     padding: 20,
   },
 
-    centeredText: {
+      centeredText: {
     color: "#8297aa",
     fontSize: 12,
     textAlign: "center",
     lineHeight: 18,
+  },
+
+  // ===== STYLE TAMBAHAN PTZ =====
+  ptzSwipeOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "flex-end",
+    paddingBottom: 10,
+  },
+
+  ptzSwipeHint: {
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 7,
+    backgroundColor: "rgba(0,0,0,0.58)",
+  },
+
+  ptzSwipeHintText: {
+    color: "#d7e4ef",
+    fontSize: 9,
+    fontWeight: "700",
+  },
+
+  ptzDisabledBox: {
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: "#0a1522",
+    borderWidth: 1,
+    borderColor: "#26384a",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  ptzDisabledText: {
+    color: "#71869a",
+    fontSize: 11,
+    textAlign: "center",
+    lineHeight: 16,
+  },
+
+  ptzPanel: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: "#091522",
+    borderWidth: 1,
+    borderColor: "#1a3047",
+  },
+
+  ptzPanelHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+
+  ptzPanelTitle: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "900",
+  },
+
+  ptzPanelStatus: {
+    color: "#7790a5",
+    fontSize: 10,
+  },
+
+  ptzSpacer: {
+    width: 44,
+    height: 40,
+    margin: 3,
+  },
+
+  ptzZoomRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+
+  ptzZoomButton: {
+    minWidth: 52,
+    height: 36,
+    marginHorizontal: 4,
+    borderRadius: 8,
+    backgroundColor: "#14283d",
+    borderWidth: 1,
+    borderColor: "#28445e",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  ptzZoomText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "900",
+  },
+
+  // ===== STYLE TAB ALIAS =====
+  tab: {
+    flex: 1,
+    minHeight: 58,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 9,
+    marginHorizontal: 2,
+  },
+
+  tabActive: {
+    backgroundColor: "#132b43",
+  },
+
+  tabText: {
+    color: "#6f8599",
+    fontSize: 9,
+    fontWeight: "800",
+  },
+
+  tabTextActive: {
+    color: "#ffffff",
+  },
+
+  // ===== STYLE GRID CAMERA =====
+  contentContainer: {
+    padding: 12,
+    paddingBottom: 90,
+  },
+
+  bigIcon: {
+    fontSize: 34,
+    marginBottom: 8,
+  },
+
+  centerText: {
+    color: "#8297aa",
+    fontSize: 12,
+    textAlign: "center",
+    lineHeight: 18,
+  },
+
+  cardTitle: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "800",
+    marginBottom: 8,
+  },
+
+  layoutHint: {
+    color: "#6f8599",
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 4,
+  },
+
+  cameraGridLandscape: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginHorizontal: -4,
+  },
+
+  cameraSlot: {
+    width: "100%",
+    backgroundColor: "#0d1b2c",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#1b3048",
+    padding: 8,
+    marginBottom: 8,
+  },
+
+  cameraSlotHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+
+  cameraSlotTitle: {
+    flex: 1,
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+
+  cameraSlotStatus: {
+    color: "#77c99b",
+    fontSize: 9,
+    fontWeight: "800",
+  },
+
+  // ===== STYLE LIVE / OVERLAY =====
+  overlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 15,
+  },
+
+  overlayTitle: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 5,
+  },
+
+  overlayText: {
+    color: "#9db2c5",
+    fontSize: 10,
+    lineHeight: 15,
+    textAlign: "center",
+  },
+
+  errorIcon: {
+    fontSize: 28,
+    marginBottom: 8,
+  },
+
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#52d38a",
+    marginRight: 5,
+  },
+
+  liveText: {
+    color: "#77c99b",
+    fontSize: 10,
+    fontWeight: "800",
+  },
+
+  // ===== STYLE CAMERA CONTROLS =====
+  cameraControlsOverlay: {
+    position: "absolute",
+    left: 7,
+    right: 7,
+    bottom: 7,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 5,
+  },
+
+  micButton: {
+    minWidth: 34,
+    height: 32,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: "rgba(0,0,0,0.75)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  micButtonText: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "900",
+  },
+
+  zoomLabel: {
+    height: 32,
+    minWidth: 55,
+    paddingHorizontal: 7,
+    borderRadius: 8,
+    backgroundColor: "rgba(0,0,0,0.75)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  zoomLabelText: {
+    color: "#ffffff",
+    fontSize: 10,
+    fontWeight: "800",
   },
 });
 
