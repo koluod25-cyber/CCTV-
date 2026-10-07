@@ -28,6 +28,8 @@ import {
 import Video from "react-native-video";
 import * as ImagePicker from "expo-image-picker";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import {
   CCTV_VENDORS,
   makeRtspUrl,
@@ -88,6 +90,20 @@ function isCameraUrl(value: string) {
     value.trim(),
   );
 }
+
+const CAMERA_STORAGE_KEY =
+  "@cctv_universal_monitor/cameras_v2";
+
+type SavedCameraState = {
+  cameraCount: number;
+  cameraStreams: string[];
+  cameraMuted: boolean[];
+  cameraMicrophone: boolean[];
+  cameraZoom: number[];
+  cameraPtzConfig: Array<CameraPtzConfig | null>;
+  ownerText: string;
+  logoUri: string;
+};
 
 function hideCredentials(value: string) {
   try {
@@ -841,6 +857,17 @@ export default function HomeScreen() {
                 false,
             ),
         );
+        
+        setCameraMicrophone(
+  (current) =>
+    Array.from(
+      {
+        length: safeCount,
+      },
+      (_, index) =>
+        current[index] ?? false,
+    ),
+);
 
         setCameraZoom(
           (current) =>
@@ -892,6 +919,141 @@ export default function HomeScreen() {
     cameraCount,
     resetCameraArrays,
   ]);
+
+  useEffect(() => {
+  let cancelled = false;
+
+  const loadSavedState = async () => {
+    try {
+      const raw =
+        await AsyncStorage.getItem(
+          CAMERA_STORAGE_KEY,
+        );
+
+      if (!raw || cancelled) {
+        return;
+      }
+
+      const saved =
+        JSON.parse(raw) as Partial<SavedCameraState>;
+
+      if (
+        typeof saved.cameraCount === "number"
+      ) {
+        setCameraCount(
+          Math.max(
+            1,
+            Math.min(
+              MAX_CAMERAS,
+              Math.floor(
+                saved.cameraCount,
+              ),
+            ),
+          ),
+        );
+      }
+
+      if (Array.isArray(saved.cameraStreams)) {
+        setCameraStreams(saved.cameraStreams);
+      }
+
+      if (Array.isArray(saved.cameraMuted)) {
+        setCameraMuted(saved.cameraMuted);
+      }
+
+      if (
+        Array.isArray(
+          saved.cameraMicrophone,
+        )
+      ) {
+        setCameraMicrophone(
+          saved.cameraMicrophone,
+        );
+      }
+
+      if (Array.isArray(saved.cameraZoom)) {
+        setCameraZoom(saved.cameraZoom);
+      }
+
+      if (
+        Array.isArray(
+          saved.cameraPtzConfig,
+        )
+      ) {
+        setCameraPtzConfig(
+          saved.cameraPtzConfig,
+        );
+      }
+
+      if (
+        typeof saved.ownerText === "string"
+      ) {
+        setOwnerText(saved.ownerText);
+        setSavedOwnerText(
+          saved.ownerText,
+        );
+      }
+
+      if (
+        typeof saved.logoUri === "string"
+      ) {
+        setLogoUri(saved.logoUri);
+        setSavedLogoUri(
+          saved.logoUri,
+        );
+      }
+    } catch (error) {
+      console.warn(
+        "Gagal memuat konfigurasi CCTV:",
+        error,
+      );
+    }
+  };
+
+  void loadSavedState();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
+  
+         useEffect(() => {
+  const saveCameraState = async () => {
+    try {
+      const state: SavedCameraState = {
+        cameraCount,
+        cameraStreams,
+        cameraMuted,
+        cameraMicrophone,
+        cameraZoom,
+        cameraPtzConfig,
+        ownerText,
+        logoUri,
+      };
+
+      await AsyncStorage.setItem(
+        CAMERA_STORAGE_KEY,
+        JSON.stringify(state),
+      );
+    } catch (error) {
+      console.warn(
+        "Gagal menyimpan konfigurasi CCTV:",
+        error,
+      );
+    }
+  };
+
+  void saveCameraState();
+}, [
+  cameraCount,
+  cameraStreams,
+  cameraMuted,
+  cameraMicrophone,
+  cameraZoom,
+  cameraPtzConfig,
+  ownerText,
+  logoUri,
+]);
 
   const updateCameraStream =
     useCallback(
@@ -1914,128 +2076,159 @@ export default function HomeScreen() {
                     );
                   }}
                 />
-
-                <PtzSwipeControl
-                  enabled={
-                    Boolean(ptzConfig) &&
-                    !controlsVisible
-                  }
-                  onMove={(direction) =>
-                    movePtz(
-                      slot,
-                      direction,
-                    )
-                  }
-                  onStop={() =>
-                    stopPtz(slot)
-                  }
-                />
-
+<PtzSwipeControl
+  enabled={
+    Boolean(ptzConfig) &&
+    !controlsVisible
+  }
+  onMove={(direction) =>
+    movePtz(
+      slot,
+      direction,
+    )
+  }
+  onStop={() =>
+    stopPtz(slot)
+  }
+/>
                 <Pressable
-                  style={
-                    styles.cameraTouchArea
-                  }
-                  onPress={() =>
-                    showCameraControls(
-                      slot,
-                    )
-                  }
-                />
+  style={styles.cameraTouchArea}
+  onPress={() =>
+    showCameraControls(slot)
+  }
+/>
 
-                {controlsVisible ? (
-                  <View
-                    style={
-                      styles.cameraControls
-                    }
-                  >
-                    <Pressable
-                      style={
-                        styles.cameraControlButton
-                      }
-                      onPress={() =>
-                        updateCameraMuted(
-                          slot,
-                          !slotMuted,
-                        )
-                      }
-                    >
-                      <Text
-                        style={
-                          styles.cameraControlText
-                        }
-                      >
-                        {slotMuted
-                          ? "🔇"
-                          : "🔊"}
-                      </Text>
-                    </Pressable>
+<PtzSwipeControl
+  enabled={
+    Boolean(ptzConfig) &&
+    !controlsVisible
+  }
+  onMove={(direction) =>
+    movePtz(
+      slot,
+      direction,
+    )
+  }
+  onStop={() =>
+    stopPtz(slot)
+  }
+/>
 
-                    <Pressable
-                      style={
-                        styles.cameraControlButton
-                      }
-                      onPress={() =>
-                        updateCameraZoom(
-                          slot,
-                          Math.min(
-                            3,
-                            zoom + 0.1,
-                          ),
-                        )
-                      }
-                    >
-                      <Text
-                        style={
-                          styles.cameraControlText
-                        }
-                      >
-                        +
-                      </Text>
-                    </Pressable>
+{controlsVisible ? (
+  <View
+    style={
+      styles.cameraControls
+    }
+  >
+    <Pressable
+      style={
+        styles.cameraControlButton
+      }
+      onPress={() =>
+        updateCameraMuted(
+          slot,
+          !slotMuted,
+        )
+      }
+    >
+      <Text
+        style={
+          styles.cameraControlText
+        }
+      >
+        {slotMuted ? "🔇" : "🔊"}
+      </Text>
+    </Pressable>
 
-                    <Pressable
-                      style={
-                        styles.cameraControlButton
-                      }
-                      onPress={() =>
-                        updateCameraZoom(
-                          slot,
-                          Math.max(
-                            1,
-                            zoom - 0.1,
-                          ),
-                        )
-                      }
-                    >
-                      <Text
-                        style={
-                          styles.cameraControlText
-                        }
-                      >
-                        −
-                      </Text>
-                    </Pressable>
+    <Pressable
+      style={
+        styles.cameraControlButton
+      }
+      onPress={() =>
+        setCameraMicrophone(
+          (current) => {
+            const next = [...current];
+            next[slot] = !next[slot];
+            return next;
+          },
+        )
+      }
+    >
+      <Text
+        style={
+          styles.cameraControlText
+        }
+      >
+        {cameraMicrophone[slot]
+          ? "🎙️"
+          : "🎤"}
+      </Text>
+    </Pressable>
 
-                    <Pressable
-                      style={
-                        styles.cameraControlButton
-                      }
-                      onPress={() =>
-                        disconnectCamera(
-                          slot,
-                        )
-                      }
-                    >
-                      <Text
-                        style={
-                          styles.cameraControlText
-                        }
-                      >
-                        ✕
-                      </Text>
-                    </Pressable>
-                  </View>
-                ) : null}
+    <Pressable
+      style={
+        styles.cameraControlButton
+      }
+      onPress={() =>
+        updateCameraZoom(
+          slot,
+          Math.min(
+            3,
+            zoom + 0.1,
+          ),
+        )
+      }
+    >
+      <Text
+        style={
+          styles.cameraControlText
+        }
+      >
+        ＋
+      </Text>
+    </Pressable>
+
+    <Pressable
+      style={
+        styles.cameraControlButton
+      }
+      onPress={() =>
+        updateCameraZoom(
+          slot,
+          Math.max(
+            1,
+            zoom - 0.1,
+          ),
+        )
+      }
+    >
+      <Text
+        style={
+          styles.cameraControlText
+        }
+      >
+        −
+      </Text>
+    </Pressable>
+
+    <Pressable
+      style={
+        styles.cameraControlButton
+      }
+      onPress={() =>
+        disconnectCamera(slot)
+      }
+    >
+      <Text
+        style={
+          styles.cameraControlText
+        }
+      >
+        ✕
+      </Text>
+    </Pressable>
+  </View>
+) : null}
               </>
             ) : (
               <View
@@ -2961,41 +3154,48 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    minHeight: 58,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: "#111923",
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#263341",
-  },
+  minHeight: 58,
+  paddingHorizontal: 8,
+  paddingVertical: 6,
+  backgroundColor: "#111923",
+  flexDirection: "row",
+  alignItems: "center",
+  borderBottomWidth: 1,
+  borderBottomColor: "#263341",
+},
 
   marqueeContainer: {
-    flex: 1,
-    height: 38,
-    overflow: "hidden",
-    justifyContent: "center",
-    marginRight: 10,
-  },
+  ...StyleSheet.absoluteFillObject,
+  overflow: "hidden",
+  justifyContent: "center",
+  zIndex: 1,
+},
 
   marqueeContent: {
-    alignSelf: "flex-start",
-    minWidth: "100%",
-  },
+  position: "absolute",
+  left: 0,
+  minWidth: "100%",
+},
 
   marqueeText: {
-    color: "#ffffff",
-    fontSize: 17,
-    fontWeight: "700",
-    includeFontPadding: false,
-  },
+  color: "#ffffff",
+  fontSize: 18,
+  fontWeight: "700",
+  includeFontPadding: false,
+  paddingHorizontal: 10,
+},
 
   headerLogo: {
-    width: 42,
-    height: 42,
-    borderRadius: 8,
-  },
+  position: "absolute",
+  right: 8,
+  top: 8,
+  width: 42,
+  height: 42,
+  borderRadius: 8,
+  zIndex: 10,
+  elevation: 10,
+  backgroundColor: "#18222d",
+},
 
   content: {
     flex: 1,
@@ -3289,12 +3489,14 @@ const styles = StyleSheet.create({
   },
 
   cameraControls: {
-    position: "absolute",
-    right: 8,
-    bottom: 8,
-    flexDirection: "row",
-    gap: 6,
-  },
+  position: "absolute",
+  top: 8,
+  right: 8,
+  flexDirection: "row",
+  gap: 6,
+  zIndex: 30,
+  elevation: 30,
+},
 
   cameraControlButton: {
     width: 34,
@@ -3639,23 +3841,25 @@ const styles = StyleSheet.create({
   },
 
   bottomTabs: {
-    minHeight: 62,
-    flexDirection: "row",
-    backgroundColor: "#111923",
-    borderTopWidth: 1,
-    borderTopColor: "#263341",
-    paddingHorizontal: 4,
-    paddingTop: 5,
-    paddingBottom: 4,
-  },
+  minHeight: 56,
+  flexDirection: "row",
+  backgroundColor: "#111923",
+  borderTopWidth: 1,
+  borderTopColor: "#263341",
+  paddingHorizontal: 6,
+  paddingTop: 3,
+  paddingBottom: 3,
+  marginBottom: 2,
+},
 
   tab: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 9,
-    marginHorizontal: 2,
-  },
+  flex: 1,
+  minHeight: 48,
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 9,
+  marginHorizontal: 2,
+},
 
   tabActive: {
     backgroundColor: "#1b3044",
