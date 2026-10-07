@@ -31,46 +31,54 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Setup Android NDK
+            - name: Setup Android NDK
         shell: bash
         run: |
-          set -e
+          set -euo pipefail
 
-          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          NDK_VERSION="27.1.12297006"
+          NDK_DIR="$ANDROID_HOME/ndk/$NDK_VERSION"
+          NDK_ZIP="/tmp/android-ndk-r27b-linux.zip"
+          NDK_URL="https://dl.google.com/android/repository/android-ndk-r27b-linux.zip"
 
-          if [ ! -x "$SDKMANAGER" ]; then
-            SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -n 1)"
-          fi
+          if [ -f "$NDK_DIR/source.properties" ]; then
+            echo "NDK $NDK_VERSION is already installed."
+          else
+            rm -rf "$NDK_DIR"
+            rm -f "$NDK_ZIP"
 
-          echo "Using sdkmanager: $SDKMANAGER"
+            echo "Downloading Android NDK r27b directly from Google..."
 
-          yes | "$SDKMANAGER" --licenses >/dev/null || true
+            curl --fail --location --show-error --silent \
+              --retry 6 \
+              --retry-delay 5 \
+              --retry-all-errors \
+              --connect-timeout 30 \
+              --max-time 900 \
+              "$NDK_URL" \
+              --output "$NDK_ZIP"
 
-          rm -rf "$ANDROID_HOME/ndk/27.1.12297006"
+            echo "Validating NDK archive..."
+            unzip -t "$NDK_ZIP" >/dev/null
 
-          for attempt in 1 2 3; do
-            echo "Installing NDK attempt $attempt..."
+            echo "Extracting NDK..."
+            mkdir -p "$ANDROID_HOME/ndk"
+            unzip -q "$NDK_ZIP" -d "$ANDROID_HOME/ndk"
 
-            rm -rf "$ANDROID_HOME/ndk/27.1.12297006"
-
-            if "$SDKMANAGER" --install "ndk;27.1.12297006"; then
-              if [ -f "$ANDROID_HOME/ndk/27.1.12297006/source.properties" ]; then
-                echo "NDK 27.1.12297006 installed successfully."
-                break
-              fi
-            fi
-
-            if [ "$attempt" -eq 3 ]; then
-              echo "NDK installation failed after 3 attempts."
+            if [ ! -f "$NDK_DIR/source.properties" ]; then
+              echo "NDK extraction completed but source.properties was not found."
+              find "$ANDROID_HOME/ndk" -maxdepth 2 \
+                -type f \
+                -name source.properties \
+                -print
               exit 1
             fi
-
-            echo "Retrying NDK installation..."
-            sleep 10
-          done
+          fi
 
           echo "Installed NDK:"
-          cat "$ANDROID_HOME/ndk/27.1.12297006/source.properties"
+          cat "$NDK_DIR/source.properties"
+
+          rm -f "$NDK_ZIP"
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
