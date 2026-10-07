@@ -38,11 +38,51 @@ jobs:
 
           NDK_VERSION="27.1.12297006"
 
-          echo "Checking Android SDK..."
-          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          echo "ANDROID_HOME=$ANDROID_HOME"
+
+          echo "Locating Android SDK command-line tools..."
+
+          SDKMANAGER=""
+
+          for candidate in \
+            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "$ANDROID_HOME/cmdline-tools/bin/sdkmanager" \
+            "$ANDROID_HOME/cmdline-tools/12.0/bin/sdkmanager" \
+            "$ANDROID_HOME/cmdline-tools/11.0/bin/sdkmanager" \
+            "$ANDROID_HOME/tools/bin/sdkmanager"
+          do
+            if [ -x "$candidate" ]; then
+              SDKMANAGER="$candidate"
+              break
+            fi
+          done
+
+          if [ -z "$SDKMANAGER" ]; then
+            echo "sdkmanager was not found in standard Android SDK locations."
+            echo "Searching Android SDK..."
+            find "$ANDROID_HOME" -type f -name sdkmanager -print || true
+            exit 1
+          fi
+
+          echo "Found sdkmanager:"
+          echo "$SDKMANAGER"
+
+          SDKMANAGER_DIR="$(dirname "$SDKMANAGER")"
+
+          echo "Adding sdkmanager to PATH..."
+          echo "$SDKMANAGER_DIR" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+
+          export PATH="$SDKMANAGER_DIR:$ANDROID_HOME/platform-tools:$PATH"
+
+          echo "Checking sdkmanager..."
+          "$SDKMANAGER" --version
+
+          echo "Accepting Android SDK licenses..."
+          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
 
           echo "Installing Android NDK ${NDK_VERSION}..."
-          sdkmanager --install "ndk;${NDK_VERSION}"
+          "$SDKMANAGER" --install "ndk;${NDK_VERSION}" --sdk_root="$ANDROID_HOME"
 
           echo "Checking installed NDK..."
           NDK_DIR="$ANDROID_HOME/ndk/$NDK_VERSION"
@@ -58,7 +98,6 @@ jobs:
 
           echo "Android NDK ${NDK_VERSION} installed successfully."
           cat "$NDK_DIR/source.properties"
-
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
