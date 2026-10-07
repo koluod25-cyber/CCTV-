@@ -4134,12 +4134,250 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 
-  centerText: {
+    centeredText: {
     color: "#8297aa",
     fontSize: 12,
     textAlign: "center",
     lineHeight: 18,
   },
+
+  // ===== CAMERA EMPTY SLOT =====
+  emptyCameraSlot: {
+    flex: 1,
+    minHeight: 150,
+    backgroundColor: "#02070d",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#1b2e44",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 15,
+  },
+
+  emptySlotIcon: {
+    fontSize: 28,
+    marginBottom: 8,
+  },
+
+  emptySlotText: {
+    color: "#dce8f3",
+    fontSize: 12,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  emptySlotHint: {
+    color: "#71869a",
+    fontSize: 10,
+    lineHeight: 15,
+    textAlign: "center",
+    marginTop: 5,
+  },
+
+  emptyLiveArea: {
+    flex: 1,
+    minHeight: 180,
+    backgroundColor: "#02070d",
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 15,
+  },
+
+  // ===== BUTTONS =====
+  flexButton: {
+    flex: 1,
+    minWidth: 120,
+  },
+
+  disabledText: {
+    color: "#657b90",
+    fontSize: 11,
+    textAlign: "center",
+  },
+
+  // ===== SWITCH / SETTINGS =====
+  switchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+  },
+
+  switchTextWrap: {
+    flex: 1,
+    paddingRight: 12,
+  },
+
+  switchTitle: {
+    color: "#dce8f3",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+
+  switchDescription: {
+    color: "#71869a",
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 3,
+  },
+
+  // ===== INFO / SECTION HEADER =====
+  infoBox: {
+    padding: 11,
+    borderRadius: 10,
+    backgroundColor: "#091827",
+    borderWidth: 1,
+    borderColor: "#1b334a",
+    marginBottom: 10,
+  },
+
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+
+  sectionHeaderText: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "900",
+  },
+
+  // ===== SMALL BUTTONS =====
+  primaryButtonSmall: {
+    minHeight: 34,
+    paddingHorizontal: 11,
+    borderRadius: 7,
+    backgroundColor: "#1c587f",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  secondaryButtonSmall: {
+    minHeight: 34,
+    paddingHorizontal: 11,
+    borderRadius: 7,
+    backgroundColor: "#13253a",
+    borderWidth: 1,
+    borderColor: "#29425a",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // ===== LOADING =====
+  loadingBox: {
+    minHeight: 90,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 15,
+    backgroundColor: "#091827",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#1b334a",
+  },
+
+  // ===== CAMERA CARD =====
+  cameraCard: {
+    backgroundColor: "#0d1b2c",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#1b3048",
+    padding: 10,
+    marginBottom: 10,
+  },
+
+  cameraCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 9,
+  },
+
+  cameraIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 9,
+    backgroundColor: "#13263b",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 9,
+  },
+
+  cameraIcon: {
+    fontSize: 19,
+  },
+
+  cameraCardInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  cameraName: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+
+  cameraMeta: {
+    color: "#71869a",
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 2,
+  },
+
+  endpointText: {
+    color: "#60768a",
+    fontSize: 9,
+    lineHeight: 14,
+    marginTop: 3,
+  },
+
+  // ===== LOGO SETTINGS =====
+  logoHelpText: {
+    color: "#71869a",
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 5,
+    marginBottom: 8,
+  },
+
+  logoActionRow: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+    marginTop: 8,
+  },
+
+  logoEmptyPreview: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+    backgroundColor: "#07111d",
+    borderWidth: 1,
+    borderColor: "#223b53",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  logoEmptyText: {
+    color: "#62788c",
+    fontSize: 10,
+    textAlign: "center",
+    paddingHorizontal: 8,
+  },
+
+  logoUriText: {
+    color: "#60768a",
+    fontSize: 9,
+    lineHeight: 14,
+    marginTop: 6,
+  },
+
+  saveButtonSaved: {
+    backgroundColor: "#216448",
+  },
+
 
   cardTitle: {
     color: "#ffffff",
