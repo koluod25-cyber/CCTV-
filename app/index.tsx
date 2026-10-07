@@ -2203,40 +2203,7 @@ export default function HomeScreen() {
           Tampilan Live
         </Text>
 
-        <View
-          style={styles.switchRow}
-        >
-          <View
-            style={
-              styles.switchTextWrap
-            }
-          >
-            <Text
-              style={
-                styles.switchTitle
-              }
-            >
-              Kontrol Video
-            </Text>
-
-            <Text
-              style={
-                styles.switchDescription
-              }
-            >
-              Tampilkan kontrol bawaan
-              pemutar video.
-            </Text>
-          </View>
-
-          <Switch
-            value={nativeControls}
-            onValueChange={
-              setNativeControls
-            }
-          />
-        </View>
-
+       
         <View
           style={styles.switchRow}
         >
@@ -2518,6 +2485,24 @@ export default function HomeScreen() {
         return renderLive();
     }
   };
+  const renderContent = () => {
+    switch (activeTab) {
+      case "live":
+        return renderLive();
+
+      case "cctv":
+        return renderCctv();
+
+      case "history":
+        return renderHistory();
+
+      case "settings":
+        return renderSettings();
+
+      default:
+        return renderLive();
+    }
+  };
 
   return (
     <SafeAreaView
@@ -2606,273 +2591,6 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
-
-    void sendPtz(slot, {
-      type: "zoom",
-      direction,
-      speed: 0.4,
-    });
-  };
-
-  const renderPtzControls = (
-    slot: number,
-  ) => {
-    const enabled =
-      Boolean(
-        cameraPtzConfig[slot],
-      );
-
-    if (!enabled) {
-      return (
-        <View
-          style={
-            styles.ptzDisabledBox
-          }
-        >
-          <Text
-            style={
-              styles.ptzDisabledText
-            }
-          >
-            PTZ tidak tersedia untuk
-            kamera ini
-          </Text>
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.ptzPanel}>
-        <View
-          style={
-            styles.ptzPanelHeader
-          }
-        >
-          <Text
-            style={
-              styles.ptzPanelTitle
-            }
-          >
-            Kontrol PTZ
-          </Text>
-
-          <Text
-            style={
-              styles.ptzPanelStatus
-            }
-          >
-            ONVIF PTZ
-          </Text>
-        </View>
-
-        <View
-          style={styles.ptzPad}
-        >
-          <View
-            style={
-              styles.ptzRow
-            }
-          >
-            <View
-              style={
-                styles.ptzSpacer
-              }
-            />
-
-            <Pressable
-              onPress={() =>
-                movePtz(
-                  slot,
-                  "up",
-                )
-              }
-              style={
-                styles.ptzButton
-              }
-            >
-              <Text
-                style={
-                  styles.ptzButtonText
-                }
-              >
-                ▲
-              </Text>
-            </Pressable>
-
-            <View
-              style={
-                styles.ptzSpacer
-              }
-            />
-          </View>
-
-          <View
-            style={
-              styles.ptzRow
-            }
-          >
-            <Pressable
-              onPress={() =>
-                movePtz(
-                  slot,
-                  "left",
-                )
-              }
-              style={
-                styles.ptzButton
-              }
-            >
-              <Text
-                style={
-                  styles.ptzButtonText
-                }
-              >
-                ◀
-              </Text>
-            </Pressable>
-
-            <Pressable
-              onPress={() =>
-                stopPtz(slot)
-              }
-              style={
-                styles.ptzStopButton
-              }
-            >
-              <Text
-                style={
-                  styles.ptzStopText
-                }
-              >
-                ■
-              </Text>
-            </Pressable>
-
-            <Pressable
-              onPress={() =>
-                movePtz(
-                  slot,
-                  "right",
-                )
-              }
-              style={
-                styles.ptzButton
-              }
-            >
-              <Text
-                style={
-                  styles.ptzButtonText
-                }
-              >
-                ▶
-              </Text>
-            </Pressable>
-          </View>
-
-          <View
-            style={
-              styles.ptzRow
-            }
-          >
-            <View
-              style={
-                styles.ptzSpacer
-              }
-            />
-
-            <Pressable
-              onPress={() =>
-                movePtz(
-                  slot,
-                  "down",
-                )
-              }
-              style={
-                styles.ptzButton
-              }
-            >
-              <Text
-                style={
-                  styles.ptzButtonText
-                }
-              >
-                ▼
-              </Text>
-            </Pressable>
-
-            <View
-              style={
-                styles.ptzSpacer
-              }
-            />
-          </View>
-        </View>
-
-        <View
-          style={
-            styles.ptzZoomRow
-          }
-        >
-          <Pressable
-            onPress={() =>
-              zoomPtz(
-                slot,
-                "out",
-              )
-            }
-            style={
-              styles.ptzZoomButton
-            }
-          >
-            <Text
-              style={
-                styles.ptzZoomText
-              }
-            >
-              − Zoom
-            </Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() =>
-              stopPtz(slot)
-            }
-            style={
-              styles.ptzZoomButton
-            }
-          >
-            <Text
-              style={
-                styles.ptzZoomText
-              }
-            >
-              Stop
-            </Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() =>
-              zoomPtz(
-                slot,
-                "in",
-              )
-            }
-            style={
-              styles.ptzZoomButton
-            }
-          >
-            <Text
-              style={
-                styles.ptzZoomText
-              }
-            >
-              + Zoom
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-    );
-  };
 
   const pickLogoFromGallery =
     async () => {
