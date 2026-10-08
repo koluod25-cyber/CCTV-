@@ -621,12 +621,6 @@ const [cameraConnected, setCameraConnected] = useState<boolean[]>([]);
       Array<CameraPtzConfig | null>
     >([]);
 
-  const cameraControlsTimers =
-    useRef<
-      Array<
-        ReturnType<typeof setTimeout> | null
-      >
-    >([]);
 const cameraVideoRefs =
   useRef<any[]>([]);
 
@@ -1990,14 +1984,6 @@ const clearCameraSlot =
         updateCameraConnected,
         cameraStreams,
       ],
-    );
-
-  const showCameraControls =
-    useCallback(
-      (slot: number) => {
-        toggleCameraControls(slot);
-      },
-      [toggleCameraControls],
     );
 
   const renderCameraSlot =
