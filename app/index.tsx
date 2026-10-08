@@ -2059,9 +2059,8 @@ const clearCameraSlot =
         cameraZoom[slot] || 1;
 
       const controlsVisible =
-        cameraControlsVisible[
-          slot
-        ] || false;
+        cameraControlsVisible[slot] ||
+        false;
 
       const ptzConfig =
         cameraPtzConfig[slot];
@@ -2072,8 +2071,7 @@ const clearCameraSlot =
           style={[
             styles.cameraCard,
             {
-              width:
-                cameraCardWidth,
+              width: cameraCardWidth,
             },
           ]}
         >
@@ -2083,9 +2081,7 @@ const clearCameraSlot =
             }
           >
             <Text
-              style={
-                styles.cardTitle
-              }
+              style={styles.cardTitle}
             >
               Kamera {slot + 1}
             </Text>
@@ -2135,6 +2131,11 @@ const clearCameraSlot =
                   }
                   muted={slotMuted}
                   zoom={zoom}
+                  videoRef={(ref) => {
+                    cameraVideoRefs.current[
+                      slot
+                    ] = ref;
+                  }}
                   onLoad={() =>
                     setCameraSlotConnected(
                       slot,
@@ -2154,174 +2155,194 @@ const clearCameraSlot =
                     );
                   }}
                 />
-<PtzSwipeControl
-  enabled={
-    Boolean(ptzConfig) &&
-    !controlsVisible
-  }
-  onMove={(direction) =>
-    movePtz(
-      slot,
-      direction,
-    )
-  }
-  onStop={() =>
-    stopPtz(slot)
-  }
-/>
+
+                <PtzSwipeControl
+                  enabled={
+                    Boolean(ptzConfig) &&
+                    !controlsVisible
+                  }
+                  onMove={(direction) =>
+                    movePtz(
+                      slot,
+                      direction,
+                    )
+                  }
+                  onStop={() =>
+                    stopPtz(slot)
+                  }
+                />
+
                 <Pressable
-  style={styles.cameraTouchArea}
-  onPress={() =>
-    showCameraControls(slot)
-  }
-/>
+                  style={
+                    styles.cameraTouchArea
+                  }
+                  onPress={() =>
+                    showCameraControls(
+                      slot,
+                    )
+                  }
+                />
 
-{controlsVisible ? (
-  <View
-    style={
-      styles.cameraControls
-    }
-  >
-    <Pressable
-      style={
-        styles.cameraControlButton
-      }
-      onPress={() =>
-        updateCameraMuted(
-          slot,
-          !slotMuted,
-        )
-      }
-    >
-      <Text
-        style={
-          styles.cameraControlText
-        }
-      >
-        {slotMuted ? "🔇" : "🔊"}
-      </Text>
-    </Pressable>
+                {controlsVisible ? (
+                  <View
+                    style={
+                      styles.cameraControls
+                    }
+                  >
+                    <Pressable
+                      style={
+                        styles.cameraControlButton
+                      }
+                      onPress={() =>
+                        updateCameraMuted(
+                          slot,
+                          !slotMuted,
+                        )
+                      }
+                    >
+                      <Text
+                        style={
+                          styles.cameraControlText
+                        }
+                      >
+                        {slotMuted
+                          ? "🔇"
+                          : "🔊"}
+                      </Text>
+                    </Pressable>
 
-    <Pressable
-      style={
-        styles.cameraControlButton
-      }
-      onPress={() =>
-        setCameraMicrophone(
-          (current) => {
-            const next = [...current];
-            next[slot] = !next[slot];
-            return next;
-          },
-        )
-      }
-    >
-      <Text
-        style={
-          styles.cameraControlText
-        }
-      >
-        {cameraMicrophone[slot]
-          ? "🎙️"
-          : "🎤"}
-      </Text>
-    </Pressable>
+                    <Pressable
+                      style={
+                        styles.cameraControlButton
+                      }
+                      onPress={() =>
+                        setCameraMicrophone(
+                          (current) => {
+                            const next = [
+                              ...current,
+                            ];
 
-    <Pressable
-      style={
-        styles.cameraControlButton
-      }
-      onPress={() =>
-        updateCameraZoom(
-          slot,
-          Math.min(
-            3,
-            zoom + 0.1,
-          ),
-        )
-      }
-    >
-      <Text
-        style={
-          styles.cameraControlText
-        }
-      >
-        ＋
-      </Text>
-    </Pressable>
+                            next[slot] =
+                              !next[slot];
 
-    <Pressable
-      style={
-        styles.cameraControlButton
-      }
-      onPress={() =>
-        updateCameraZoom(
-          slot,
-          Math.max(
-            1,
-            zoom - 0.1,
-          ),
-        )
-      }
-    >
-      <Text
-        style={
-          styles.cameraControlText
-        }
-      >
-        −
-      </Text>
-    </Pressable>
+                            return next;
+                          },
+                        )
+                      }
+                    >
+                      <Text
+                        style={
+                          styles.cameraControlText
+                        }
+                      >
+                        {cameraMicrophone[
+                          slot
+                        ]
+                          ? "🎙️"
+                          : "🎤"}
+                      </Text>
+                    </Pressable>
 
-    <Pressable
-      style={
-        styles.cameraControlButton
-      }
-      onPress={() =>
-        disconnectCamera(slot)
-      }
-    >
-      <Text
-        style={
-          styles.cameraControlText
-        }
-      >
-        ✕
-<Pressable
-  style={
-    styles.cameraControlButton
-  }
-  onPress={() => {
-    const player =
-      cameraVideoRefs.current[slot];
+                    <Pressable
+                      style={
+                        styles.cameraControlButton
+                      }
+                      onPress={() =>
+                        updateCameraZoom(
+                          slot,
+                          Math.min(
+                            3,
+                            zoom + 0.1,
+                          ),
+                        )
+                      }
+                    >
+                      <Text
+                        style={
+                          styles.cameraControlText
+                        }
+                      >
+                        ＋
+                      </Text>
+                    </Pressable>
 
-    if (
-      player &&
-      typeof player.presentFullscreenPlayer ===
-        "function"
-    ) {
-      player.presentFullscreenPlayer();
-    } else {
-      Alert.alert(
-        "Fullscreen",
-        "Mode fullscreen belum tersedia pada player kamera ini.",
-      );
-    }
-  }}
->
-  <Text
-    style={
-      styles.cameraControlText
-    }
-  >
-    ⛶
-  </Text>
-</Pressable>
+                    <Pressable
+                      style={
+                        styles.cameraControlButton
+                      }
+                      onPress={() =>
+                        updateCameraZoom(
+                          slot,
+                          Math.max(
+                            1,
+                            zoom - 0.1,
+                          ),
+                        )
+                      }
+                    >
+                      <Text
+                        style={
+                          styles.cameraControlText
+                        }
+                      >
+                        −
+                      </Text>
+                    </Pressable>
 
-      </Text>
-    </Pressable>
-  </View>
-) : null}
+                    <Pressable
+                      style={
+                        styles.cameraControlButton
+                      }
+                      onPress={() =>
+                        disconnectCamera(
+                          slot,
+                        )
+                      }
+                    >
+                      <Text
+                        style={
+                          styles.cameraControlText
+                        }
+                      >
+                        ✕
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={
+                        styles.cameraControlButton
+                      }
+                      onPress={() => {
+                        const player =
+                          cameraVideoRefs
+                            .current[
+                            slot
+                          ];
+
+                        if (
+                          player &&
+                          typeof player.presentFullscreenPlayer ===
+                            "function"
+                        ) {
+                          player.presentFullscreenPlayer();
+                        } else {
+                          Alert.alert(
+                            "Fullscreen",
+                            "Mode fullscreen belum tersedia pada player kamera ini.",
+                          );
+                        }
+                      }}
+                    >
+                      <Text
+                        style={
+                          styles.cameraControlText
+                        }
+                      >
+                        ⛶
+                      </Text>
+                    </Pressable>
+                  </View>
+                ) : null}
               </>
             ) : (
               <View
@@ -2373,6 +2394,7 @@ const clearCameraSlot =
         </View>
       );
     };
+
   const renderLive = () => (
     <ScrollView
       style={styles.content}
