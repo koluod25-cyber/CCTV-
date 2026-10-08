@@ -2048,11 +2048,28 @@ const clearCameraSlot =
               styles.cameraCardHeader
             }
           >
-            <Text
-              style={styles.cardTitle}
-            >
-              Kamera {slot + 1}
-            </Text>
+           <View style={styles.cameraHeaderTitleWrap}>
+  <Text
+    style={styles.cardTitle}
+  >
+    Kamera {slot + 1}
+  </Text>
+
+  <Pressable
+    style={styles.cameraSettingsButton}
+    onPress={() =>
+      toggleCameraControls(slot)
+    }
+    accessibilityRole="button"
+    accessibilityLabel={`Pengaturan kamera ${slot + 1}`}
+  >
+    <Text
+      style={styles.cameraSettingsButtonText}
+    >
+      ⚙
+    </Text>
+  </Pressable>
+</View>
 
             <View
               style={
@@ -3193,7 +3210,7 @@ cameras.map((camera) => {
                   style={styles.historyUrl}
                   numberOfLines={2}
                 >
-                  {hideCredentials(item.url)}
+                 77 m. lol {hideCredentials(item.url)}
                 </Text>
               ) : null}
 
@@ -3639,6 +3656,30 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+     cameraHeaderTitleWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    minWidth: 0,
+  },
+
+  cameraSettingsButton: {
+    width: 32,
+    height: 32,
+    marginLeft: 8,
+    borderRadius: 8,
+    backgroundColor: "rgba(0,0,0,0.70)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#526171",
+  },
+
+  cameraSettingsButtonText: {
+    color: "#ffffff",
+    fontSize: 17,
+    fontWeight: "700",
+  },
 
   statusDot: {
     width: 7,
@@ -3662,26 +3703,6 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "#000000",
   },
-
-  cameraControlTrigger: {
-  position: "absolute",
-  right: 8,
-  bottom: 8,
-  width: 34,
-  height: 34,
-  borderRadius: 8,
-  backgroundColor: "rgba(0,0,0,0.70)",
-  alignItems: "center",
-  justifyContent: "center",
-  zIndex: 20,
-  elevation: 20,
-},
-
-cameraControlTriggerText: {
-  color: "#ffffff",
-  fontSize: 18,
-  fontWeight: "700",
-},
 
   cameraControls: {
   position: "absolute",
