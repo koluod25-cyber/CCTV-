@@ -745,18 +745,6 @@ useEffect(() => {
   marqueeX,
 ]);
   
-  useEffect(() => {
-    return () => {
-      cameraControlsTimers.current.forEach(
-        (timer) => {
-          if (timer) {
-            clearTimeout(timer);
-          }
-        },
-      );
-    };
-  }, []);
-
   const addHistory =
     useCallback(
       (
