@@ -633,6 +633,8 @@ const [cameraConnected, setCameraConnected] = useState<boolean[]>([]);
         ReturnType<typeof setTimeout> | null
       >
     >([]);
+const cameraVideoRefs =
+  useRef<any[]>([]);
 
   const [
     ownerText,
@@ -2024,16 +2026,9 @@ const clearCameraSlot =
           slot,
           value,
         );
-
-        if (
-          value &&
-          cameraStreams[slot]
-        ) {
-          setActiveStream(
-            cameraStreams[slot],
-          );
-          setPlayerConnected(true);
-        }
+// Status LIVE hanya untuk channel ini.
+// Jangan mengubah activeStream global ketika
+// beberapa kamera sedang diputar bersamaan.
       },
       [
         updateCameraConnected,
@@ -2292,6 +2287,37 @@ const clearCameraSlot =
         }
       >
         ✕
+<Pressable
+  style={
+    styles.cameraControlButton
+  }
+  onPress={() => {
+    const player =
+      cameraVideoRefs.current[slot];
+
+    if (
+      player &&
+      typeof player.presentFullscreenPlayer ===
+        "function"
+    ) {
+      player.presentFullscreenPlayer();
+    } else {
+      Alert.alert(
+        "Fullscreen",
+        "Mode fullscreen belum tersedia pada player kamera ini.",
+      );
+    }
+  }}
+>
+  <Text
+    style={
+      styles.cameraControlText
+    }
+  >
+    ⛶
+  </Text>
+</Pressable>
+
       </Text>
     </Pressable>
   </View>
@@ -2992,8 +3018,7 @@ cameras.map((camera) => {
           onPress={saveSettings}
         >
           <Text
-            style={styles.primaryButtonText}
-          >
+            styles.settingsSaveButton
             {settingsSaved
               ? "Tersimpan"
               : "Simpan Pengaturan"}
@@ -3822,6 +3847,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
+settingsSaveButton: {
+  width: "100%",
+  minHeight: 48,
+  marginTop: 12,
+  paddingHorizontal: 14,
+  borderRadius: 9,
+  backgroundColor: "#1976d2",
+  alignItems: "center",
+  justifyContent: "center",
+  alignSelf: "stretch",
+  elevation: 3,
+},
 
   vendorRow: {
         gap: 7,
