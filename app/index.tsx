@@ -445,18 +445,12 @@ function PtzSwipeControl({
   }
 
   return (
-    <View
-      pointerEvents="box-only"
-      style={styles.ptzSwipeOverlay}
-      {...responder.panHandlers}
-    >
-      <View style={styles.ptzSwipeHint}>
-        <Text style={styles.ptzSwipeHintText}>
-          Geser layar untuk PTZ
-        </Text>
-      </View>
-    </View>
-  );
+  <View
+    pointerEvents="box-only"
+    style={styles.ptzSwipeOverlay}
+    {...responder.panHandlers}
+  />
+);
 }
 
 function TabButton({
