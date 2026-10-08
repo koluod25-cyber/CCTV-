@@ -1917,56 +1917,64 @@ if (Array.isArray(saved.cameraIds)) {
       [],
     );
 
-  const clearCameraSlot =
-    useCallback(
-      (slot: number) => {
-        setCameraStreams(
-          (items) => {
-            const next = [...items];
-            next[slot] = "";
-            return next;
-          },
-        );
+const clearCameraSlot =
+  useCallback(
+    (slot: number) => {
+      setCameraStreams(
+        (items) => {
+          const next = [...items];
+          next[slot] = "";
+          return next;
+        },
+      );
 
-        setCameraConnected(
-          (items) => {
-            const next = [...items];
-            next[slot] = false;
-            return next;
-          },
-        );
+      setCameraIds(
+        (items) => {
+          const next = [...items];
+          next[slot] = "";
+          return next;
+        },
+      );
 
-        setCameraPtzConfig(
-          (items) => {
-            const next = [...items];
-            next[slot] = null;
-            return next;
-          },
-        );
+      setCameraConnected(
+        (items) => {
+          const next = [...items];
+          next[slot] = false;
+          return next;
+        },
+      );
 
-        setCameraControlsVisible(
-          (items) => {
-            const next = [...items];
-            next[slot] = false;
-            return next;
-          },
-        );
+      setCameraPtzConfig(
+        (items) => {
+          const next = [...items];
+          next[slot] = null;
+          return next;
+        },
+      );
 
-        const timer =
-          cameraControlsTimers.current[
-            slot
-          ];
+      setCameraControlsVisible(
+        (items) => {
+          const next = [...items];
+          next[slot] = false;
+          return next;
+        },
+      );
 
-        if (timer) {
-          clearTimeout(timer);
-        }
-
+      const timer =
         cameraControlsTimers.current[
           slot
-        ] = null;
-      },
-      [],
-    );
+        ];
+
+      if (timer) {
+        clearTimeout(timer);
+      }
+
+      cameraControlsTimers.current[
+        slot
+      ] = null;
+    },
+    [],
+  );
 
   const cameraGridColumns =
     cameraCount === 1
@@ -2522,75 +2530,169 @@ if (Array.isArray(saved.cameraIds)) {
             Tekan "Cari CCTV".
           </Text>
         ) : (
-          cameras.map((camera) => {
-            const key =
-              `${camera.host}:${camera.port}`;
+
+cameras.map((camera) => {
+  const assignedSlot =
+    cameraIds.findIndex(
+      (id) => id === camera.id,
+    );
+
+  return (
+    <View
+      key={camera.id}
+      style={styles.cameraListItem}
+    >
+      <View
+        style={styles.cameraListInfo}
+      >
+        <Text
+          style={styles.cameraListName}
+        >
+          {camera.name ||
+            "Kamera ONVIF"}
+        </Text>
+
+        <Text
+          style={
+            styles.cameraListAddress
+          }
+        >
+          {camera.host}:{camera.port}
+        </Text>
+
+        {camera.xaddrs?.length ? (
+          <Text
+            style={styles.endpointText}
+            numberOfLines={1}
+          >
+            {camera.xaddrs[0]}
+          </Text>
+        ) : null}
+
+        {assignedSlot >= 0 ? (
+          <Text
+            style={[
+              styles.mutedText,
+              {
+                marginTop: 4,
+              },
+            ]}
+          >
+            Terpasang pada Kamera{" "}
+            {assignedSlot + 1}
+          </Text>
+        ) : null}
+      </View>
+
+      <Text
+        style={[
+          styles.fieldLabel,
+          {
+            marginTop: 8,
+          },
+        ]}
+      >
+        Pilih Channel
+      </Text>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          gap: 6,
+          paddingVertical: 4,
+        }}
+      >
+        {Array.from(
+          {
+            length: cameraCount,
+          },
+          (_, slot) => {
+            const isAssigned =
+              cameraIds[slot] ===
+              camera.id;
+
+            const assignedElsewhere =
+              assignedSlot >= 0 &&
+              assignedSlot !== slot;
 
             return (
-              <View
-                key={camera.id}
-                style={styles.cameraListItem}
+              <Pressable
+                key={`camera-${camera.id}-slot-${slot}`}
+                disabled={
+                  connecting === camera.id ||
+                  assignedElsewhere
+                }
+                onPress={() =>
+                  connectCamera(
+                    camera,
+                    slot,
+                  )
+                }
+                style={[
+                  styles.vendorButton,
+                  isAssigned &&
+                    styles.vendorButtonActive,
+                  assignedElsewhere && {
+                    opacity: 0.35,
+                  },
+                  connecting ===
+                    camera.id && {
+                    opacity: 0.6,
+                  },
+                ]}
               >
-                <View
-                  style={styles.cameraListInfo}
-                >
-                  <Text
-                    style={styles.cameraListName}
-                  >
-                    {camera.name ||
-                      "Kamera ONVIF"}
-                  </Text>
-
-                  <Text
-                                        style={
-                      styles.cameraListAddress
-                    }
-                  >
-                    {camera.host}:{camera.port}
-                  </Text>
-
-                  {camera.xaddrs?.length ? (
-                    <Text
-                      style={
-                        styles.endpointText
-                      }
-                      numberOfLines={1}
-                    >
-                      {camera.xaddrs[0]}
-                    </Text>
-                  ) : null}
-                </View>
-
-                <Pressable
+                <Text
                   style={[
-                    styles.secondaryButton,
-                    connecting === key &&
-                      styles.buttonDisabled,
+                    styles.vendorButtonText,
+                    isAssigned &&
+                      styles.vendorButtonTextActive,
                   ]}
-                  disabled={
-                    connecting === key
-                  }
-                  onPress={() =>
-                    connectCamera(camera)
-                  }
                 >
-                  {connecting === key ? (
-                    <ActivityIndicator
-                      size="small"
-                    />
-                  ) : (
-                    <Text
-                      style={
-                        styles.secondaryButtonText
-                      }
-                    >
-                      Hubungkan
-                    </Text>
-                  )}
-                </Pressable>
-              </View>
+                  {isAssigned
+                    ? `Kamera ${
+                        slot + 1
+                      } ✓`
+                    : `Kamera ${
+                        slot + 1
+                      }`}
+                </Text>
+              </Pressable>
             );
-          })
+          },
+        )}
+      </ScrollView>
+
+      <Pressable
+        style={[
+          styles.secondaryButton,
+          connecting === camera.id &&
+            styles.buttonDisabled,
+        ]}
+        disabled={
+          connecting === camera.id
+        }
+        onPress={() =>
+          connectCamera(camera)
+        }
+      >
+        {connecting === camera.id ? (
+          <ActivityIndicator
+            size="small"
+          />
+        ) : (
+          <Text
+            style={
+              styles.secondaryButtonText
+            }
+          >
+            Hubungkan Otomatis
+          </Text>
+        )}
+      </Pressable>
+    </View>
+  );
+})
         )}
       </View>
 
