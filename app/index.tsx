@@ -1139,47 +1139,47 @@ if (Array.isArray(saved.cameraIds)) {
     );
 
   const toggleCameraControls =
-    useCallback(
-      (index: number) => {
-        setCameraControlsVisible(
-          (current) => {
-            const next = [
-              ...current,
-            ];
+  useCallback(
+    (index: number) => {
+      const oldTimer =
+        cameraControlsTimers.current[index];
 
-            next[index] =
-              !next[index];
+      if (oldTimer) {
+        clearTimeout(oldTimer);
+        cameraControlsTimers.current[index] =
+          null;
+      }
 
-            return next;
-          },
-        );
+      setCameraControlsVisible(
+        (current) => {
+          const next = [...current];
+          const willShow = !next[index];
 
-        const oldTimer =
-          cameraControlsTimers
-            .current[index];
+          next[index] = willShow;
 
-        if (oldTimer) {
-          clearTimeout(oldTimer);
-        }
+          if (willShow) {
+            cameraControlsTimers.current[index] =
+              setTimeout(() => {
+                setCameraControlsVisible(
+                  (latest) => {
+                    const updated = [...latest];
+                    updated[index] = false;
+                    return updated;
+                  },
+                );
 
-        cameraControlsTimers.current[
-          index
-        ] = setTimeout(() => {
-          setCameraControlsVisible(
-            (current) => {
-              const next = [
-                ...current,
-              ];
+                cameraControlsTimers.current[index] =
+                  null;
+              }, 5000);
+          }
 
-              next[index] = false;
+          return next;
+        },
+      );
+    },
+    [],
+  );
 
-              return next;
-            },
-          );
-        }, 5000);
-      },
-      [],
-    );
   const updateCameraPtzConfig =
     useCallback(
       (
