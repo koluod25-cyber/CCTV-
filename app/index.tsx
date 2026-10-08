@@ -1153,29 +1153,25 @@ if (Array.isArray(saved.cameraIds)) {
       setCameraControlsVisible(
         (current) => {
           const next = [...current];
-          const willShow = !next[index];
-
-          next[index] = willShow;
-
-          if (willShow) {
-            cameraControlsTimers.current[index] =
-              setTimeout(() => {
-                setCameraControlsVisible(
-                  (latest) => {
-                    const updated = [...latest];
-                    updated[index] = false;
-                    return updated;
-                  },
-                );
-
-                cameraControlsTimers.current[index] =
-                  null;
-              }, 5000);
-          }
-
+          next[index] = true;
           return next;
         },
       );
+
+      cameraControlsTimers.current[index] =
+        setTimeout(() => {
+          setCameraControlsVisible(
+            (current) => {
+              const next = [...current];
+              next[index] = false;
+              return next;
+            },
+          );
+
+          cameraControlsTimers.current[index] =
+            null;
+        },
+        5000);
     },
     [],
   );
