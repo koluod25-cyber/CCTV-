@@ -1625,15 +1625,26 @@ if (Array.isArray(saved.cameraIds)) {
             findNextCameraSlot();
 
           if (slot >= 0) {
-            setCameraStream(
-              slot,
-              finalUrl,
-            );
-            setCameraPtz(
-              slot,
-              null,
-            );
-          }
+  // RTSP/manual tidak lagi terikat
+  // ke kamera ONVIF sebelumnya.
+  setCameraIds(
+    (current) => {
+      const next = [...current];
+      next[slot] = "";
+      return next;
+    },
+  );
+
+  setCameraStream(
+    slot,
+    finalUrl,
+  );
+
+  setCameraPtz(
+    slot,
+    null,
+  );
+}
 
           setActiveTab("live");
           setStatusText(
@@ -1661,15 +1672,16 @@ if (Array.isArray(saved.cameraIds)) {
         }
       },
       [
-        manualUrl,
-        username,
-        password,
-        vendor,
-        findNextCameraSlot,
-        setCameraStream,
-        setCameraPtz,
-        addHistory,
-      ],
+  manualUrl,
+  username,
+  password,
+  vendor,
+  findNextCameraSlot,
+  setCameraIds,
+  setCameraStream,
+  setCameraPtz,
+  addHistory,
+],
     );
   const testManualConnection =
     useCallback(
