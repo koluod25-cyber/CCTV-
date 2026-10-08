@@ -1,4 +1,4 @@
-limport {
+import {
   useCallback,
   useEffect,
   useMemo,
@@ -3031,7 +3031,7 @@ cameras.map((camera) => {
           Logo akan tampil di sudut kanan atas.
         </Text>
 
-              <Pressable
+        <Pressable
           style={[
             styles.primaryButton,
             settingsSaved &&
@@ -3049,8 +3049,9 @@ cameras.map((camera) => {
               : "Simpan Pengaturan"}
           </Text>
         </Pressable>
+      </View>
 
-        <View style={styles.card}>
+      <View style={styles.card}>
         <Text style={styles.sectionTitle}>
           Tampilan Live
         </Text>
