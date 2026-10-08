@@ -3058,9 +3058,7 @@ cameras.map((camera) => {
               : "Simpan Pengaturan"}
           </Text>
         </Pressable>
-        </Pressable>
-      </View>
-
+        
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>
           Tampilan Live
