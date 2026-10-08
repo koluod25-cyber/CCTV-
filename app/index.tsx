@@ -3039,12 +3039,25 @@ cameras.map((camera) => {
           ]}
           onPress={saveSettings}
         >
+          <Text>
+        <Pressable
+          style={[
+            styles.primaryButton,
+            settingsSaved &&
+              styles.saveButtonSaved,
+          ]}
+          onPress={saveSettings}
+        >
           <Text
-            styles.settingsSaveButton
+            style={
+              styles.primaryButtonText
+            }
+          >
             {settingsSaved
               ? "Tersimpan"
               : "Simpan Pengaturan"}
           </Text>
+        </Pressable>
         </Pressable>
       </View>
 
