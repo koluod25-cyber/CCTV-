@@ -3031,16 +3031,7 @@ cameras.map((camera) => {
           Logo akan tampil di sudut kanan atas.
         </Text>
 
-        <Pressable
-          style={[
-            styles.primaryButton,
-            settingsSaved &&
-              styles.saveButtonSaved,
-          ]}
-          onPress={saveSettings}
-        >
-          <Text>
-        <Pressable
+              <Pressable
           style={[
             styles.primaryButton,
             settingsSaved &&
@@ -3058,8 +3049,8 @@ cameras.map((camera) => {
               : "Simpan Pengaturan"}
           </Text>
         </Pressable>
-        
-      <View style={styles.card}>
+
+        <View style={styles.card}>
         <Text style={styles.sectionTitle}>
           Tampilan Live
         </Text>
