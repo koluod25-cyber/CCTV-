@@ -2172,16 +2172,16 @@ const clearCameraSlot =
                   }
                 />
 
-                <Pressable
-                  style={
-                    styles.cameraTouchArea
-                  }
-                  onPress={() =>
-                    showCameraControls(
-                      slot,
-                    )
-                  }
-                />
+<Pressable
+  style={styles.cameraControlTrigger}
+  onPress={() =>
+    showCameraControls(slot)
+  }
+>
+  <Text style={styles.cameraControlTriggerText}>
+    ⚙
+  </Text>
+</Pressable>               
 
                 {controlsVisible ? (
                   <View
@@ -3695,13 +3695,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#000000",
   },
 
-  cameraTouchArea: {
+  cameraControlTrigger: {
   position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  zIndex: 1,
+  right: 8,
+  bottom: 8,
+  width: 34,
+  height: 34,
+  borderRadius: 8,
+  backgroundColor: "rgba(0,0,0,0.70)",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 20,
+  elevation: 20,
+},
+
+cameraControlTriggerText: {
+  color: "#ffffff",
+  fontSize: 18,
+  fontWeight: "700",
 },
 
   cameraControls: {
