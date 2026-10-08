@@ -1923,23 +1923,7 @@ const clearCameraSlot =
           return next;
         },
       );
-
-      const timer =
-        cameraControlsTimers.current[
-          slot
-        ];
-
-      if (timer) {
-        clearTimeout(timer);
-      }
-
-      cameraControlsTimers.current[
-        slot
-      ] = null;
-    },
-    [],
-  );
-
+ 
   const cameraGridColumns =
     cameraCount === 1
       ? 1
