@@ -240,19 +240,20 @@ function CameraVideo({
       ],
     },
   ]}
-controls={false}
-        muted={muted}
-        resizeMode="contain"
-        paused={false}
-        playInBackground={false}
-        playWhenInactive={false}
-        repeat={false}
-        onLoad={() => {
-          setLoaded(true);
-          setError(false);
-          setErrorDetail("");
-          onLoad?.();
-        }}
+
+controls={nativeControls}
+muted={muted}
+resizeMode="contain"
+paused={false}
+playInBackground={false}
+playWhenInactive={false}
+repeat={false}
+onLoad={() => {
+  setLoaded(true);
+  setError(false);
+  setErrorDetail("");
+  onLoad?.();
+}}
         onError={(videoError) => {
           const errorObject =
             videoError?.error;
