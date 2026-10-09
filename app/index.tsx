@@ -166,7 +166,6 @@ function CameraVideo({
   zoom,
   onLoad,
   onError,
-  videoRef,
 }: {
   url: string;
   nativeControls: boolean;
@@ -174,8 +173,6 @@ function CameraVideo({
   zoom: number;
   onLoad?: () => void;
   onError?: (message: string) => void;
-  videoRef?: (ref: any) => void;
-}) {
   const [loaded, setLoaded] =
     useState(false);
 
@@ -3279,16 +3276,6 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "#000000",
   },
-
-  cameraControls: {
-  position: "absolute",
-  top: 8,
-  right: 8,
-  flexDirection: "row",
-  gap: 6,
-  zIndex: 30,
-  elevation: 30,
-},
 
   cameraMeta: {
     paddingHorizontal: 10,
