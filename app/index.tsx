@@ -1870,83 +1870,73 @@ const clearCameraSlot =
               },
             ]}
           >
-            {stream ? (
-              <>
-                <CameraVideo
-                  url={stream}
-                  nativeControls={
-                    nativeControls
-                  }
-                  muted={muted}
-                  zoom={1}
-                  onLoad={() =>
-                    setCameraSlotConnected(
-                      slot,
-                      true,
-                    )
-                  }
-                  onError={(message) => {
-                    updateCameraConnected(
-                      slot,
-                      false,
-                    );
 
-                    addHistory(
-                      "error",
-                      stream,
-                      message,
-                    );
-                  }}
-                />
-                  
-<PtzSwipeControl
-  enabled={
-    Boolean(ptzConfig) &&
-    !nativeControls
-  }
-  onMove={(direction) =>
-    movePtz(
-      slot,
-      direction,
-    )
-  }
-  onStop={() =>
-    stopPtz(slot)
-  }
-/>
+{stream ? (
+  <>
+    <CameraVideo
+      url={stream}
+      nativeControls={nativeControls}
+      muted={muted}
+      zoom={1}
+      onLoad={() =>
+        setCameraSlotConnected(
+          slot,
+          true,
+        )
+      }
+      onError={(message) => {
+        updateCameraConnected(
+          slot,
+          false,
+        );
 
-            ) : (
-              <View
-                style={
-                  styles.emptyCameraSlot
-                }
-              >
-                <Text
-                  style={
-                    styles.emptySlotIcon
-                  }
-                >
-                  📹
-                </Text>
+        addHistory(
+          "error",
+          stream,
+          message,
+        );
+      }}
+    />
 
-                <Text
-                  style={
-                    styles.emptySlotText
-                  }
-                >
-                  Kamera {slot + 1}
-                </Text>
+    <PtzSwipeControl
+      enabled={
+        Boolean(ptzConfig) &&
+        !nativeControls
+      }
+      onMove={(direction) =>
+        movePtz(
+          slot,
+          direction,
+        )
+      }
+      onStop={() =>
+        stopPtz(slot)
+      }
+    />
+  </>
+) : (
+  <View
+    style={styles.emptyCameraSlot}
+  >
+    <Text
+      style={styles.emptySlotIcon}
+    >
+      📹
+    </Text>
 
-                <Text
-                  style={
-                    styles.emptySlotHint
-                  }
-                >
-                  Tambahkan dari menu CCTV
-                </Text>
-              </View>
-            )}
-          </View>
+    <Text
+      style={styles.emptySlotText}
+    >
+      Kamera {slot + 1}
+    </Text>
+
+    <Text
+      style={styles.emptySlotHint}
+    >
+      Tambahkan dari menu CCTV
+    </Text>
+  </View>
+)}
 
           {stream ? (
             <View
