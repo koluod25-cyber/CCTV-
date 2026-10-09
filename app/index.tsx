@@ -1923,7 +1923,10 @@ const clearCameraSlot =
           return next;
         },
       );
- 
+    },
+    [],
+  );
+
   const cameraGridColumns =
     cameraCount === 1
       ? 1
@@ -2114,18 +2117,7 @@ const clearCameraSlot =
                     stopPtz(slot)
                   }
                 />
-
-<Pressable
-  style={styles.cameraControlTrigger}
-  onPress={() =>
-    showCameraControls(slot)
-  }
->
-  <Text style={styles.cameraControlTriggerText}>
-    ⚙
-  </Text>
-</Pressable>               
-
+             
                 {controlsVisible ? (
                   <View
                     style={
