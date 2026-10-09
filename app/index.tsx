@@ -1741,25 +1741,17 @@ const clearCameraSlot =
         },
       );
 
-      setCameraPtzConfig(
+            setCameraPtzConfig(
         (items) => {
           const next = [...items];
           next[slot] = null;
           return next;
         },
       );
-
-      setCameraControlsVisible(
-        (items) => {
-          const next = [...items];
-          next[slot] = false;
-          return next;
-        },
-      );
     },
     [],
   );
-
+      
   const cameraGridColumns =
     cameraCount === 1
       ? 1
