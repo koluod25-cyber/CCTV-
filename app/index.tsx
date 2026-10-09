@@ -1877,18 +1877,15 @@ const clearCameraSlot =
 
 {stream ? (
   <>
-    <CameraVideo     
-controls={nativeControls}
-controlsStyles={{
-  hideFullscreen: false,
-  hidePlayPause: true,
-  hidePosition: true,
-  hideDuration: true,
-  hideSeekBar: true,
-  liveLabel: "LIVE",
-}}
 
-      }
+    <CameraVideo
+      url={stream}
+      nativeControls={nativeControls}
+      muted={muted}
+      zoom={1}
+      onLoad={() => {
+        setCameraSlotConnected(slot, true);
+      }}
       onError={(message) => {
         updateCameraConnected(
           slot,
