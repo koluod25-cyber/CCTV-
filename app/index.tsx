@@ -1831,41 +1831,44 @@ const clearCameraSlot =
           ]}
         >
           <View
-            style={
-              styles.cameraCardHeader
-            }
+            style={styles.cameraCardHeader}
           >
-           <View style={styles.cameraHeaderTitleWrap}>
-  <Text
-    style={styles.cardTitle}
-  >
-    Kamera {slot + 1}
-  </Text>
-
             <View
               style={
-                styles.cameraStatusWrap
+                styles.cameraHeaderTitleWrap
               }
             >
-              <View
-                style={[
-                  styles.statusDot,
-                  connected &&
-                    styles.statusDotOnline,
-                ]}
-              />
-
               <Text
+                style={styles.cardTitle}
+              >
+                Kamera {slot + 1}
+              </Text>
+
+              <View
                 style={
-                  styles.cameraStatusText
+                  styles.cameraStatusWrap
                 }
               >
-                {connected
-                  ? "LIVE"
-                  : stream
-                    ? "SIAP"
-                    : "KOSONG"}
-              </Text>
+                <View
+                  style={[
+                    styles.statusDot,
+                    connected &&
+                      styles.statusDotOnline,
+                  ]}
+                />
+
+                <Text
+                  style={
+                    styles.cameraStatusText
+                  }
+                >
+                  {connected
+                    ? "LIVE"
+                    : stream
+                      ? "SIAP"
+                      : "KOSONG"}
+                </Text>
+              </View>
             </View>
           </View>
 
@@ -1885,8 +1888,8 @@ const clearCameraSlot =
                   nativeControls={
                     nativeControls
                   }
-                  muted={slotMuted}
-                  zoom={zoom}
+                  muted={muted}
+                  zoom={1}
                   onLoad={() =>
                     setCameraSlotConnected(
                       slot,
@@ -1907,7 +1910,7 @@ const clearCameraSlot =
                   }}
                 />
 
-                                <PtzSwipeControl
+                <PtzSwipeControl
                   enabled={Boolean(ptzConfig)}
                   onMove={(direction) =>
                     movePtz(
@@ -1919,7 +1922,6 @@ const clearCameraSlot =
                     stopPtz(slot)
                   }
                 />
-                 
               </>
             ) : (
               <View
