@@ -172,6 +172,8 @@ function CameraVideo({
   muted: boolean;
   zoom: number;
   onLoad?: () => void;
+  onError?: (message: string) => void;
+}) {
   const [loaded, setLoaded] =
     useState(false);
 
