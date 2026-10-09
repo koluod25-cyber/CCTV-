@@ -1898,20 +1898,23 @@ const clearCameraSlot =
                     );
                   }}
                 />
+                  
+<PtzSwipeControl
+  enabled={
+    Boolean(ptzConfig) &&
+    !nativeControls
+  }
+  onMove={(direction) =>
+    movePtz(
+      slot,
+      direction,
+    )
+  }
+  onStop={() =>
+    stopPtz(slot)
+  }
+/>
 
-                <PtzSwipeControl
-                  enabled={Boolean(ptzConfig)}
-                  onMove={(direction) =>
-                    movePtz(
-                      slot,
-                      direction,
-                    )
-                  }
-                  onStop={() =>
-                    stopPtz(slot)
-                  }
-                />
-              </>
             ) : (
               <View
                 style={
