@@ -596,33 +596,12 @@ const [cameraIds, setCameraIds] = useState<string[]>([]);
 const [cameraConnected, setCameraConnected] = useState<boolean[]>([]);
 
   const [
-    cameraMuted,
-    setCameraMuted,
-  ] = useState<boolean[]>([]);
-  
-  const [cameraMicrophone, setCameraMicrophone] =
-  useState<boolean[]>([]);
-
-  const [
-    cameraZoom,
-    setCameraZoom,
-  ] = useState<number[]>([]);
-
-  const [
-    cameraControlsVisible,
-    setCameraControlsVisible,
-  ] = useState<boolean[]>([]);
-
-  const [
     cameraPtzConfig,
     setCameraPtzConfig,
   ] =
     useState<
       Array<CameraPtzConfig | null>
     >([]);
-
-const cameraVideoRefs =
-  useRef<any[]>([]);
 
   const [
     ownerText,
@@ -1996,11 +1975,6 @@ const clearCameraSlot =
                   }
                   muted={slotMuted}
                   zoom={zoom}
-                  videoRef={(ref) => {
-                    cameraVideoRefs.current[
-                      slot
-                    ] = ref;
-                  }}
                   onLoad={() =>
                     setCameraSlotConnected(
                       slot,
