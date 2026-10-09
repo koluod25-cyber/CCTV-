@@ -1934,9 +1934,11 @@ const clearCameraSlot =
       style={styles.emptySlotHint}
     >
       Tambahkan dari menu CCTV
-    </Text>
+     </Text>
   </View>
 )}
+
+          </View>
 
           {stream ? (
             <View
