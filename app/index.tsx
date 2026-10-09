@@ -98,9 +98,6 @@ type SavedCameraState = {
   cameraCount: number;
   cameraStreams: string[];
   cameraIds: string[];
-  cameraMuted: boolean[];
-  cameraMicrophone: boolean[];
-  cameraZoom: number[];
   cameraPtzConfig: Array<CameraPtzConfig | null>;
   ownerText: string;
   logoUri: string;
@@ -791,57 +788,6 @@ const resetCameraArrays = useCallback(
         ),
     );
 
-    setCameraMuted(
-      (current) =>
-        Array.from(
-          {
-            length:
-              safeCount,
-          },
-          (_, index) =>
-            current[index] ||
-            false,
-        ),
-    );
-
-    setCameraMicrophone(
-      (current) =>
-        Array.from(
-          {
-            length:
-              safeCount,
-        },
-          (_, index) =>
-            current[index] ?? false,
-        ),
-    );
-
-    setCameraZoom(
-      (current) =>
-        Array.from(
-          {
-            length:
-              safeCount,
-          },
-          (_, index) =>
-            current[index] ||
-            1,
-        ),
-    );
-
-    setCameraControlsVisible(
-      (current) =>
-        Array.from(
-          {
-            length:
-              safeCount,
-          },
-          (_, index) =>
-            current[index] ||
-            false,
-        ),
-    );
-
     setCameraPtzConfig(
       (current) =>
         Array.from(
@@ -908,25 +854,7 @@ if (Array.isArray(saved.cameraIds)) {
   setCameraIds(saved.cameraIds);
 }
 
-      if (Array.isArray(saved.cameraMuted)) {
-        setCameraMuted(saved.cameraMuted);
-      }
-
-      if (
-        Array.isArray(
-          saved.cameraMicrophone,
-        )
-      ) {
-        setCameraMicrophone(
-          saved.cameraMicrophone,
-        );
-      }
-
-      if (Array.isArray(saved.cameraZoom)) {
-        setCameraZoom(saved.cameraZoom);
-      }
-
-      if (
+    if (
         Array.isArray(
           saved.cameraPtzConfig,
         )
@@ -975,9 +903,6 @@ if (Array.isArray(saved.cameraIds)) {
         cameraCount,
         cameraStreams,
         cameraIds,
-        cameraMuted,
-        cameraMicrophone,
-        cameraZoom,
         cameraPtzConfig,
         ownerText,
         logoUri,
@@ -1000,9 +925,6 @@ if (Array.isArray(saved.cameraIds)) {
   cameraCount,
   cameraStreams,
   cameraIds,
-  cameraMuted,
-  cameraMicrophone,
-  cameraZoom,
   cameraPtzConfig,
   ownerText,
   logoUri,
@@ -1895,16 +1817,6 @@ const clearCameraSlot =
       const connected =
         cameraConnected[slot] || false;
 
-      const slotMuted =
-        cameraMuted[slot] || false;
-
-      const zoom =
-        cameraZoom[slot] || 1;
-
-      const controlsVisible =
-        cameraControlsVisible[slot] ||
-        false;
-
       const ptzConfig =
         cameraPtzConfig[slot];
 
@@ -1995,11 +1907,8 @@ const clearCameraSlot =
                   }}
                 />
 
-                <PtzSwipeControl
-                  enabled={
-                    Boolean(ptzConfig) &&
-                    !controlsVisible
-                  }
+                                <PtzSwipeControl
+                  enabled={Boolean(ptzConfig)}
                   onMove={(direction) =>
                     movePtz(
                       slot,
@@ -2009,6 +1918,7 @@ const clearCameraSlot =
                   onStop={() =>
                     stopPtz(slot)
                   }
+                />
                  
               </>
             ) : (
@@ -3345,24 +3255,6 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
 
-  cameraSettingsButton: {
-    width: 32,
-    height: 32,
-    marginLeft: 8,
-    borderRadius: 8,
-    backgroundColor: "rgba(0,0,0,0.70)",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#526171",
-  },
-
-  cameraSettingsButtonText: {
-    color: "#ffffff",
-    fontSize: 17,
-    fontWeight: "700",
-  },
-
   statusDot: {
     width: 7,
     height: 7,
@@ -3395,23 +3287,6 @@ const styles = StyleSheet.create({
   zIndex: 30,
   elevation: 30,
 },
-
-  cameraControlButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
-    backgroundColor: "rgba(0,0,0,0.78)",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#526171",
-  },
-
-  cameraControlText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
 
   cameraMeta: {
     paddingHorizontal: 10,
