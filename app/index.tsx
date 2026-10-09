@@ -2814,7 +2814,8 @@ const renderPlayback = () => (
                   style={styles.historyUrl}
                   numberOfLines={2}
                 >
-                 77 m. lol {hideCredentials(item.url)}
+             
+ {hideCredentials(item.url)}
                 </Text>
               ) : null}
 
@@ -2829,6 +2830,7 @@ const renderPlayback = () => (
       )}
     </ScrollView>
   );
+
   const renderHeader = () => (
     <View style={styles.header}>
       <View
