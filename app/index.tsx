@@ -6,6 +6,8 @@ import {
   useState,
 } from "react";
 
+import OnvifPlaybackPanel from "@/onvif-playback-panel";
+
 import {
   ActivityIndicator,
   Alert,
@@ -26,6 +28,7 @@ import {
 } from "react-native";
 
 import Video from "react-native-video";
+
 import * as ImagePicker from "expo-image-picker";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -61,6 +64,7 @@ import {
 type TabName =
   | "live"
   | "cctv"
+  | "playback"
   | "history"
   | "settings";
 
@@ -2684,6 +2688,35 @@ cameras.map((camera) => {
     </ScrollView>
   );
 
+const renderPlayback = () => (
+  <OnvifPlaybackPanel
+    cameras={cameraPtzConfig.flatMap(
+      (config, index) =>
+        config?.deviceServiceUrl
+          ? [
+              {
+                slot: index,
+                deviceServiceUrl:
+                  config.deviceServiceUrl,
+                credentials:
+                  config.credentials,
+                connected:
+                  cameraConnected[index],
+              },
+            ]
+          : [],
+    )}
+    muted={muted}
+    onHistory={(url, message) =>
+      addHistory(
+        "connected",
+        url,
+        message,
+      )
+    }
+  />
+);
+
   const renderHistory = () => (
     <ScrollView
       style={styles.content}
@@ -2855,6 +2888,9 @@ cameras.map((camera) => {
       case "cctv":
         return renderCctv();
 
+      case "playback":
+        return renderPlayback();
+
       case "history":
         return renderHistory();
 
@@ -2903,6 +2939,15 @@ cameras.map((camera) => {
           }
         />
 
+<TabButton
+  icon="⏪"
+  label="Playback"
+  active={activeTab === "playback"}
+  onPress={() =>
+    setActiveTab("playback")
+  }
+/>      
+        
         <TabButton
           icon="⚙"
           label="Pengaturan"
