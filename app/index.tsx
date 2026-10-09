@@ -240,13 +240,7 @@ function CameraVideo({
       ],
     },
   ]}
-
-controls={nativeControls}
-controlsStyles={{
-  hideFullscreen: false,
-  hideSeekBar: true,
-  liveLabel: "LIVE",
-}}
+controls={false}
         muted={muted}
         resizeMode="contain"
         paused={false}
