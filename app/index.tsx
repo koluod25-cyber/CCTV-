@@ -1069,72 +1069,7 @@ if (Array.isArray(saved.cameraIds)) {
         );
       },
       [],
-    );
-
-  const updateCameraMuted =
-    useCallback(
-      (
-        index: number,
-        value: boolean,
-      ) => {
-        setCameraMuted(
-          (current) => {
-            const next = [
-              ...current,
-            ];
-
-            next[index] = value;
-
-            return next;
-          },
-        );
-      },
-      [],
-    );
-
-  const updateCameraZoom =
-    useCallback(
-      (
-        index: number,
-        value: number,
-      ) => {
-        setCameraZoom(
-          (current) => {
-            const next = [
-              ...current,
-            ];
-
-            next[index] =
-              Math.max(
-                1,
-                Math.min(
-                  3,
-                  value,
-                ),
-              );
-
-            return next;
-          },
-        );
-      },
-      [],
-    );
-
-    const toggleCameraControls =
-    useCallback(
-      (index: number) => {
-        setCameraControlsVisible(
-          (current) => {
-            const next = [...current];
-
-            next[index] = !next[index];
-
-            return next;
-          },
-        );
-      },
-      [],
-    );
+    ):
 
   const updateCameraPtzConfig =
     useCallback(
@@ -1263,7 +1198,7 @@ if (Array.isArray(saved.cameraIds)) {
       (slot: number) => {
         void sendPtz(slot, {
           type: "stop",
-        });
+        })j
       },
       [sendPtz],
     );
