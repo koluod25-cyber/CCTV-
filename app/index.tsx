@@ -172,7 +172,6 @@ function CameraVideo({
   muted: boolean;
   zoom: number;
   onLoad?: () => void;
-  onError?: (message: string) => void;
   const [loaded, setLoaded] =
     useState(false);
 
@@ -219,7 +218,6 @@ function CameraVideo({
   <Video
   key={url}
   focusable
-  ref={videoRef}
   source={{
     uri: url,
     ...(isRtsp
