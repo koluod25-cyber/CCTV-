@@ -967,7 +967,7 @@ if (Array.isArray(saved.cameraIds)) {
         );
       },
       [],
-    ):
+    );
 
   const updateCameraPtzConfig =
     useCallback(
@@ -1091,12 +1091,12 @@ if (Array.isArray(saved.cameraIds)) {
       [sendPtz],
     );
 
-  const stopPtz =
+    const stopPtz =
     useCallback(
       (slot: number) => {
         void sendPtz(slot, {
           type: "stop",
-        })j
+        });
       },
       [sendPtz],
     );
