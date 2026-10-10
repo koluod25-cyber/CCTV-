@@ -243,7 +243,7 @@ function CameraVideo({
     },
   ]}
 
-controls={nativeControls}
+controls={false}
 muted={muted}
 resizeMode="contain"
 paused={false}
@@ -557,7 +557,7 @@ export default function HomeScreen() {
   ] = useState(true);
 
   const [
-    nativeControls,
+    const nativeControls = false;
     setNativeControls,
   ] = useState(true);
 
@@ -1922,19 +1922,6 @@ const renderCameraSlot =
       onStop={() => stopPtz(slot)}
     />
 
-  
-<View style={styles.cameraControlRow}>
-  {/* Tombol layar penuh */}
-  <Pressable
-    style={styles.cameraControlButton}
-    onPress={() =>
-      setFullscreenSlot(
-        fullscreenSlot === slot
-          ? null
-          : slot,
-      )
-    }
-  >
     <Text style={styles.cameraControlText}>
       {fullscreenSlot === slot ? "⊡" : "⛶"}
     </Text>
