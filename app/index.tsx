@@ -775,6 +775,26 @@ useEffect(() => {
     [],
   );
 
+
+  const setCameraStream = useCallback(
+    (slot: number, stream: string) => {
+      setCameraStreams((current) => {
+        const next = Array.from(
+          { length: MAX_CAMERAS },
+          (_, index) => current[index] || "",
+        );
+
+        if (slot < 0 || slot >= MAX_CAMERAS) {
+          return current;
+        }
+
+        next[slot] = stream;
+        return next;
+      });
+    },
+    [],
+  );
+
   useEffect(() => {
     resetCameraArrays(cameraCount);
   }, [cameraCount, resetCameraArrays]);
