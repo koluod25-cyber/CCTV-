@@ -1953,21 +1953,8 @@ const clearCameraSlot =
   </Pressable>
 </View>
 </>
-
-
-{/* Tombol pengaturan per kamera */}
-<Pressable
-  style={styles.cameraControlButton}
-  onPress={() => openCameraSettings(slot)}
->
-  <Text style={styles.cameraControlText}>
-    ⚙
-  </Text>
-</Pressable>
-
-    
-  </>
-) : (
+) : 
+(
   <View
     style={styles.emptyCameraSlot}
   >
