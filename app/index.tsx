@@ -1915,32 +1915,45 @@ const clearCameraSlot =
     />
 
   
-    <View style={styles.cameraControlRow}>
-      {/* Tombol layar penuh */}
-      <Pressable
-        style={styles.cameraControlButton}
-        onPress={() =>
-          setFullscreenSlot(
-            fullscreenSlot === slot
-              ? null
-              : slot,
-          )
-        }
-      >
-        <Text style={styles.cameraControlText}>
-          {fullscreenSlot === slot ? "⊡" : "⛶"}
-        </Text>
-      </Pressable>
+<View style={styles.cameraControlRow}>
+  {/* Tombol layar penuh */}
+  <Pressable
+    style={styles.cameraControlButton}
+    onPress={() =>
+      setFullscreenSlot(
+        fullscreenSlot === slot
+          ? null
+          : slot,
+      )
+    }
+  >
+    <Text style={styles.cameraControlText}>
+      {fullscreenSlot === slot ? "⊡" : "⛶"}
+    </Text>
+  </Pressable>
 
-      {/* Tombol suara */}
-      <Pressable
-        style={styles.cameraControlButton}
-        onPress={() => setMuted(!muted)}
-      >
-        <Text style={styles.cameraControlText}>
-          {muted ? "🔇" : "🔊"}
-        </Text>
-      </Pressable>
+  {/* Tombol suara */}
+  <Pressable
+    style={styles.cameraControlButton}
+    onPress={() => setMuted(!muted)}
+  >
+    <Text style={styles.cameraControlText}>
+      {muted ? "🔇" : "🔊"}
+    </Text>
+  </Pressable>
+
+  {/* Tombol pengaturan per kamera */}
+  <Pressable
+    style={styles.cameraControlButton}
+    onPress={() => openCameraSettings(slot)}
+  >
+    <Text style={styles.cameraControlText}>
+      ⚙
+    </Text>
+  </Pressable>
+</View>
+</>
+
 
 {/* Tombol pengaturan per kamera */}
 <Pressable
