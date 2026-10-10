@@ -556,10 +556,7 @@ export default function HomeScreen() {
     setShowInfo,
   ] = useState(true);
 
-  const [
-    const nativeControls = false;
-    setNativeControls,
-  ] = useState(true);
+  const nativeControls = false;
 
   const [
     muted,
@@ -1911,23 +1908,32 @@ const renderCameraSlot =
       }}
     />
 
-    <PtzSwipeControl
-      enabled={
-        Boolean(ptzConfig) &&
-        !nativeControls
-      }
-      onMove={(direction) =>
-        movePtz(slot, direction)
-      }
-      onStop={() => stopPtz(slot)}
-    />
+<PtzSwipeControl
+  enabled={Boolean(ptzConfig)}
+  onMove={(direction) =>
+    movePtz(slot, direction)
+  }
+  onStop={() => stopPtz(slot)}
+/>
 
+<View style={styles.cameraControlRow}>
+  {/* Tombol Full Screen */}
+  <Pressable
+    style={styles.cameraControlButton}
+    onPress={() =>
+      setFullscreenSlot(
+        fullscreenSlot === slot
+          ? null
+          : slot
+      )
+    }
+  >
     <Text style={styles.cameraControlText}>
       {fullscreenSlot === slot ? "⊡" : "⛶"}
     </Text>
   </Pressable>
 
-  {/* Tombol suara */}
+  {/* Tombol Mute / Unmute */}
   <Pressable
     style={styles.cameraControlButton}
     onPress={() => setMuted(!muted)}
@@ -1937,7 +1943,7 @@ const renderCameraSlot =
     </Text>
   </Pressable>
 
-  {/* Tombol pengaturan per kamera */}
+  {/* Pengaturan kamera */}
   <Pressable
     style={styles.cameraControlButton}
     onPress={() => openCameraSettings(slot)}
@@ -1949,6 +1955,7 @@ const renderCameraSlot =
 </View>
 </>
 ) : 
+
 (
   <View
     style={styles.emptyCameraSlot}
