@@ -962,37 +962,38 @@ if (Array.isArray(saved.cameraIds)) {
       [],
     );
 
-  const findNextCameraSlot =
-    useCallback(() => {
-      const existingIndex = cameraStreams.findIndex(
-        (stream) => !stream.trim(),
-      );
+const [cameraSettingsSlot, setCameraSettingsSlot] =
+  useState<number | null>(null);
 
-      if (existingIndex >= 0) {
-        return existingIndex;
-      }
+const [cameraSettingsUrl, setCameraSettingsUrl] =
+  useState("");
 
-      if (cameraStreams.length < cameraCount) {
-        return cameraStreams.length;
-      }
+const [cameraSettingsServiceUrl, setCameraSettingsServiceUrl] =
+  useState("");
 
-      return -1;
-    }, [cameraStreams, cameraCount]);
+const [cameraSettingsProfileToken, setCameraSettingsProfileToken] =
+  useState("");
 
-  const setCameraStream =
-    useCallback(
-      (
-        index: number,
-        value: string,
-      ) => {
-        updateCameraStream(index, value);
-        updateCameraConnected(index, false);
-      },
-      [
-        updateCameraStream,
-        updateCameraConnected,
-      ],
-    );
+const [cameraSettingsUsername, setCameraSettingsUsername] =
+  useState("");
+
+const [cameraSettingsPassword, setCameraSettingsPassword] =
+  useState("");
+
+const findNextCameraSlot = useCallback(() => {
+  const visibleStreams = cameraStreams.slice(
+    0,
+    cameraCount,
+  );
+
+  const existingIndex = visibleStreams.findIndex(
+    (stream) => !stream.trim(),
+  );
+
+  return existingIndex >= 0
+    ? existingIndex
+    : -1;
+}, [cameraStreams, cameraCount]);
 
   const setCameraPtz =
     useCallback(
@@ -1093,6 +1094,30 @@ if (Array.isArray(saved.cameraIds)) {
       },
       [sendPtz],
     );
+
+const openCameraSettings = useCallback(
+  (slot: number) => {
+    const config = cameraPtzConfig[slot];
+
+    setCameraSettingsSlot(slot);
+    setCameraSettingsUrl(cameraStreams[slot] || "");
+    setCameraSettingsServiceUrl(
+      config?.deviceServiceUrl || "",
+    );
+    setCameraSettingsProfileToken(
+      config?.profileToken || "",
+    );
+    setCameraSettingsUsername(
+      config?.credentials.username || "",
+    );
+    setCameraSettingsPassword(
+      config?.credentials.password || "",
+    );
+
+    setActiveTab("settings");
+  },
+  [cameraPtzConfig, cameraStreams],
+);
 
   const discoverCameras =
     useCallback(
@@ -1917,17 +1942,17 @@ const clearCameraSlot =
         </Text>
       </Pressable>
 
-      {/* Tombol pengaturan */}
-      <Pressable
-        style={styles.cameraControlButton}
-        onPress={() => setActiveTab("settings")}
-      >
-        <Text style={styles.cameraControlText}>
-          ⚙
-        </Text>
-      </Pressable>
-    </View>
+{/* Tombol pengaturan per kamera */}
+<Pressable
+  style={styles.cameraControlButton}
+  onPress={() => openCameraSettings(slot)}
+>
+  <Text style={styles.cameraControlText}>
+    ⚙
+  </Text>
+</Pressable>
 
+    
   </>
 ) : (
   <View
@@ -2292,8 +2317,82 @@ cameras.map((camera) => {
             );
           },
         )}
-      </ScrollView>
 
+{cameraSettingsSlot !== null ? (
+  <View style={styles.card}>
+    <Text style={styles.sectionTitle}>
+      Pengaturan Kamera {cameraSettingsSlot + 1}
+    </Text>
+
+    <Text style={styles.fieldLabel}>
+      URL Stream
+    </Text>
+    <TextInput
+      value={cameraSettingsUrl}
+      onChangeText={setCameraSettingsUrl}
+      autoCapitalize="none"
+      autoCorrect={false}
+      keyboardType="url"
+      placeholder="rtsp://alamat-kamera/stream"
+      placeholderTextColor="#7b8794"
+      style={styles.input}
+    />
+
+    <Text style={styles.fieldLabel}>
+      ONVIF Device Service URL
+    </Text>
+    <TextInput
+      value={cameraSettingsServiceUrl}
+      onChangeText={setCameraSettingsServiceUrl}
+      autoCapitalize="none"
+      autoCorrect={false}
+      placeholder="Alamat layanan ONVIF"
+      placeholderTextColor="#7b8794"
+      style={styles.input}
+    />
+
+    <Text style={styles.fieldLabel}>
+      ONVIF Profile Token
+    </Text>
+    <TextInput
+      value={cameraSettingsProfileToken}
+      onChangeText={setCameraSettingsProfileToken}
+      placeholder="Profile token"
+      placeholderTextColor="#7b8794"
+      style={styles.input}
+    />
+
+    <Text style={styles.fieldLabel}>
+      Username ONVIF
+    </Text>
+    <TextInput
+      value={cameraSettingsUsername}
+      onChangeText={setCameraSettingsUsername}
+      autoCapitalize="none"
+      placeholder="Username"
+      placeholderTextColor="#7b8794"
+      style={styles.input}
+    />
+
+    <Text style={styles.fieldLabel}>
+      Password ONVIF
+    </Text>
+    <TextInput
+      value={cameraSettingsPassword}
+      onChangeText={setCameraSettingsPassword}
+      secureTextEntry
+      placeholder="Password"
+      placeholderTextColor="#7b8794"
+      style={styles.input}
+    />
+
+    <Text style={styles.saveHint}>
+      Simpan URL dan konfigurasi PTZ untuk channel ini saja.
+    </Text>
+  </View>
+) : null}
+
+      </ScrollView>
       <Pressable
         style={[
           styles.secondaryButton,
