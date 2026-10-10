@@ -1889,12 +1889,16 @@ const clearCameraSlot =
       onStop={() => stopPtz(slot)}
     />
 
+  
     <View style={styles.cameraControlRow}>
+      {/* Tombol layar penuh */}
       <Pressable
         style={styles.cameraControlButton}
         onPress={() =>
           setFullscreenSlot(
-            fullscreenSlot === slot ? null : slot
+            fullscreenSlot === slot
+              ? null
+              : slot,
           )
         }
       >
@@ -1903,20 +1907,17 @@ const clearCameraSlot =
         </Text>
       </Pressable>
 
+      {/* Tombol suara */}
       <Pressable
         style={styles.cameraControlButton}
-        onPress={() =>
-  setFullscreenSlot(
-    fullscreenSlot === slot
-      ? null
-      : slot,
-  )
-}
+        onPress={() => setMuted(!muted)}
+      >
         <Text style={styles.cameraControlText}>
           {muted ? "🔇" : "🔊"}
         </Text>
       </Pressable>
 
+      {/* Tombol pengaturan */}
       <Pressable
         style={styles.cameraControlButton}
         onPress={() => setActiveTab("settings")}
