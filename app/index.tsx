@@ -224,11 +224,13 @@ function CameraVideo({
   <Video
   key={url}
   focusable
+  viewType="textureView"
   source={{
     uri: url,
     ...(isRtsp
       ? { type: "rtsp" }
       : {}),
+
   }}
   style={[
     styles.video,
@@ -419,8 +421,9 @@ function PtzSwipeControl({
 
   return (
   <View
-    pointerEvents="none"
+    pointerEvents="box-only"
     style={styles.ptzSwipeOverlay}
+    {...responder.panHandlers}
   />
 );
 
