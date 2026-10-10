@@ -738,69 +738,46 @@ useEffect(() => {
       [],
     );
 
-const resetCameraArrays = useCallback(
-  (count: number) => {
-    const safeCount =
-      Math.max(
-        1,
-        Math.min(
-          MAX_CAMERAS,
-          Math.floor(count),
+
+  const resetCameraArrays = useCallback(
+    (_count: number) => {
+      // Selalu pertahankan 9 slot kamera.
+      // Pergantian layout tidak boleh menghapus
+      // stream, ID, status, atau konfigurasi PTZ.
+      setCameraStreams((current) =>
+        Array.from(
+          { length: MAX_CAMERAS },
+          (_, index) => current[index] || "",
         ),
       );
 
-    setCameraStreams(
-      (current) =>
+      setCameraIds((current) =>
         Array.from(
-          {
-            length:
-              safeCount,
-          },
-          (_, index) =>
-            current[index] || "",
+          { length: MAX_CAMERAS },
+          (_, index) => current[index] || "",
         ),
-    );
+      );
 
-    setCameraIds(
-      (current) =>
+      setCameraConnected((current) =>
         Array.from(
-          {
-            length:
-              safeCount,
-          },
-          (_, index) =>
-            current[index] || "",
+          { length: MAX_CAMERAS },
+          (_, index) => current[index] || false,
         ),
-    );
+      );
 
-    setCameraConnected(
-      (current) =>
+      setCameraPtzConfig((current) =>
         Array.from(
-          {
-            length:
-              safeCount,
-          },
-          (_, index) =>
-            current[index] ||
-            false,
+          { length: MAX_CAMERAS },
+          (_, index) => current[index] || null,
         ),
-    );
+      );
+    },
+    [],
+  );
 
-    setCameraPtzConfig(
-      (current) =>
-        Array.from(
-          {
-            length:
-              safeCount,
-          },
-          (_, index) =>
-            current[index] ||
-            null,
-        ),
-    );
-  },
-  [],
-);
+  useEffect(() => {
+    resetCameraArrays(cameraCount);
+  }, [cameraCount, resetCameraArrays]);
 
   useEffect(() => {
     resetCameraArrays(
