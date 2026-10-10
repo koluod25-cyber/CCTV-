@@ -2071,21 +2071,11 @@ const renderCameraSlot =
       >
         
 {Array.from(
-{ length: cameraCount },
-(_, index) => renderCameraSlot(index),
-)}
-
-  },
-  (_, index) =>
-    renderCameraSlot(
-      fullscreenSlot !== null
-        ? fullscreenSlot
-        : index,
-    ),
+  { length: cameraCount },
+  (_, index) => renderCameraSlot(index),
 )}
 
       </View>
-
       {!cameraStreams.some(
         (stream) => Boolean(stream),
       ) ? (
