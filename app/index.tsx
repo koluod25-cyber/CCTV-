@@ -2733,59 +2733,6 @@ cameras.map((camera) => {
           Tampilan Live
         </Text>
 
-        <View style={styles.switchRow}>
-          <View
-            style={styles.switchTextWrap}
-          >
-            <Text
-              style={styles.switchTitle}
-            >
-              Suara CCTV
-            </Text>
-
-            <Text
-              style={
-                styles.switchDescription
-              }
-            >
-              Aktifkan atau matikan suara kamera.
-            </Text>
-          </View>
-
-          <Switch
-            value={!muted}
-            onValueChange={(value) =>
-              setMuted(!value)
-            }
-          />
-        </View>
-
-        <View style={styles.switchRow}>
-          <View
-            style={styles.switchTextWrap}
-          >
-            <Text
-              style={styles.switchTitle}
-            >
-              Kontrol Video
-            </Text>
-
-            <Text
-              style={
-                styles.switchDescription
-              }
-            >
-              Tampilkan kontrol bawaan player.
-            </Text>
-          </View>
-
-          <Switch
-            value={nativeControls}
-            onValueChange={
-              setNativeControls
-            }
-          />
-        </View>
       </View>
 
       {statusText ? (
