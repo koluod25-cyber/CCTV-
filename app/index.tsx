@@ -1812,6 +1812,10 @@ const renderCameraSlot =
       fullscreenSlot !== null &&
       fullscreenSlot !== slot;
 
+if (hiddenInFullscreen) {
+  return null;
+}
+
     const stream: string =
       cameraStreams[slot] || "";
 
