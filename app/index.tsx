@@ -352,9 +352,7 @@ function PtzSwipeControl({
   onStop,
 }: {
   enabled: boolean;
-  onMove: (
-    direction: PtzDirection,
-  ) => void;
+  onMove: (direction: PtzDirection) => void;
   onStop: () => void;
 }) {
   const startX = useRef(0);
@@ -363,32 +361,30 @@ function PtzSwipeControl({
   const responder = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () =>
-          enabled,
+        // Jangan mengambil sentuhan saat pengguna mengetuk tombol.
+        onStartShouldSetPanResponder: () => false,
 
-        onMoveShouldSetPanResponder: () =>
-          enabled,
+        // PTZ hanya mengambil alih saat jari mulai bergerak.
+        onMoveShouldSetPanResponder: (
+          _event,
+          gestureState,
+        ) =>
+          enabled &&
+          (
+            Math.abs(gestureState.dx) > 8 ||
+            Math.abs(gestureState.dy) > 8
+          ),
 
         onPanResponderGrant: (event) => {
-          startX.current =
-            event.nativeEvent.pageX;
-
-          startY.current =
-            event.nativeEvent.pageY;
+          startX.current = event.nativeEvent.pageX;
+          startY.current = event.nativeEvent.pageY;
         },
 
         onPanResponderRelease: (event) => {
-          if (!enabled) {
-            return;
-          }
-
           const dx =
-            event.nativeEvent.pageX -
-            startX.current;
-
+            event.nativeEvent.pageX - startX.current;
           const dy =
-            event.nativeEvent.pageY -
-            startY.current;
+            event.nativeEvent.pageY - startY.current;
 
           const distance = Math.sqrt(
             dx * dx + dy * dy,
@@ -399,21 +395,10 @@ function PtzSwipeControl({
             return;
           }
 
-          if (
-            Math.abs(dx) >
-            Math.abs(dy)
-          ) {
-            onMove(
-              dx > 0
-                ? "right"
-                : "left",
-            );
+          if (Math.abs(dx) > Math.abs(dy)) {
+            onMove(dx > 0 ? "right" : "left");
           } else {
-            onMove(
-              dy > 0
-                ? "down"
-                : "up",
-            );
+            onMove(dy > 0 ? "down" : "up");
           }
 
           onStop();
@@ -423,14 +408,9 @@ function PtzSwipeControl({
           onStop();
         },
 
-        onPanResponderTerminationRequest:
-          () => true,
+        onPanResponderTerminationRequest: () => true,
       }),
-    [
-      enabled,
-      onMove,
-      onStop,
-    ],
+    [enabled, onMove, onStop],
   );
 
   if (!enabled) {
@@ -438,12 +418,12 @@ function PtzSwipeControl({
   }
 
   return (
-  <View
-    pointerEvents="box-only"
-    style={styles.ptzSwipeOverlay}
-    {...responder.panHandlers}
-  />
-);
+    <View
+      pointerEvents="box-only"
+      style={styles.ptzSwipeOverlay}
+      {...responder.panHandlers}
+    />
+  );
 }
 
 function TabButton({
@@ -1781,12 +1761,13 @@ const clearCameraSlot =
       : 2;
 
   const cameraAspectRatio =
-    cameraCount === 1
+    fullscreenSlot !== null
       ? 16 / 9
-      : cameraCount <= 4
-        ? 1.25
-        : 1.45;
-
+      : cameraCount === 1
+        ? 16 / 9
+        : cameraCount <= 4
+          ? 1.25
+          : 1.45;
   
   const cameraCardWidth: DimensionValue =
     fullscreenSlot !== null
