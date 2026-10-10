@@ -224,7 +224,7 @@ function CameraVideo({
   <Video
   key={url}
   focusable
-  viewType="textureView"
+  useTextureView={true}
   source={{
     uri: url,
     ...(isRtsp
