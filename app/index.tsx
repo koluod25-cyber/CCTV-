@@ -1811,8 +1811,9 @@ const clearCameraSlot =
 
   const renderCameraSlot =
     (slot: number) => {
-      const stream =
-        cameraStreams[slot] || "";
+      const hiddenInFullscreen =
+fullscreenSlot !== null &&
+fullscreenSlot !== slot; || "";
 
       const connected =
         cameraConnected[slot] || false;
@@ -2067,11 +2068,10 @@ const clearCameraSlot =
       >
         
 {Array.from(
-  {
-    length:
-      fullscreenSlot !== null
-        ? 1
-        : cameraCount,
+{ length: cameraCount },
+(_, index) => renderCameraSlot(index),
+)}
+
   },
   (_, index) =>
     renderCameraSlot(
