@@ -1875,7 +1875,7 @@ const clearCameraSlot =
 
     <CameraVideo
       url={stream}
-      nativeControls={nativeControls}
+      nativeControls={false}
       muted={muted}
       zoom={1}
       onLoad={() => {
