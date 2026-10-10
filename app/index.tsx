@@ -1809,18 +1809,21 @@ const clearCameraSlot =
       ],
     );
 
-  const renderCameraSlot =
-    (slot: number) => {
-      const hiddenInFullscreen =
-fullscreenSlot !== null &&
-fullscreenSlot !== slot; || "";
+const renderCameraSlot =
+  (slot: number) => {
+    const hiddenInFullscreen: boolean =
+      fullscreenSlot !== null &&
+      fullscreenSlot !== slot;
 
-      const connected =
-        cameraConnected[slot] || false;
+    const stream: string =
+      cameraStreams[slot] || "";
 
-      const ptzConfig =
-        cameraPtzConfig[slot];
+    const connected: boolean =
+      cameraConnected[slot] || false;
 
+    const ptzConfig =
+      cameraPtzConfig[slot];
+      
       return (
         <View
           key={`camera-slot-${slot}`}
