@@ -418,12 +418,12 @@ function PtzSwipeControl({
   }
 
   return (
-    <View
-      pointerEvents="box-only"
-      style={styles.ptzSwipeOverlay}
-      {...responder.panHandlers}
-    />
-  );
+  <View
+    pointerEvents="none"
+    style={styles.ptzSwipeOverlay}
+  />
+);
+
 }
 
 function TabButton({
