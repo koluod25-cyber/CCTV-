@@ -1742,10 +1742,14 @@ const clearCameraSlot =
         ? 1.25
         : 1.45;
 
+  
   const cameraCardWidth: DimensionValue =
-  isLandscape
-    ? `${100 / cameraGridColumns - 1}%`
-    : "100%";
+    fullscreenSlot !== null
+      ? "100%"
+      : isLandscape
+        ? `${100 / cameraGridColumns - 1}%`
+        : "100%";
+
 
   const cameraGridStyle = {
     flexDirection:
@@ -1901,8 +1905,13 @@ const clearCameraSlot =
 
       <Pressable
         style={styles.cameraControlButton}
-        onPress={() => setMuted(!muted)}
-      >
+        onPress={() =>
+  setFullscreenSlot(
+    fullscreenSlot === slot
+      ? null
+      : slot,
+  )
+}
         <Text style={styles.cameraControlText}>
           {muted ? "🔇" : "🔊"}
         </Text>
