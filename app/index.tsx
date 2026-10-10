@@ -2026,13 +2026,22 @@ const clearCameraSlot =
           cameraGridStyle,
         ]}
       >
-        {Array.from(
-          {
-            length: cameraCount,
-          },
-          (_, index) =>
-            renderCameraSlot(index),
-        )}
+        
+{Array.from(
+  {
+    length:
+      fullscreenSlot !== null
+        ? 1
+        : cameraCount,
+  },
+  (_, index) =>
+    renderCameraSlot(
+      fullscreenSlot !== null
+        ? fullscreenSlot
+        : index,
+    ),
+)}
+
       </View>
 
       {!cameraStreams.some(
