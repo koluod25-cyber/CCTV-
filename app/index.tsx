@@ -584,6 +584,8 @@ export default function HomeScreen() {
   ] = useState(false);
 
 const [cameraCount, setCameraCount] = useState(1);
+const [fullscreenSlot, setFullscreenSlot] =
+useState<number | null>(null);
 const [cameraStreams, setCameraStreams] = useState<string[]>([]);
 const [cameraIds, setCameraIds] = useState<string[]>([]);
 const [cameraConnected, setCameraConnected] = useState<boolean[]>([]);
@@ -1901,15 +1903,44 @@ const clearCameraSlot =
         !nativeControls
       }
       onMove={(direction) =>
-        movePtz(
-          slot,
-          direction,
-        )
+        movePtz(slot, direction)
       }
-      onStop={() =>
-        stopPtz(slot)
-      }
+      onStop={() => stopPtz(slot)}
     />
+
+    <View style={styles.cameraControlRow}>
+      <Pressable
+        style={styles.cameraControlButton}
+        onPress={() =>
+          setFullscreenSlot(
+            fullscreenSlot === slot ? null : slot
+          )
+        }
+      >
+        <Text style={styles.cameraControlText}>
+          {fullscreenSlot === slot ? "⊡" : "⛶"}
+        </Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.cameraControlButton}
+        onPress={() => setMuted(!muted)}
+      >
+        <Text style={styles.cameraControlText}>
+          {muted ? "🔇" : "🔊"}
+        </Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.cameraControlButton}
+        onPress={() => setActiveTab("settings")}
+      >
+        <Text style={styles.cameraControlText}>
+          ⚙
+        </Text>
+      </Pressable>
+    </View>
+
   </>
 ) : (
   <View
@@ -3274,7 +3305,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-     cameraHeaderTitleWrap: {
+  cameraHeaderTitleWrap: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
@@ -3680,4 +3711,35 @@ settingsSaveButton: {
   tabTextActive: {
     color: "#ffffff",
   },
+
+  
+  cameraControlRow: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    zIndex: 20,
+    elevation: 20,
+  },
+
+  cameraControlButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: "rgba(15, 25, 35, 0.9)",
+    borderWidth: 1,
+    borderColor: "#526273",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  cameraControlText: {
+    color: "#ffffff",
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+
 });
