@@ -1,19 +1,38 @@
+
 import { NativeModules, Platform } from "react-native";
 
-type TalkbackModule = {
-  checkSupport(url: string): Promise<{
+export type TalkbackResult = {
+  success: boolean;
+  message: string;
+};
+
+type TalkbackNativeModule = {
+  checkSupport(
+    url: string,
+  ): Promise<{
     reachable: boolean;
     statusCode?: number;
     supported: boolean;
     message: string;
   }>;
+
+  startTalkback(
+    host: string,
+    port: number,
+    username: string,
+    password: string,
+  ): Promise<TalkbackResult>;
+
+  stopTalkback(): Promise<TalkbackResult>;
 };
 
-const nativeModule = NativeModules.CctvTalkback
-  as TalkbackModule | undefined;
+const nativeModule = NativeModules.CctvTalkback as
+  | TalkbackNativeModule
+  | undefined;
 
 export const talkbackAvailable =
-  Platform.OS === "android" && Boolean(nativeModule);
+  Platform.OS === "android" &&
+  Boolean(nativeModule);
 
 export async function checkTalkbackSupport(url: string) {
   if (!nativeModule) {
@@ -25,4 +44,30 @@ export async function checkTalkbackSupport(url: string) {
   }
 
   return nativeModule.checkSupport(url);
+}
+
+export async function startTalkback(
+  host: string,
+  port: number,
+  username: string,
+  password: string,
+): Promise<TalkbackResult> {
+  if (!nativeModule) {
+    throw new Error("Modul Talkback Android belum tersedia.");
+  }
+
+  return nativeModule.startTalkback(
+    host,
+    port,
+    username,
+    password,
+  );
+}
+
+export async function stopTalkback(): Promise<TalkbackResult> {
+  if (!nativeModule) {
+    throw new Error("Modul Talkback Android belum tersedia.");
+  }
+
+  return nativeModule.stopTalkback();
 }
