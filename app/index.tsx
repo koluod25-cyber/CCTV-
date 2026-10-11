@@ -243,7 +243,7 @@ function CameraVideo({
     },
   ]}
 
-controls={boolean}
+controls={true}
 muted={muted}
 resizeMode="contain"
 paused={false}
