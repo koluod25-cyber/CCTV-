@@ -31,6 +31,8 @@ import Video from "react-native-video";
 
 import * as ImagePicker from "expo-image-picker";
 
+import * as ScreenOrientation from "expo-screen-orientation";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import {
