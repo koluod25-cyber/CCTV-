@@ -1,3 +1,4 @@
+
 {
   "name": "cctv-universal-monitor",
   "version": "1.0.0",
@@ -15,6 +16,7 @@
     "@expo/config-plugins": "~54.0.4",
     "@isvend/expo-udp": "0.1.0",
     "@react-native-async-storage/async-storage": "^2.2.0",
+    "cctv-talkback": "file:./modules/cctv-talkback",
     "expo": "~54.0.29",
     "expo-build-properties": "^1.0.10",
     "expo-crypto": "~15.0.9",
@@ -34,4 +36,3 @@
   },
   "packageManager": "pnpm@9.12.0"
 }
-"cctv-talkback": "file:./modules/cctv-talkback"
