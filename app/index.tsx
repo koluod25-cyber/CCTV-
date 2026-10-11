@@ -1207,7 +1207,7 @@ const openCameraSettings = useCallback(
         return;
       }
 
-      let slot =
+let slot =
         typeof targetSlot === "number"
           ? targetSlot
           : findNextCameraSlot();
@@ -1216,7 +1216,8 @@ const openCameraSettings = useCallback(
         slot < 0 ||
         slot >= cameraCount
       ) {
-        
+        Alert.alert(
+          "Channel penuh",
           "Semua channel kamera yang aktif sudah digunakan.",
         );
         return;
@@ -1230,7 +1231,7 @@ const openCameraSettings = useCallback(
         }...`,
       );
 
-      const credentials: OnvifPtzCredentials = {Ok
+      const credentials: OnvifPtzCredentials = {
         username,
         password,
       };
