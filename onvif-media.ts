@@ -780,6 +780,135 @@ async function getStreamUri(
   return streamUri.trim();
 }
 
+
+/**
+ * Pemeriksaan awal dukungan audio balik (talkback) ONVIF.
+ * Fungsi ini hanya memeriksa kemampuan kamera; belum mengirim audio.
+ */
+export type OnvifTalkbackCapability = {
+  supported: boolean;
+  confirmed: boolean;
+  mediaServiceUrl?: string;
+  mediaVersion?: 1 | 2;
+  profileToken?: string;
+  profileName?: string;
+  message: string;
+};
+
+export async function checkOnvifTalkbackSupport(
+  deviceUrl: string,
+  credentials: OnvifCredentials,
+): Promise<OnvifTalkbackCapability> {
+  try {
+    const capabilitiesXml = await getCapabilities(
+      deviceUrl,
+      credentials,
+    );
+
+    const mediaCandidates = getMediaServiceCandidates(
+      capabilitiesXml,
+      deviceUrl,
+    );
+
+    const errors: string[] = [];
+
+    for (const mediaUrl of mediaCandidates) {
+      for (const mediaVersion of [2, 1] as Array<1 | 2>) {
+        try {
+          const profilesXml = await getProfiles(
+            mediaUrl,
+            credentials,
+            mediaVersion,
+          );
+
+          const profileBlocks = [
+            ...getAllElements(profilesXml, "Profiles"),
+            ...getAllElements(profilesXml, "Profile"),
+          ];
+
+          const seen = new Set<string>();
+
+          for (const block of profileBlocks) {
+            const token =
+              getAttributeAnyCase(
+                block,
+                "Profiles",
+                ["token", "Token"],
+              ) ||
+              getAttributeAnyCase(
+                block,
+                "Profile",
+                ["token", "Token"],
+              );
+
+            if (!token || seen.has(token)) continue;
+            seen.add(token);
+
+            const hasAudioOutput =
+              getAllElements(
+                block,
+                "AudioOutputConfiguration",
+              ).length > 0;
+
+            const hasAudioDecoder =
+              getAllElements(
+                block,
+                "AudioDecoderConfiguration",
+              ).length > 0;
+
+            if (hasAudioOutput && hasAudioDecoder) {
+              return {
+                supported: true,
+                confirmed: true,
+                mediaServiceUrl: mediaUrl,
+                mediaVersion,
+                profileToken: token,
+                profileName:
+                  getTag(block, "Name") || token,
+                message:
+                  "Profil ONVIF mengumumkan konfigurasi audio output dan audio decoder. Pengiriman suara masih memerlukan RTSP backchannel dan pengirim audio native.",
+              };
+            }
+          }
+
+          if (profilesXml.trim()) {
+            errors.push(
+              `${mediaUrl} Media${mediaVersion}: konfigurasi audio output dan audio decoder belum ditemukan bersama dalam profil.`,
+            );
+          }
+        } catch (error) {
+          errors.push(
+            `${mediaUrl} Media${mediaVersion}: ${
+              error instanceof Error
+                ? error.message
+                : "pemeriksaan gagal"
+            }`,
+          );
+        }
+      }
+    }
+
+    return {
+      supported: false,
+      confirmed: false,
+      message: errors.length
+        ? "Dukungan talkback belum dapat dikonfirmasi. " +
+          errors.slice(0, 4).join(" | ")
+        : "Dukungan talkback belum dapat dikonfirmasi dari profil ONVIF yang tersedia.",
+    };
+  } catch (error) {
+    return {
+      supported: false,
+      confirmed: false,
+      message:
+        "Pemeriksaan kemampuan talkback gagal: " +
+        (error instanceof Error
+          ? error.message
+          : "kesalahan jaringan"),
+    };
+  }
+}
+
 export async function getOnvifStreamUri(
   deviceUrl: string,
   credentials: OnvifCredentials,
