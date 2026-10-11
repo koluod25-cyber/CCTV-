@@ -572,8 +572,8 @@ useState<number | null>(null);
 const [cameraStreams, setCameraStreams] = useState<string[]>([]);
 const [cameraIds, setCameraIds] = useState<string[]>([]);
 const [cameraConnected, setCameraConnected] = useState<boolean[]>([]);
-
-  const [
+const [cameraMuted, setCameraMuted] = useState<boolean[]>([]);
+const [
     cameraPtzConfig,
     setCameraPtzConfig,
   ] =
@@ -1318,7 +1318,7 @@ const openCameraSettings = useCallback(
           }.`,
         );
 
-        addHistory(
+       addHistory(
           "connected",
           streamUri,
           `Kamera ONVIF terhubung ke Kamera ${
@@ -1896,7 +1896,7 @@ if (hiddenInFullscreen) {
     <CameraVideo
       url={stream}
       nativeControls={nativeControls}
-      muted={muted}
+      muted={cameraMuted[slot] ?? false}
       zoom={1}
       onLoad={() => {
         setCameraSlotConnected(slot, true);
@@ -1955,13 +1955,19 @@ if (hiddenInFullscreen) {
   </Text>
 </Pressable>
 
-{/* Tombol Mute / Unmute */}
+{/* Tombol Mute / Unmute per kamera */}
 <Pressable
   style={styles.cameraControlButton}
-  onPress={() => setMuted((previous) => !previous)}
+  onPress={() => {
+    setCameraMuted((previous) => {
+      const next = [...previous];
+      next[slot] = !(next[slot] ?? false);
+      return next;
+    });
+  }}
 >
   <Text style={styles.cameraControlText}>
-    {muted ? "🔇" : "🔊"}
+    {(cameraMuted[slot] ?? false) ? "🔇" : "🔊"}
   </Text>
 </Pressable>
 
