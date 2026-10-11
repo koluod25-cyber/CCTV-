@@ -224,6 +224,34 @@ export function createTalkClaim(
  * Input must already be encoded G.711 A-law.
  * Raw PCM microphone samples cannot be passed directly.
  */
+
+/**
+ * Membuat perintah OPTalk Start.
+ * Jalankan setelah respons Claim menyatakan Ret: 100.
+ */
+export function createTalkStart(
+  sessionId: string | number,
+  sequence = 2,
+): Uint8Array {
+  const id = parseSessionId(sessionId);
+
+  const sessionText =
+    "0x" + id.toString(16).padStart(8, "0");
+
+  return encodeDvripJson(
+    DVRIP.TALK_START,
+    id,
+    sequence,
+    {
+      Name: "OPTalk",
+      OPTalk: {
+        Action: "Start",
+      },
+      SessionID: sessionText,
+    },
+  );
+}
+
 export function createTalkAudioFrame(
   encodedAudio: Uint8Array,
   sessionId: string | number,
