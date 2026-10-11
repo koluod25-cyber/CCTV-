@@ -27,12 +27,14 @@ const config: ExpoConfig = {
     predictiveBackGestureEnabled: false,
 
     permissions: [
-      "INTERNET",
-      "ACCESS_NETWORK_STATE",
-      "ACCESS_WIFI_STATE",
-      "CHANGE_WIFI_MULTICAST_STATE",
-      "POST_NOTIFICATIONS",
-    ],
+  "INTERNET",
+  "ACCESS_NETWORK_STATE",
+  "ACCESS_WIFI_STATE",
+  "CHANGE_WIFI_MULTICAST_STATE",
+  "POST_NOTIFICATIONS",
+  "RECORD_AUDIO",
+],
+
   },
 
   plugins: [
