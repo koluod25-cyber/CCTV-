@@ -1127,6 +1127,7 @@ const openCameraSettings = useCallback(
     useCallback(
       async () => {
         setSearching(true);
+
         setStatusText(
           "Mencari kamera ONVIF...",
         );
@@ -1521,15 +1522,10 @@ const talkbackCapability =
             });
 
 setStatusText(
-  `Kamera ${
-    camera.name || camera.host
-  } terhubung ke Kamera ${
-    slot + 1
-  }. Talkback: ${
-    talkbackCapability.supported
-      ? "kemampuan awal terdeteksi"
-      : "belum terkonfirmasi"
-  }.`,
+  result.message ||
+    (result.status === "offline"
+      ? "Kamera tidak merespons."
+      : "Tes koneksi selesai."),
 );
 
           addHistory(
