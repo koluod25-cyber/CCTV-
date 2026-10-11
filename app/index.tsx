@@ -243,7 +243,7 @@ function CameraVideo({
     },
   ]}
 
-controls={false}
+controls={nativeControl}
 muted={muted}
 resizeMode="contain"
 paused={false}
@@ -556,7 +556,7 @@ export default function HomeScreen() {
     setShowInfo,
   ] = useState(true);
 
-  const nativeControls = false;
+  const nativeControls = true;
 
   const [
     muted,
