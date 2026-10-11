@@ -1967,6 +1967,25 @@ if (hiddenInFullscreen) {
   </Text>
 </Pressable>
 
+
+{/* Tombol Talkback per kamera */}
+<Pressable
+  style={styles.cameraControlButton}
+  accessibilityRole="button"
+  accessibilityLabel={`Talkback kamera ${slot + 1}`}
+  onPress={() => {
+    Alert.alert(
+      "Talkback belum aktif",
+      "Tombol sudah tersedia, tetapi pengiriman suara dari mikrofon HP ke speaker CCTV belum terpasang.",
+      [{ text: "Mengerti" }],
+    );
+  }}
+>
+  <Text style={styles.cameraControlText}>
+    🎤
+  </Text>
+</Pressable>
+
 {/* Tombol Mute / Unmute per kamera */}
 <Pressable
   style={styles.cameraControlButton}
