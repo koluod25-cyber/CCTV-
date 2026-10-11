@@ -1924,41 +1924,47 @@ if (hiddenInFullscreen) {
 />
 
 <View style={styles.cameraControlRow}>
-  {/* Tombol Full Screen */}
-  <Pressable
-    style={styles.cameraControlButton}
-    onPress={() =>
-      setFullscreenSlot(
-        fullscreenSlot === slot
-          ? null
-          : slot
-      )
+  
+
+{/* Tombol Full Screen */}
+<Pressable
+  style={styles.cameraControlButton}
+  onPress={async () => {
+    const enteringFullscreen = fullscreenSlot !== slot;
+
+    try {
+      if (enteringFullscreen) {
+        setFullscreenSlot(slot);
+        await ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.LANDSCAPE
+        );
+      } else {
+        setFullscreenSlot(null);
+        await ScreenOrientation.unlockAsync();
+      }
+    } catch (error) {
+      console.warn(
+        "Gagal mengubah orientasi layar:",
+        error
+      );
     }
-  >
-    <Text style={styles.cameraControlText}>
-      {fullscreenSlot === slot ? "⊡" : "⛶"}
-    </Text>
-  </Pressable>
+  }}
+>
+  <Text style={styles.cameraControlText}>
+    {fullscreenSlot === slot ? "⊡" : "⛶"}
+  </Text>
+</Pressable>
 
-  {/* Tombol Mute / Unmute */}
-  <Pressable
-    style={styles.cameraControlButton}
-    onPress={() => setMuted(!muted)}
-  >
-    <Text style={styles.cameraControlText}>
-      {muted ? "🔇" : "🔊"}
-    </Text>
-  </Pressable>
+{/* Tombol Mute / Unmute */}
+<Pressable
+  style={styles.cameraControlButton}
+  onPress={() => setMuted((previous) => !previous)}
+>
+  <Text style={styles.cameraControlText}>
+    {muted ? "🔇" : "🔊"}
+  </Text>
+</Pressable>
 
-  {/* Pengaturan kamera */}
-  <Pressable
-    style={styles.cameraControlButton}
-    onPress={() => openCameraSettings(slot)}
-  >
-    <Text style={styles.cameraControlText}>
-      ⚙
-    </Text>
-  </Pressable>
 </View>
 </>
 ) : 
