@@ -75,8 +75,10 @@ class CctvTalkbackModule : Module() {
     } finally { try { socket?.close() } catch (_: Exception) {} }
   }
 
-  private fun start(host: String, port: Int, username: String, password: String): Map<String, Any> {
-    synchronized(lock) {
+  
+private fun start(host: String, port: Int, username: String, password: String): Map<String, Any> {
+    return synchronized(lock) {
+
       if (running.get()) return mapOf("success" to true, "message" to "Talkback sudah aktif.")
       require(host.isNotBlank()) { "Alamat IP kamera belum diisi." }
       require(port in 1..65535) { "Port DVRIP tidak valid." }
