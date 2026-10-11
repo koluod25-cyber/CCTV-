@@ -246,7 +246,7 @@ function CameraVideo({
 controls={true}
 muted={muted}
 resizeMode="contain"
-paused={false}
+
 playInBackground={false}
 playWhenInactive={false}
 repeat={false}
