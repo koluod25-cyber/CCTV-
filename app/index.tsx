@@ -52,6 +52,7 @@ import {
 } from "@/onvif-discovery";
 
 import {
+  checkOnvifTalkbackSupport,
   getOnvifStreamUri,
   type OnvifMediaProfile,
 } from "@/onvif-media";
@@ -1215,8 +1216,7 @@ const openCameraSettings = useCallback(
         slot < 0 ||
         slot >= cameraCount
       ) {
-        Alert.alert(
-          "Channel penuh",
+        
           "Semua channel kamera yang aktif sudah digunakan.",
         );
         return;
@@ -1230,7 +1230,7 @@ const openCameraSettings = useCallback(
         }...`,
       );
 
-      const credentials: OnvifPtzCredentials = {
+      const credentials: OnvifPtzCredentials = {Ok
         username,
         password,
       };
@@ -1258,6 +1258,14 @@ const openCameraSettings = useCallback(
             username,
             password,
           );
+
+ // Pemeriksaan awal dukungan talkback ONVIF.
+// Pemeriksaan ini tidak mengirim suara ke kamera.
+const talkbackCapability =
+  await checkOnvifTalkbackSupport(
+    deviceUrl,
+    credentials,
+  );
 
         setSelectedCamera(camera);
         setProfile(
@@ -1511,10 +1519,17 @@ const openCameraSettings = useCallback(
               vendor,
             });
 
-          setStatusText(
-            result.message ||
-              "Koneksi kamera selesai diuji.",
-          );
+setStatusText(
+  `Kamera ${
+    camera.name || camera.host
+  } terhubung ke Kamera ${
+    slot + 1
+  }. Talkback: ${
+    talkbackCapability.supported
+      ? "kemampuan awal terdeteksi"
+      : "belum terkonfirmasi"
+  }.`,
+);
 
           addHistory(
             result.status === "offline"
