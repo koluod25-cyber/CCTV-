@@ -1,5 +1,5 @@
-
-import { NativeModules, Platform } from "react-native";
+import { Platform } from "react-native";
+import { requireNativeModule } from "expo-modules-core";
 
 export type TalkbackResult = {
   success: boolean;
@@ -26,20 +26,37 @@ type TalkbackNativeModule = {
   stopTalkback(): Promise<TalkbackResult>;
 };
 
-const nativeModule = NativeModules.CctvTalkback as
-  | TalkbackNativeModule
-  | undefined;
+let nativeModule: TalkbackNativeModule | null = null;
+let nativeModuleError = "";
+
+if (Platform.OS === "android") {
+  try {
+    nativeModule =
+      requireNativeModule<TalkbackNativeModule>(
+        "CctvTalkback",
+      );
+  } catch (error) {
+    nativeModuleError =
+      error instanceof Error
+        ? error.message
+        : String(error);
+  }
+}
 
 export const talkbackAvailable =
   Platform.OS === "android" &&
-  Boolean(nativeModule);
+  nativeModule !== null;
 
-export async function checkTalkbackSupport(url: string) {
+export async function checkTalkbackSupport(
+  url: string,
+) {
   if (!nativeModule) {
     return {
       reachable: false,
       supported: false,
-      message: "Modul Talkback Android belum tersedia.",
+      message:
+        "Modul Talkback Android tidak berhasil dimuat. " +
+        nativeModuleError,
     };
   }
 
@@ -53,7 +70,10 @@ export async function startTalkback(
   password: string,
 ): Promise<TalkbackResult> {
   if (!nativeModule) {
-    throw new Error("Modul Talkback Android belum tersedia.");
+    throw new Error(
+      "Modul Talkback Android tidak berhasil dimuat. " +
+        nativeModuleError,
+    );
   }
 
   return nativeModule.startTalkback(
@@ -66,7 +86,10 @@ export async function startTalkback(
 
 export async function stopTalkback(): Promise<TalkbackResult> {
   if (!nativeModule) {
-    throw new Error("Modul Talkback Android belum tersedia.");
+    throw new Error(
+      "Modul Talkback Android tidak berhasil dimuat. " +
+        nativeModuleError,
+    );
   }
 
   return nativeModule.stopTalkback();
