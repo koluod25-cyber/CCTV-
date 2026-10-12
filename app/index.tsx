@@ -111,6 +111,10 @@ type SavedCameraState = {
   cameraPtzConfig: Array<CameraPtzConfig | null>;
   ownerText: string;
   logoUri: string;
+  cameraTalkbackCredentials?: Array<{
+  username: string;
+  password: string;
+} | null>;
 };
 
 function hideCredentials(value: string) {
@@ -577,6 +581,15 @@ const [cameraStreams, setCameraStreams] = useState<string[]>([]);
 const [cameraIds, setCameraIds] = useState<string[]>([]);
 const [cameraConnected, setCameraConnected] = useState<boolean[]>([]);
 const [cameraMuted, setCameraMuted] = useState<boolean[]>([]);
+const [
+  cameraTalkbackCredentials,
+  setCameraTalkbackCredentials,
+] = useState<
+  Array<{
+    username: string;
+    password: string;
+  } | null>
+>([]);
 const [talkbackActiveSlot, setTalkbackActiveSlot] =
   useState<number | null>(null);
 const [talkbackBusySlot, setTalkbackBusySlot] =
@@ -845,7 +858,15 @@ if (Array.isArray(saved.cameraIds)) {
           saved.cameraPtzConfig,
         );
       }
-
+      if (
+  Array.isArray(
+    saved.cameraTalkbackCredentials,
+  )
+) {
+  setCameraTalkbackCredentials(
+    saved.cameraTalkbackCredentials,
+  );
+      }
       if (
         typeof saved.ownerText === "string"
       ) {
@@ -886,6 +907,7 @@ if (Array.isArray(saved.cameraIds)) {
         cameraStreams,
         cameraIds,
         cameraPtzConfig,
+        cameraTalkbackCredentials,
         ownerText,
         logoUri,
       };
@@ -908,6 +930,7 @@ if (Array.isArray(saved.cameraIds)) {
   cameraStreams,
   cameraIds,
   cameraPtzConfig,
+  cameraTalkbackCredentials,
   ownerText,
   logoUri,
 ]);
@@ -1302,7 +1325,20 @@ const talkbackCapability =
         if (
           result.mediaServiceUrl &&
           result.profile?.token
-        ) {
+        ) 
+        { 
+          setCameraTalkbackCredentials(
+  (current) => {
+    const next = [...current];
+
+    next[slot] = {
+      username,
+      password,
+    };
+
+    return next;
+  },
+);
           setCameraPtz(
             slot,
             {
@@ -1443,6 +1479,19 @@ const talkbackCapability =
     slot,
     finalUrl,
   );
+ 
+  setCameraTalkbackCredentials(
+  (current) => {
+    const next = [...current];
+
+    next[slot] = {
+      username: username.trim(),
+      password,
+    };
+
+    return next;
+  },
+);
 
   setCameraPtz(
     slot,
@@ -2067,20 +2116,31 @@ if (hiddenInFullscreen) {
         await stopTalkback();
         setTalkbackActiveSlot(null);
       }
-
       const credentials =
-        cameraPtzConfig[slot]?.credentials;
+  cameraTalkbackCredentials[slot];
 
-      const username =
+const username =
   credentials?.username?.trim() ||
-  decodeURIComponent(parsedUrl.username || "") ||
-  "admin";
+  decodeURIComponent(
+    parsedUrl.username || "",
+  ).trim();
 
 const password =
-  credentials?.password ||
-  decodeURIComponent(parsedUrl.password || "") ||
-  "admin";
+  credentials?.password ??
+  decodeURIComponent(
+    parsedUrl.password || "",
+  );
 
+if (
+  !username ||
+  (!credentials && !parsedUrl.password)
+) {
+  Alert.alert(
+    "Kredensial Talkback belum diisi",
+    "Buka Pengaturan Kamera, isi username dan password kamera untuk channel ini, lalu simpan."
+  );
+  return;
+}
       // Port DVRIP yang digunakan modul native.
       const result = await startTalkback(
         parsedUrl.hostname,
@@ -2567,6 +2627,44 @@ cameras.map((camera) => {
 
     <Text style={styles.saveHint}>
       Simpan URL dan konfigurasi PTZ untuk channel ini saja.
+      <Pressable
+  style={styles.secondaryButton}
+  onPress={() => {
+    if (cameraSettingsSlot === null) {
+      return;
+    }
+
+    setCameraStream(
+      cameraSettingsSlot,
+      cameraSettingsUrl.trim(),
+    );
+
+    setCameraTalkbackCredentials(
+      (current) => {
+        const next = [...current];
+
+        next[cameraSettingsSlot] = {
+          username:
+            cameraSettingsUsername.trim(),
+          password: cameraSettingsPassword,
+        };
+
+        return next;
+      },
+    );
+
+    Alert.alert(
+      "Kredensial disimpan",
+      `Kredensial Talkback Kamera ${
+        cameraSettingsSlot + 1
+      } telah disimpan.`
+    );
+  }}
+>
+  <Text style={styles.buttonText}>
+    Simpan Kredensial Talkback
+  </Text>
+</Pressable>
     </Text>
   </View>
 ) : null}
