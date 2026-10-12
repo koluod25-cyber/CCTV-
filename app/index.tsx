@@ -15,6 +15,7 @@ import {
   Easing,
   Image,
   PanResponder,
+  PermissionsAndroid,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -1973,22 +1974,156 @@ if (hiddenInFullscreen) {
   </Text>
 </Pressable>
 
-
 {/* Tombol Talkback per kamera */}
 <Pressable
-  style={styles.cameraControlButton}
+  style={[
+    styles.cameraControlButton,
+    talkbackActiveSlot === slot
+      ? { backgroundColor: "#b42318" }
+      : null,
+    talkbackBusySlot === slot
+      ? { opacity: 0.6 }
+      : null,
+  ]}
   accessibilityRole="button"
   accessibilityLabel={`Talkback kamera ${slot + 1}`}
-  onPress={() => {
-    Alert.alert(
-      "Talkback belum aktif",
-      "Tombol sudah tersedia, tetapi pengiriman suara dari mikrofon HP ke speaker CCTV belum terpasang.",
-      [{ text: "Mengerti" }],
-    );
+  disabled={talkbackBusySlot !== null}
+  onPress={async () => {
+    if (talkbackBusySlot !== null) return;
+
+    setTalkbackBusySlot(slot);
+
+    try {
+      // Jika kamera ini sedang aktif, hentikan Talkback.
+      if (talkbackActiveSlot === slot) {
+        const stopped = await stopTalkback();
+
+        setTalkbackActiveSlot(null);
+        setStatusText(
+          stopped.message || "Talkback dihentikan."
+        );
+
+        Alert.alert(
+          "Talkback",
+          stopped.message || "Talkback dihentikan."
+        );
+        return;
+      }
+
+      const streamUrl = cameraStreams[slot] || "";
+
+      if (!streamUrl) {
+        Alert.alert(
+          "Talkback",
+          "Tambahkan alamat RTSP kamera terlebih dahulu."
+        );
+        return;
+      }
+
+      let parsedUrl: URL;
+
+      try {
+        parsedUrl = new URL(streamUrl);
+      } catch {
+        Alert.alert(
+          "Alamat kamera tidak valid",
+          "Periksa kembali alamat RTSP kamera."
+        );
+        return;
+      }
+
+      if (
+        parsedUrl.protocol !== "rtsp:" &&
+        parsedUrl.protocol !== "rtsps:"
+      ) {
+        Alert.alert(
+          "Talkback",
+          "Talkback memerlukan alamat RTSP kamera."
+        );
+        return;
+      }
+
+      const permission =
+        await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+          {
+            title: "Izin mikrofon untuk Talkback",
+            message:
+              "Izinkan mikrofon HP untuk mengirim suara ke speaker CCTV.",
+            buttonPositive: "Izinkan",
+            buttonNegative: "Batal",
+          }
+        );
+
+      if (
+        permission !==
+        PermissionsAndroid.RESULTS.GRANTED
+      ) {
+        Alert.alert(
+          "Izin mikrofon diperlukan",
+          "Izinkan akses mikrofon Android, lalu coba lagi."
+        );
+        return;
+      }
+
+      // Modul native hanya menangani satu sesi Talkback.
+      if (talkbackActiveSlot !== null) {
+        await stopTalkback();
+        setTalkbackActiveSlot(null);
+      }
+
+      const credentials =
+        cameraPtzConfig[slot]?.credentials;
+
+      const username =
+        credentials?.username ||
+        decodeURIComponent(parsedUrl.username || "") ||
+        "admin";
+
+      const password =
+        credentials?.password ||
+        decodeURIComponent(parsedUrl.password || "");
+
+      // Port DVRIP yang digunakan modul native.
+      const result = await startTalkback(
+        parsedUrl.hostname,
+        34567,
+        username,
+        password
+      );
+
+      if (result.success) {
+        setTalkbackActiveSlot(slot);
+      }
+
+      setStatusText(result.message);
+
+      Alert.alert(
+        result.success
+          ? "Talkback aktif"
+          : "Talkback gagal",
+        result.message
+      );
+    } catch (error) {
+      const message = formatError(error);
+
+      setTalkbackActiveSlot(null);
+      setStatusText(
+        `Talkback kamera ${slot + 1}: ${message}`
+      );
+
+      Alert.alert("Talkback gagal", message);
+    } finally {
+      setTalkbackBusySlot(null);
+    }
   }}
 >
   <Text style={styles.cameraControlText}>
-    🎤
+    {talkbackBusySlot === slot
+      ? "…"
+      : talkbackActiveSlot === slot
+        ? "🎙️"
+        : "🎤"}
   </Text>
 </Pressable>
 
