@@ -2624,47 +2624,47 @@ cameras.map((camera) => {
       placeholderTextColor="#7b8794"
       style={styles.input}
     />
-
+      
     <Text style={styles.saveHint}>
       Simpan URL dan konfigurasi PTZ untuk channel ini saja.
-      <Pressable
-  style={styles.secondaryButton}
-  onPress={() => {
-    if (cameraSettingsSlot === null) {
-      return;
-    }
+    </Text>
 
-    setCameraStream(
-      cameraSettingsSlot,
-      cameraSettingsUrl.trim(),
-    );
+    <Pressable
+      style={styles.secondaryButton}
+      onPress={() => {
+        if (cameraSettingsSlot === null) {
+          return;
+        }
 
-    setCameraTalkbackCredentials(
-      (current) => {
-        const next = [...current];
+        setCameraStream(
+          cameraSettingsSlot,
+          cameraSettingsUrl.trim(),
+        );
 
-        next[cameraSettingsSlot] = {
-          username:
-            cameraSettingsUsername.trim(),
-          password: cameraSettingsPassword,
-        };
+        setCameraTalkbackCredentials((current) => {
+          const next = [...current];
 
-        return next;
-      },
-    );
+          next[cameraSettingsSlot] = {
+            username: cameraSettingsUsername.trim(),
+            password: cameraSettingsPassword,
+          };
 
-    Alert.alert(
-      "Kredensial disimpan",
-      `Kredensial Talkback Kamera ${
-        cameraSettingsSlot + 1
-      } telah disimpan.`
-    );
-  }}
->
-  <Text style={styles.buttonText}>
-    Simpan Kredensial Talkback
-  </Text>
-</Pressable>
+          return next;
+        });
+
+        Alert.alert(
+          "Kredensial disimpan",
+          `Kredensial Talkback Kamera ${
+            cameraSettingsSlot + 1
+          } telah disimpan.`,
+        );
+      }}
+    >
+      <Text style={styles.secondaryButtonText}>
+        Simpan Kredensial Talkback
+      </Text>
+    </Pressable>
+   
     </Text>
   </View>
 ) : null}
