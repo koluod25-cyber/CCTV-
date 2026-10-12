@@ -2131,16 +2131,16 @@ const password =
     parsedUrl.password || "",
   );
 
-if (
-  !username ||
-  (!credentials && !parsedUrl.password)
-) {
+      if (!username || !password) {
+  openCameraSettings(slot);
+
   Alert.alert(
-    "Kredensial Talkback belum diisi",
-    "Buka Pengaturan Kamera, isi username dan password kamera untuk channel ini, lalu simpan."
+    "Username dan Password Kamera",
+    `Isi username dan password untuk Kamera ${slot + 1}, lalu simpan sebelum menekan tombol Mic kembali.`,
   );
+
   return;
-}
+      }
       // Port DVRIP yang digunakan modul native.
       const result = await startTalkback(
         parsedUrl.hostname,
