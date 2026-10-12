@@ -98,7 +98,7 @@ private fun start(host: String, port: Int, username: String, password: String): 
         val login = JSONObject()
           .put("EncryptType", "MD5")
           .put("LoginType", "DVRIP-Web")
-          .put("PassWord", md5Upper(password))
+          .put("PassWord", sofiaHash(password))
           .put("UserName", username)
         writeFrame(output, LOGIN_REQUEST, 0, nextSequence(), (login.toString() + "\n\u0000").toByteArray(Charsets.UTF_8))
         val loginFrame = readFrame(input)
@@ -199,9 +199,18 @@ private fun start(host: String, port: Int, username: String, password: String): 
     }
   }
 
-  private fun md5Upper(value: String): String = MessageDigest.getInstance("MD5")
-    .digest(value.toByteArray(Charsets.UTF_8)).joinToString("") { "%02X".format(it) }
+  // Hash password DVRIP Xiongmai/Sofia: MD5 diubah menjadi 8 karakter.
+private fun sofiaHash(value: String): String {
+    val chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    val digest = MessageDigest.getInstance("MD5")
+        .digest(value.toByteArray(Charsets.UTF_8))
 
+    return (0 until digest.size step 2).joinToString("") { index ->
+        val a = digest[index].toInt() and 0xff
+        val b = digest[index + 1].toInt() and 0xff
+        chars[(a + b) % chars.length].toString()
+    }
+}
   private fun parseSessionId(value: String): Long {
     val clean = value.trim()
     return if (clean.startsWith("0x", true)) clean.substring(2).toLong(16) and 0xffffffffL else clean.toLongOrNull() ?: 0L
