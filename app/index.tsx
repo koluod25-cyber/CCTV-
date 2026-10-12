@@ -785,11 +785,7 @@ useEffect(() => {
     },
     [],
   );
-
-  useEffect(() => {
-    resetCameraArrays(cameraCount);
-  }, [cameraCount, resetCameraArrays]);
-
+  
   useEffect(() => {
     resetCameraArrays(
       cameraCount,
