@@ -29,6 +29,8 @@ import {
 
 import Video from "react-native-video";
 
+import { startTalkback, stopTalkback } from "cctv-talkback";
+
 import * as ImagePicker from "expo-image-picker";
 
 import * as ScreenOrientation from "expo-screen-orientation";
@@ -574,6 +576,10 @@ const [cameraStreams, setCameraStreams] = useState<string[]>([]);
 const [cameraIds, setCameraIds] = useState<string[]>([]);
 const [cameraConnected, setCameraConnected] = useState<boolean[]>([]);
 const [cameraMuted, setCameraMuted] = useState<boolean[]>([]);
+const [talkbackActiveSlot, setTalkbackActiveSlot] =
+  useState<number | null>(null);
+const [talkbackBusySlot, setTalkbackBusySlot] =
+  useState<number | null>(null);
 const [
     cameraPtzConfig,
     setCameraPtzConfig,
