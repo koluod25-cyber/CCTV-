@@ -2556,7 +2556,7 @@ cameras.map((camera) => {
             );
           },
         )}
-
+              </ScrollView>
 {cameraSettingsSlot !== null ? (
   <View style={styles.card}>
     <Text style={styles.sectionTitle}>
@@ -2664,12 +2664,9 @@ cameras.map((camera) => {
         Simpan Kredensial Talkback
       </Text>
     </Pressable>
-   
-    </Text>
   </View>
 ) : null}
-
-      </ScrollView>
+      
       <Pressable
         style={[
           styles.secondaryButton,
