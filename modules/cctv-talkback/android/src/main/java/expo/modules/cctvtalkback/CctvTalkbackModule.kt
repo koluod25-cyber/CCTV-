@@ -234,7 +234,7 @@ private fun parseJsonObject(
     )
   }
 }
-}
+
   private fun parseSessionId(value: String): Long {
     val clean = value.trim()
     return if (clean.startsWith("0x", true)) clean.substring(2).toLong(16) and 0xffffffffL else clean.toLongOrNull() ?: 0L
