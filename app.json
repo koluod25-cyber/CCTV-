@@ -1,11 +1,21 @@
+
 {
   "expo": {
     "name": "CCTV Universal Monitor",
     "slug": "cctv-universal-monitor",
     "version": "1.0.0",
+    "icon": "./assets/icon.png",
     "orientation": "default",
+    "scheme": "cctvuniversalmonitor",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "space.manus.cctv.universal.monitor.t20260903114227",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
     "android": {
       "package": "space.manus.cctv.universal.monitor.t20260903114227",
       "edgeToEdgeEnabled": true,
@@ -15,11 +25,24 @@
         "ACCESS_NETWORK_STATE",
         "ACCESS_WIFI_STATE",
         "CHANGE_WIFI_MULTICAST_STATE",
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
+        "RECORD_AUDIO"
       ]
     },
     "plugins": [
       "expo-router",
+      [
+        "react-native-video",
+        {
+          "androidExtensions": {
+            "useExoplayerRtsp": true,
+            "useExoplayerSmoothStreaming": false,
+            "useExoplayerHls": false,
+            "useExoplayerDash": false
+          }
+        }
+      ],
+      "./plugins/withRtspTcp.js",
       [
         "@isvend/expo-udp",
         {
@@ -31,14 +54,14 @@
         "expo-build-properties",
         {
           "android": {
-            buildArchs: [
-             "armeabi-v7a",
-             "arm64-v8a",
-             "x86",
-             "x86_64",
-            ],
             "minSdkVersion": 24,
-            "usesCleartextTraffic": true
+            "usesCleartextTraffic": true,
+            "buildArchs": [
+              "armeabi-v7a",
+              "arm64-v8a",
+              "x86",
+              "x86_64"
+            ]
           }
         }
       ]
