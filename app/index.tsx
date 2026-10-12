@@ -2076,13 +2076,14 @@ if (hiddenInFullscreen) {
         cameraPtzConfig[slot]?.credentials;
 
       const username =
-        credentials?.username ||
-        decodeURIComponent(parsedUrl.username || "") ||
-        "admin";
+  credentials?.username?.trim() ||
+  decodeURIComponent(parsedUrl.username || "") ||
+  "admin";
 
-      const password =
-        credentials?.password ||
-        decodeURIComponent(parsedUrl.password || "");
+const password =
+  credentials?.password ||
+  decodeURIComponent(parsedUrl.password || "") ||
+  "admin";
 
       // Port DVRIP yang digunakan modul native.
       const result = await startTalkback(
