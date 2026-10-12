@@ -199,16 +199,19 @@ private fun start(host: String, port: Int, username: String, password: String): 
   }
 
   // Hash password DVRIP Xiongmai/Sofia: MD5 diubah menjadi 8 karakter.
+  
 private fun sofiaHash(value: String): String {
     val chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
     val digest = MessageDigest.getInstance("MD5")
         .digest(value.toByteArray(Charsets.UTF_8))
 
-    return (0 until digest.size step 2).joinToString("") { index ->
+        return (0 until digest.size step 2).joinToString("") { index ->
         val a = digest[index].toInt() and 0xff
         val b = digest[index + 1].toInt() and 0xff
         chars[(a + b) % chars.length].toString()
     }
+}
+
 private fun parseJsonObject(
   payload: ByteArray,
   label: String,
