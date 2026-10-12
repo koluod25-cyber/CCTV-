@@ -210,6 +210,28 @@ private fun sofiaHash(value: String): String {
         val b = digest[index + 1].toInt() and 0xff
         chars[(a + b) % chars.length].toString()
     }
+private fun parseJsonObject(
+  payload: ByteArray,
+  label: String,
+): JSONObject {
+  val raw = String(
+    payload,
+    Charsets.UTF_8,
+  ).trim('\u0000', '\n', '\r', ' ')
+
+  if (raw.isBlank()) {
+    error("$label: respons kamera kosong.")
+  }
+
+  return try {
+    JSONObject(raw)
+  } catch (e: Exception) {
+    error(
+      "$label: respons bukan JSON valid. " +
+        "Data awal: ${raw.take(120)}"
+    )
+  }
+}
 }
   private fun parseSessionId(value: String): Long {
     val clean = value.trim()
