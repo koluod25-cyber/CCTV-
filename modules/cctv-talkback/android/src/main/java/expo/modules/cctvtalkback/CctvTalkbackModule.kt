@@ -105,7 +105,32 @@ private fun start(host: String, port: Int, username: String, password: String): 
         if (loginFrame.messageId != LOGIN_RESPONSE) error("Respons login DVRIP tidak sesuai (ID ${loginFrame.messageId}).")
         val loginJson = parseJsonObject(loginFrame.payload,"Respons login DVRIP",)
         val ret = loginJson.optInt("Ret", -1)
-        if (ret != 100) error("Login DVRIP ditolak kamera (Ret=$ret). Periksa username/password atau format autentikasi firmware.")
+
+when (ret) {
+  100 -> {
+    // Login berhasil, lanjutkan proses Talkback.
+  }
+
+  205 -> error(
+    "Kamera mengembalikan Ret=205 (akun terkunci menurut kode DVRIP). " +
+    "Login Talkback dihentikan. Jangan mencoba berulang kali; " +
+    "periksa status akun melalui aplikasi resmi kamera."
+  )
+
+  203 -> error(
+    "Kamera menolak password DVRIP (Ret=203). " +
+    "Periksa format autentikasi tanpa mengubah password kamera."
+  )
+
+  206 -> error(
+    "Kamera menolak login DVRIP karena akun masuk daftar blokir (Ret=206)."
+  )
+
+  else -> error(
+    "Login DVRIP ditolak kamera (Ret=$ret). " +
+    "Perlu pemeriksaan protokol dan firmware."
+  )
+}
         val sidText = loginJson.optString("SessionID", "0")
         sessionId = parseSessionId(sidText)
 
