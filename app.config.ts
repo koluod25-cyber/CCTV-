@@ -10,7 +10,7 @@ const config: ExpoConfig = {
   orientation: "default",
   scheme: "cctvuniversalmonitor",
   userInterfaceStyle: "automatic",
-  newArchEnabled: true,
+  newArchEnabled: false,
 
   ios: {
     supportsTablet: true,
