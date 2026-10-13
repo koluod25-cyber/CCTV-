@@ -203,6 +203,11 @@ const lastProgressAt = useRef(0);
 const [stalled, setStalled] =
   useState(false);
 
+const [playerGeneration, setPlayerGeneration] =
+  useState(0);
+
+const recoveryCountRef = useRef(0);
+
 useEffect(() => {
   lastProgressAt.current = 0;
   setStalled(false);
@@ -218,6 +223,35 @@ useEffect(() => {
 
   return () => clearInterval(timer);
 }, [url]);
+
+  useEffect(() => {
+  recoveryCountRef.current = 0;
+}, [url]);
+
+useEffect(() => {
+  if (!stalled || error) {
+    return;
+  }
+
+  if (recoveryCountRef.current >= 3) {
+    setError(true);
+    setErrorDetail(
+      "Gambar kamera berhenti setelah 3 kali percobaan pemulihan. Periksa koneksi RTSP kamera ini."
+    );
+    setStalled(false);
+    return;
+  }
+
+  recoveryCountRef.current += 1;
+
+  lastProgressAt.current = Date.now();
+  setLoaded(false);
+  setStalled(false);
+
+  setPlayerGeneration(
+    (current) => current + 1
+  );
+}, [stalled, error]);
   
   useEffect(() => {
     setLoaded(false);
@@ -254,7 +288,7 @@ useEffect(() => {
   return (
     <View style={styles.videoBox}>
   <Video
-  key={url}
+  key={`${url}-${playerGeneration}`}
   focusable
   useTextureView={true}
   source={{
