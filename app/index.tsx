@@ -1847,16 +1847,9 @@ const clearCameraSlot =
     cameraCount === 1
       ? 1
       : 2;
-
-  const cameraAspectRatio =
-    fullscreenSlot !== null
-      ? 16 / 9
-      : cameraCount === 1
-        ? 16 / 9
-        : cameraCount <= 4
-          ? 1.25
-          : 1.45;
   
+const cameraAspectRatio = 16 / 9;
+
   const cameraCardWidth: DimensionValue =
     fullscreenSlot !== null
       ? "100%"
