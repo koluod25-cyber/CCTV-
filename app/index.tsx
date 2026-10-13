@@ -1884,9 +1884,6 @@ const renderCameraSlot =
     const stream: string =
       cameraStreams[slot] || "";
     
-    const stream: string =
-      cameraStreams[slot] || "";
-
     const connected: boolean =
       cameraConnected[slot] || false;
 
@@ -1897,8 +1894,6 @@ const renderCameraSlot =
         <View
           key={`camera-slot-${slot}`}
           style={[
-            
-style={[
   styles.cameraCard,
   hiddenInFullscreen
     ? {
@@ -1911,8 +1906,7 @@ style={[
     : {
         width: cameraCardWidth,
       },
-]}
-            
+]}          
         >
           <View
             style={styles.cameraCardHeader}
