@@ -203,11 +203,6 @@ const lastProgressAt = useRef(0);
 const [stalled, setStalled] =
   useState(false);
 
-const [playerGeneration, setPlayerGeneration] =
-  useState(0);
-
-const recoveryCountRef = useRef(0);
-
 useEffect(() => {
   lastProgressAt.current = 0;
   setStalled(false);
@@ -224,14 +219,6 @@ useEffect(() => {
   return () => clearInterval(timer);
 }, [url]);
 
-  useEffect(() => {
-  recoveryCountRef.current = 0;
-}, [url]);
-
-useEffect(() => {
-  if (!stalled || error) {
-    return;
-  }
 
   if (recoveryCountRef.current >= 3) {
     setError(true);
@@ -288,7 +275,7 @@ useEffect(() => {
   return (
     <View style={styles.videoBox}>
   <Video
-  key={`${url}-${playerGeneration}`}
+  key={url}
   focusable
   useTextureView={true}
   source={{
