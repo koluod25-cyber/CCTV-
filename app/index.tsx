@@ -197,6 +197,28 @@ function CameraVideo({
   const [errorDetail, setErrorDetail] =
     useState("");
 
+  
+const lastProgressAt = useRef(0);
+
+const [stalled, setStalled] =
+  useState(false);
+
+useEffect(() => {
+  lastProgressAt.current = 0;
+  setStalled(false);
+
+  const timer = setInterval(() => {
+    if (
+      lastProgressAt.current > 0 &&
+      Date.now() - lastProgressAt.current > 10000
+    ) {
+      setStalled(true);
+    }
+  }, 3000);
+
+  return () => clearInterval(timer);
+}, [url]);
+  
   useEffect(() => {
     setLoaded(false);
     setError(false);
@@ -266,7 +288,7 @@ setError(false);
 setErrorDetail("");
 onLoad?.();
 }}
-
+    lastProgressAt.current = Date.now();
         onError={(videoError) => {
           const errorObject =
             videoError?.error;
