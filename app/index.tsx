@@ -287,7 +287,7 @@ useEffect(() => {
   return (
     <View style={styles.videoBox}>
   <Video
-  <Video
+
   key={`${url}-${playerGeneration}`}
   focusable
   useTextureView={true}
