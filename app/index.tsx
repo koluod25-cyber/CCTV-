@@ -205,53 +205,6 @@ const recoveryAttempts = useRef(0);
 const [playerGeneration, setPlayerGeneration] =
   useState(0);
 
-const [stalled, setStalled] =
-  useState(false);
-
-useEffect(() => {
-  lastProgressAt.current = 0;
-  recoveryAttempts.current = 0;
-  setStalled(false);
-
-  const timer = setInterval(() => {
-    if (
-      lastProgressAt.current > 0 &&
-      Date.now() - lastProgressAt.current > 10000
-    ) {
-      setStalled(true);
-    }
-  }, 3000);
-
-  return () => clearInterval(timer);
-}, [url]);
-
-useEffect(() => {
-  if (!stalled || error || !url) {
-    return;
-  }
-
-  if (recoveryAttempts.current >= 2) {
-    const message =
-      "Video berhenti setelah 2 kali percobaan pemulihan. Periksa koneksi kamera.";
-
-    setErrorDetail(message);
-    setLoaded(false);
-    setError(true);
-    setStalled(false);
-    onError?.(message);
-    return;
-  }
-
-  recoveryAttempts.current += 1;
-  lastProgressAt.current = 0;
-
-  setLoaded(false);
-  setStalled(false);
-
-  setPlayerGeneration((current) => current + 1);
-}, [stalled, error, url, onError]);
-
-
   useEffect(() => {
     setLoaded(false);
     setError(false);
