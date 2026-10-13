@@ -283,49 +283,56 @@ playInBackground={false}
 playWhenInactive={false}
 repeat={false}
 onLoad={() => {
-setLoaded(true);
-setError(false);
-setErrorDetail("");
-onLoad?.();
+  setLoaded(true);
+  setError(false);
+  setErrorDetail("");
+  lastProgressAt.current = Date.now();
+  setStalled(false);
+  onLoad?.();
 }}
-    lastProgressAt.current = Date.now();
-        onError={(videoError) => {
-          const errorObject =
-            videoError?.error;
 
-          const errorCode =
-            errorObject?.errorCode || "";
+onProgress={() => {
+  lastProgressAt.current = Date.now();
+  setStalled(false);
+}}
 
-          const errorString =
-            errorObject?.errorString || "";
+onError={(videoError) => {
+  const errorObject =
+    videoError?.error;
 
-          const errorException =
-            errorObject?.errorException || "";
+  const errorCode =
+    errorObject?.errorCode || "";
 
-          const detail = [
-            errorCode
-              ? `Code: ${errorCode}`
-              : "",
-            errorString
-              ? `Detail: ${errorString}`
-              : "",
-            errorException
-              ? `Exception: ${errorException}`
-              : "",
-          ]
-            .filter(Boolean)
-            .join(" • ");
+  const errorString =
+    errorObject?.errorString || "";
 
-          const finalDetail =
-            detail ||
-            "ExoPlayer gagal membuka stream CCTV.";
+  const errorException =
+    errorObject?.errorException || "";
 
-          setLoaded(false);
-          setError(true);
-          setErrorDetail(finalDetail);
+  const detail = [
+    errorCode
+      ? `Code: ${errorCode}`
+      : "",
+    errorString
+      ? `Detail: ${errorString}`
+      : "",
+    errorException
+      ? `Exception: ${errorException}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" • ");
 
-          onError?.(finalDetail);
-        }}
+  const finalDetail =
+    detail ||
+    "ExoPlayer gagal membuka stream CCTV.";
+
+  setLoaded(false);
+  setError(true);
+  setErrorDetail(finalDetail);
+
+  onError?.(finalDetail);
+}}
         bufferConfig={{
           minBufferMs: 1500,
           maxBufferMs: 5000,
