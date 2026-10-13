@@ -1875,14 +1875,15 @@ const clearCameraSlot =
 
 const renderCameraSlot =
   (slot: number) => {
+    // Pertahankan pemutar setiap channel agar
+    // stream kamera lain tidak dilepas saat fullscreen.
     const hiddenInFullscreen: boolean =
       fullscreenSlot !== null &&
       fullscreenSlot !== slot;
 
-if (hiddenInFullscreen) {
-  return null;
-}
-
+    const stream: string =
+      cameraStreams[slot] || "";
+    
     const stream: string =
       cameraStreams[slot] || "";
 
@@ -1896,11 +1897,22 @@ if (hiddenInFullscreen) {
         <View
           key={`camera-slot-${slot}`}
           style={[
-            styles.cameraCard,
-            {
-              width: cameraCardWidth,
-            },
-          ]}
+            
+style={[
+  styles.cameraCard,
+  hiddenInFullscreen
+    ? {
+        position: "absolute" as const,
+        left: -10000,
+        top: 0,
+        width: cameraCardWidth,
+        opacity: 0,
+      }
+    : {
+        width: cameraCardWidth,
+      },
+]}
+            
         >
           <View
             style={styles.cameraCardHeader}
