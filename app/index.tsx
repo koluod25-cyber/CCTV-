@@ -1889,25 +1889,25 @@ const renderCameraSlot =
 
     const ptzConfig =
       cameraPtzConfig[slot];
-      
-      return (
+            return (
         <View
           key={`camera-slot-${slot}`}
           style={[
-  styles.cameraCard,
-  hiddenInFullscreen
-    ? {
-        position: "absolute" as const,
-        left: -10000,
-        top: 0,
-        width: cameraCardWidth,
-        opacity: 0,
-      }
-    : {
-        width: cameraCardWidth,
-      },
-]}          
+            styles.cameraCard,
+            hiddenInFullscreen
+              ? {
+                  position: "absolute" as const,
+                  left: -10000,
+                  top: 0,
+                  width: cameraCardWidth,
+                  opacity: 0,
+                }
+              : {
+                  width: cameraCardWidth,
+                },
+          ]}
         >
+      
           <View
             style={styles.cameraCardHeader}
           >
