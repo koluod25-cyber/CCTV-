@@ -197,14 +197,18 @@ function CameraVideo({
   const [errorDetail, setErrorDetail] =
     useState("");
 
+  const [playbackTime, setPlaybackTime] =
+  useState(0);
+
 const [playerGeneration, setPlayerGeneration] =
   useState(0);
 
-  useEffect(() => {
-    setLoaded(false);
-    setError(false);
-    setErrorDetail("");
-  }, [url]);
+useEffect(() => {
+  setLoaded(false);
+  setError(false);
+  setErrorDetail("");
+  setPlaybackTime(0);
+}, [url]);
 
   if (!url) {
     return (
@@ -261,6 +265,10 @@ controls={false}
 muted={muted}
 resizeMode="contain"
 paused={false}
+progressUpdateInterval={1000}
+onProgress={({ currentTime }) => {
+  setPlaybackTime(currentTime);
+}}
 playInBackground={false}
 playWhenInactive={false}
 repeat={false}
@@ -316,18 +324,15 @@ onError={(videoError) => {
         }}
       />
 
-      {!loaded && !error ? (
-        <View style={styles.overlay}>
-          <ActivityIndicator
-            size="large"
-            color="#fff"
-          />
+      {loaded && !error ? (
+  <View style={styles.liveBadge}>
+    <View style={styles.liveDot} />
 
-          <Text style={styles.overlayText}>
-            Menghubungkan ke CCTV...
-          </Text>
-        </View>
-      ) : null}
+    <Text style={styles.liveText}>
+      LIVE · {playbackTime.toFixed(1)}s
+    </Text>
+  </View>
+) : null}
 
       {error ? (
         <View style={styles.overlay}>
