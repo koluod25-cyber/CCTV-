@@ -200,6 +200,12 @@ function CameraVideo({
   const [playbackTime, setPlaybackTime] =
   useState(0);
 
+const [buffering, setBuffering] =
+  useState(false);
+
+const [isPlaying, setIsPlaying] =
+  useState(false);
+
 const [playerGeneration, setPlayerGeneration] =
   useState(0);
 
@@ -266,8 +272,17 @@ muted={muted}
 resizeMode="contain"
 paused={false}
 progressUpdateInterval={1000}
+
 onProgress={({ currentTime }) => {
   setPlaybackTime(currentTime);
+}}
+
+onBuffer={({ isBuffering }) => {
+  setBuffering(isBuffering);
+}}
+
+onPlaybackStateChanged={({ isPlaying }) => {
+  setIsPlaying(isPlaying);
 }}
 playInBackground={false}
 playWhenInactive={false}
@@ -328,9 +343,15 @@ onError={(videoError) => {
   <View style={styles.liveBadge}>
     <View style={styles.liveDot} />
 
-    <Text style={styles.liveText}>
-      LIVE · {playbackTime.toFixed(1)}s
-    </Text>
+   <Text style={styles.liveText}>
+  {buffering
+    ? "BUFFERING"
+    : isPlaying
+      ? "PLAYING"
+      : "STOP"}
+  {" · "}
+  {playbackTime.toFixed(1)}s
+</Text>
   </View>
 ) : null}
 
