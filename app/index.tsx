@@ -355,15 +355,6 @@ onError={(videoError) => {
         </View>
       ) : null}
 
-      {loaded && !error ? (
-        <View style={styles.liveBadge}>
-          <View style={styles.liveDot} />
-
-          <Text style={styles.liveText}>
-            LIVE
-          </Text>
-        </View>
-      ) : null}
     </View>
   );
 }
