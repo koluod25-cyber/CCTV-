@@ -256,7 +256,7 @@ useEffect(() => {
   <Video
   key={url}
   focusable
-  useTextureView={true}
+  useTextureView={false}
   source={{
     uri: url,
     ...(isRtsp
