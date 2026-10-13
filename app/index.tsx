@@ -219,27 +219,6 @@ useEffect(() => {
   return () => clearInterval(timer);
 }, [url]);
 
-
-  if (recoveryCountRef.current >= 3) {
-    setError(true);
-    setErrorDetail(
-      "Gambar kamera berhenti setelah 3 kali percobaan pemulihan. Periksa koneksi RTSP kamera ini."
-    );
-    setStalled(false);
-    return;
-  }
-
-  recoveryCountRef.current += 1;
-
-  lastProgressAt.current = Date.now();
-  setLoaded(false);
-  setStalled(false);
-
-  setPlayerGeneration(
-    (current) => current + 1
-  );
-}, [stalled, error]);
-  
   useEffect(() => {
     setLoaded(false);
     setError(false);
