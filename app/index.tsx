@@ -197,11 +197,6 @@ function CameraVideo({
   const [errorDetail, setErrorDetail] =
     useState("");
 
- 
-const lastProgressAt = useRef(0);
-
-const recoveryAttempts = useRef(0);
-
 const [playerGeneration, setPlayerGeneration] =
   useState(0);
 
@@ -273,14 +268,7 @@ onLoad={() => {
   setLoaded(true);
   setError(false);
   setErrorDetail("");
-  lastProgressAt.current = Date.now();
-  setStalled(false);
   onLoad?.();
-}}
-
-onProgress={() => {
-  lastProgressAt.current = Date.now();
-  setStalled(false);
 }}
 
 onError={(videoError) => {
