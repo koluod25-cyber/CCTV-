@@ -2177,89 +2177,326 @@ const renderCameraSlot =
       {talkbackBusySlot === slot
         ? "…"
         : talkbackActiveSlot === slot
-          ? "🎙️"
-          : "🎤"}
-    </Text>
-  </Pressable>
 
-  {/* Tombol Mute / Unmute per kamera */}
-  <Pressable
-    style={styles.cameraControlButton}
-    onPress={() => {
-      setCameraMuted((previous) => {
-        const next = [...previous];
-        next[slot] = !(next[slot] ?? false);
-        return next;
-      });
-    }}
-  >
-    <Text style={styles.cameraControlText}>
-      {(cameraMuted[slot] ?? false) ? "🔇" : "🔊"}
-    </Text>
-  </Pressable>
+          <View
+            style={styles.cameraCardHeader}
+          >
+            <View
+              style={styles.cameraHeaderTitleWrap}
+            >
+              <Text style={styles.cardTitle}>
+                Kamera {slot + 1}
+              </Text>
 
-</View>
-      
-    <CameraVideo
-      url={stream}
-      nativeControls={nativeControls}
-      muted={cameraMuted[slot] ?? false}
-      zoom={1}
-      onLoad={() => {
-        setCameraSlotConnected(slot, true);
-      }}
+              <View
+                style={styles.cameraStatusWrap}
+              >
+                <View
+                  style={[
+                    styles.statusDot,
+                    connected &&
+                      styles.statusDotOnline,
+                  ]}
+                />
 
-      onError={(message) => {
-        updateCameraConnected(
-          slot,
-          false,
-        );
+                <Text
+                  style={styles.cameraStatusText}
+                >
+                  {connected
+                    ? "LIVE"
+                    : stream
+                      ? "SIAP"
+                      : "KOSONG"}
+                </Text>
+              </View>
+            </View>
 
-        addHistory(
-          "error",
-          stream,
-          message,
-        );
-      }}
-      onPlaybackStateChange={(isPlaying) => {
-        if (!isPlaying) {
-          console.warn(
-            `Kamera ${slot + 1}: pemutar tidak sedang berjalan.`,
-          );
-        }
-      }}
-    />
+            {stream ? (
+              <View style={styles.cameraControlRow}>
+                {/* Tombol Fullscreen */}
+                <Pressable
+                  style={styles.cameraControlButton}
+                  onPress={async () => {
+                    const enteringFullscreen =
+                      fullscreenSlot !== slot;
 
-<PtzSwipeControl
-  enabled={Boolean(ptzConfig)}
-  onMove={(direction) =>
-    movePtz(slot, direction)
-  }
-  onStop={() => stopPtz(slot)}
-/>
-</>
-) : (
-  <View
-    style={styles.emptyCameraSlot}
-  >
-    <Text
-      style={styles.emptySlotIcon}
-    >
-      📹
-    </Text>
+                    try {
+                      if (enteringFullscreen) {
+                        setFullscreenSlot(slot);
+                        await ScreenOrientation.lockAsync(
+                          ScreenOrientation.OrientationLock.LANDSCAPE
+                        );
+                      } else {
+                        setFullscreenSlot(null);
+                        await ScreenOrientation.unlockAsync();
+                      }
+                    } catch (error) {
+                      console.warn(
+                        "Gagal mengubah orientasi layar:",
+                        error
+                      );
+                    }
+                  }}
+                >
+                  <Text style={styles.cameraControlText}>
+                    {fullscreenSlot === slot ? "⊡" : "⛶"}
+                  </Text>
+                </Pressable>
 
-    <Text
-      style={styles.emptySlotText}
-    >
-      Kamera {slot + 1}
-    </Text>
+                {/* Tombol Talkback / Mikrofon */}
+                <Pressable
+                  style={[
+                    styles.cameraControlButton,
+                    talkbackActiveSlot === slot
+                      ? { backgroundColor: "#b42318" }
+                      : null,
+                    talkbackBusySlot === slot
+                      ? { opacity: 0.6 }
+                      : null,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Talkback kamera ${slot + 1}`}
+                  disabled={talkbackBusySlot !== null}
+                  onPress={async () => {
+                    if (talkbackBusySlot !== null) return;
 
-    <Text
-      style={styles.emptySlotHint}
-    >
-      Tambahkan dari menu CCTV
-     </Text>
-  </View>
+                    setTalkbackBusySlot(slot);
+
+                    try {
+                      if (talkbackActiveSlot === slot) {
+                        const stopped = await stopTalkback();
+
+                        setTalkbackActiveSlot(null);
+                        setStatusText(
+                          stopped.message || "Talkback dihentikan."
+                        );
+
+                        Alert.alert(
+                          "Talkback",
+                          stopped.message || "Talkback dihentikan."
+                        );
+                        return;
+                      }
+
+                      const streamUrl = cameraStreams[slot] || "";
+
+                      if (!streamUrl) {
+                        Alert.alert(
+                          "Talkback",
+                          "Tambahkan alamat RTSP kamera terlebih dahulu."
+                        );
+                        return;
+                      }
+
+                      let parsedUrl: URL;
+
+                      try {
+                        parsedUrl = new URL(streamUrl);
+                      } catch {
+                        Alert.alert(
+                          "Alamat kamera tidak valid",
+                          "Periksa kembali alamat RTSP kamera."
+                        );
+                        return;
+                      }
+
+                      if (
+                        parsedUrl.protocol !== "rtsp:" &&
+                        parsedUrl.protocol !== "rtsps:"
+                      ) {
+                        Alert.alert(
+                          "Talkback",
+                          "Talkback memerlukan alamat RTSP kamera."
+                        );
+                        return;
+                      }
+
+                      const permission =
+                        await PermissionsAndroid.request(
+                          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+                          {
+                            title: "Izin mikrofon untuk Talkback",
+                            message:
+                              "Izinkan mikrofon HP untuk mengirim suara ke speaker CCTV.",
+                            buttonPositive: "Izinkan",
+                            buttonNegative: "Batal",
+                          }
+                        );
+
+                      if (
+                        permission !==
+                        PermissionsAndroid.RESULTS.GRANTED
+                      ) {
+                        Alert.alert(
+                          "Izin mikrofon diperlukan",
+                          "Izinkan akses mikrofon Android, lalu coba lagi."
+                        );
+                        return;
+                      }
+
+                      if (talkbackActiveSlot !== null) {
+                        await stopTalkback();
+                        setTalkbackActiveSlot(null);
+                      }
+
+                      const credentials =
+                        cameraTalkbackCredentials[slot];
+
+                      const username =
+                        credentials?.username?.trim() ||
+                        decodeURIComponent(
+                          parsedUrl.username || "",
+                        ).trim();
+
+                      const password =
+                        credentials?.password ??
+                        decodeURIComponent(
+                          parsedUrl.password || "",
+                        );
+
+                      if (!username || !password) {
+                        openCameraSettings(slot);
+
+                        Alert.alert(
+                          "Username dan Password Kamera",
+                          `Isi username dan password untuk Kamera ${slot + 1}, lalu simpan sebelum menekan tombol Mic kembali.`,
+                        );
+
+                        return;
+                      }
+
+                      const result = await startTalkback(
+                        parsedUrl.hostname,
+                        34567,
+                        username,
+                        password
+                      );
+
+                      if (result.success) {
+                        setTalkbackActiveSlot(slot);
+                      }
+
+                      setStatusText(result.message);
+
+                      Alert.alert(
+                        result.success
+                          ? "Talkback aktif"
+                          : "Talkback gagal",
+                        result.message
+                      );
+                    } catch (error) {
+                      const message = formatError(error);
+
+                      setTalkbackActiveSlot(null);
+                      setStatusText(
+                        `Talkback kamera ${slot + 1}: ${message}`
+                      );
+
+                      Alert.alert("Talkback gagal", message);
+                    } finally {
+                      setTalkbackBusySlot(null);
+                    }
+                  }}
+                >
+                  <Text style={styles.cameraControlText}>
+                    {talkbackBusySlot === slot
+                      ? "…"
+                      : talkbackActiveSlot === slot
+                        ? "🎙️"
+                        : "🎤"}
+                  </Text>
+                </Pressable>
+
+                {/* Tombol Mute / Unmute per kamera */}
+                <Pressable
+                  style={styles.cameraControlButton}
+                  onPress={() => {
+                    setCameraMuted((previous) => {
+                      const next = [...previous];
+                      next[slot] = !(next[slot] ?? false);
+                      return next;
+                    });
+                  }}
+                >
+                  <Text style={styles.cameraControlText}>
+                    {(cameraMuted[slot] ?? false) ? "🔇" : "🔊"}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
+          </View>
+          <View
+            style={[
+              styles.cameraVideoArea,
+              {
+                aspectRatio:
+                  cameraAspectRatio,
+              },
+            ]}
+          >
+            {stream ? (
+              <>
+                <CameraVideo
+                  url={stream}
+                  nativeControls={nativeControls}
+                  muted={cameraMuted[slot] ?? false}
+                  zoom={1}
+                  onLoad={() => {
+                    setCameraSlotConnected(slot, true);
+                  }}
+                  onError={(message) => {
+                    updateCameraConnected(
+                      slot,
+                      false,
+                    );
+
+                    addHistory(
+                      "error",
+                      stream,
+                      message,
+                    );
+                  }}
+                  onPlaybackStateChange={(isPlaying) => {
+                    if (!isPlaying) {
+                      console.warn(
+                        `Kamera ${slot + 1}: pemutar tidak sedang berjalan.`,
+                      );
+                    }
+                  }}
+                />
+
+                <PtzSwipeControl
+                  enabled={Boolean(ptzConfig)}
+                  onMove={(direction) =>
+                    movePtz(slot, direction)
+                  }
+                  onStop={() => stopPtz(slot)}
+                />
+              </>
+            ) : (
+              <View
+                style={styles.emptyCameraSlot}
+              >
+                <Text
+                  style={styles.emptySlotIcon}
+                >
+                  📹
+                </Text>
+
+                <Text
+                  style={styles.emptySlotText}
+                >
+                  Kamera {slot + 1}
+                </Text>
+
+                <Text
+                  style={styles.emptySlotHint}
+                >
+                  Tambahkan dari menu CCTV
+                </Text>
+              </View>
+            )}
+          </View>                 
 )}
 
           </View>
