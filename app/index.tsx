@@ -2102,8 +2102,6 @@ const renderCameraSlot =
         ) {
           Alert.alert(
 
-          <View
-            style={styles.cameraCardHeader}
           >
             <View
               style={styles.cameraHeaderTitleWrap}
