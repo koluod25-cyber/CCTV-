@@ -2004,10 +2004,9 @@ const renderCameraSlot =
               >
                 <Text style={styles.cameraControlText}>⚙</Text>
               </Pressable>
-            </View>
-          </View>
-          
+              
               {stream ? (
+          
                 <Pressable
                   style={[
                     styles.cameraControlButton,
@@ -2164,14 +2163,7 @@ const renderCameraSlot =
                   </Text>
                 </Pressable>
               ) : null}
-          
-          <View
-            style={[
-              styles.cameraVideoArea,
-              {
-                aspectRatio:
-                  cameraAspectRatio,
-              },
+                            },
             ]}
           >
 
