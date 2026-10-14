@@ -4080,7 +4080,6 @@ cameraControlText: {
   fontWeight: "700",
   textAlign: "center",
 },
-});
 
 cameraHeaderControls: {
   flexDirection: "row",
@@ -4089,3 +4088,6 @@ cameraHeaderControls: {
   gap: 4,
   marginLeft: 8,
 },
+});
+
+
