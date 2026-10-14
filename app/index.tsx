@@ -4081,3 +4081,11 @@ cameraControlText: {
   textAlign: "center",
 },
 });
+
+cameraHeaderControls: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: 4,
+  marginLeft: 8,
+},
