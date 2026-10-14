@@ -1982,6 +1982,223 @@ const renderCameraSlot =
             ]}
           >
 
+<View style={styles.cameraControlRow}>
+
+  {/* Tombol Full Screen */}
+  <Pressable
+    style={styles.cameraControlButton}
+    onPress={async () => {
+      const enteringFullscreen =
+        fullscreenSlot !== slot;
+
+      try {
+        if (enteringFullscreen) {
+          setFullscreenSlot(slot);
+          await ScreenOrientation.lockAsync(
+            ScreenOrientation.OrientationLock.LANDSCAPE
+          );
+        } else {
+          setFullscreenSlot(null);
+          await ScreenOrientation.unlockAsync();
+        }
+      } catch (error) {
+        console.warn(
+          "Gagal mengubah orientasi layar:",
+          error
+        );
+      }
+    }}
+  >
+    <Text style={styles.cameraControlText}>
+      {fullscreenSlot === slot ? "⊡" : "⛶"}
+    </Text>
+  </Pressable>
+
+  {/* Tombol Talkback per kamera */}
+  <Pressable
+    style={[
+      styles.cameraControlButton,
+      talkbackActiveSlot === slot
+        ? { backgroundColor: "#b42318" }
+        : null,
+      talkbackBusySlot === slot
+        ? { opacity: 0.6 }
+        : null,
+    ]}
+    accessibilityRole="button"
+    accessibilityLabel={`Talkback kamera ${slot + 1}`}
+    disabled={talkbackBusySlot !== null}
+    onPress={async () => {
+      if (talkbackBusySlot !== null) return;
+
+      setTalkbackBusySlot(slot);
+
+      try {
+        // Jika kamera ini sedang aktif, hentikan Talkback.
+        if (talkbackActiveSlot === slot) {
+          const stopped = await stopTalkback();
+
+          setTalkbackActiveSlot(null);
+          setStatusText(
+            stopped.message || "Talkback dihentikan."
+          );
+
+          Alert.alert(
+            "Talkback",
+            stopped.message || "Talkback dihentikan."
+          );
+          return;
+        }
+
+        const streamUrl = cameraStreams[slot] || "";
+
+        if (!streamUrl) {
+          Alert.alert(
+            "Talkback",
+            "Tambahkan alamat RTSP kamera terlebih dahulu."
+          );
+          return;
+        }
+
+        let parsedUrl: URL;
+
+        try {
+          parsedUrl = new URL(streamUrl);
+        } catch {
+          Alert.alert(
+            "Alamat kamera tidak valid",
+            "Periksa kembali alamat RTSP kamera."
+          );
+          return;
+        }
+
+        if (
+          parsedUrl.protocol !== "rtsp:" &&
+          parsedUrl.protocol !== "rtsps:"
+        ) {
+          Alert.alert(
+            "Talkback",
+            "Talkback memerlukan alamat RTSP kamera."
+          );
+          return;
+        }
+
+        const permission =
+          await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+            {
+              title: "Izin mikrofon untuk Talkback",
+              message:
+                "Izinkan mikrofon HP untuk mengirim suara ke speaker CCTV.",
+              buttonPositive: "Izinkan",
+              buttonNegative: "Batal",
+            }
+          );
+
+        if (
+          permission !==
+          PermissionsAndroid.RESULTS.GRANTED
+        ) {
+          Alert.alert(
+            "Izin mikrofon diperlukan",
+            "Izinkan akses mikrofon Android, lalu coba lagi."
+          );
+          return;
+        }
+
+        // Modul native hanya menangani satu sesi Talkback.
+        if (talkbackActiveSlot !== null) {
+          await stopTalkback();
+          setTalkbackActiveSlot(null);
+        }
+
+        const credentials =
+          cameraTalkbackCredentials[slot];
+
+        const username =
+          credentials?.username?.trim() ||
+          decodeURIComponent(
+            parsedUrl.username || "",
+          ).trim();
+
+        const password =
+          credentials?.password ??
+          decodeURIComponent(
+            parsedUrl.password || "",
+          );
+
+        if (!username || !password) {
+          openCameraSettings(slot);
+
+          Alert.alert(
+            "Username dan Password Kamera",
+            `Isi username dan password untuk Kamera ${slot + 1}, lalu simpan sebelum menekan tombol Mic kembali.`,
+          );
+
+          return;
+        }
+
+        // Port DVRIP yang digunakan modul native.
+        const result = await startTalkback(
+          parsedUrl.hostname,
+          34567,
+          username,
+          password
+        );
+
+        if (result.success) {
+          setTalkbackActiveSlot(slot);
+        }
+
+        setStatusText(result.message);
+
+        Alert.alert(
+          result.success
+            ? "Talkback aktif"
+            : "Talkback gagal",
+          result.message
+        );
+      } catch (error) {
+        const message = formatError(error);
+
+        setTalkbackActiveSlot(null);
+        setStatusText(
+          `Talkback kamera ${slot + 1}: ${message}`
+        );
+
+        Alert.alert("Talkback gagal", message);
+      } finally {
+        setTalkbackBusySlot(null);
+      }
+    }}
+  >
+    <Text style={styles.cameraControlText}>
+      {talkbackBusySlot === slot
+        ? "…"
+        : talkbackActiveSlot === slot
+          ? "🎙️"
+          : "🎤"}
+    </Text>
+  </Pressable>
+
+  {/* Tombol Mute / Unmute per kamera */}
+  <Pressable
+    style={styles.cameraControlButton}
+    onPress={() => {
+      setCameraMuted((previous) => {
+        const next = [...previous];
+        next[slot] = !(next[slot] ?? false);
+        return next;
+      });
+    }}
+  >
+    <Text style={styles.cameraControlText}>
+      {(cameraMuted[slot] ?? false) ? "🔇" : "🔊"}
+    </Text>
+  </Pressable>
+
+</View>
+      
 {stream ? (
   <>
 
