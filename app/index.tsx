@@ -1927,39 +1927,20 @@ const renderCameraSlot =
                 },
           ]}
         >
-
-          <View
-            style={styles.cameraCardHeader}
-          >
-            <View
-              style={
-                styles.cameraHeaderTitleWrap
-              }
-            >
-              <Text
-                style={styles.cardTitle}
-              >
+          <View style={styles.cameraCardHeader}>
+            <View style={styles.cameraHeaderTitleWrap}>
+              <Text style={styles.cardTitle}>
                 Kamera {slot + 1}
               </Text>
 
-              <View
-                style={
-                  styles.cameraStatusWrap
-                }
-              >
+              <View style={styles.cameraStatusWrap}>
                 <View
                   style={[
                     styles.statusDot,
-                    connected &&
-                      styles.statusDotOnline,
+                    connected && styles.statusDotOnline,
                   ]}
                 />
-
-                <Text
-                  style={
-                    styles.cameraStatusText
-                  }
-                >
+                <Text style={styles.cameraStatusText}>
                   {connected
                     ? "LIVE"
                     : stream
@@ -1968,8 +1949,63 @@ const renderCameraSlot =
                 </Text>
               </View>
             </View>
-          </View>
 
+            <View style={styles.cameraHeaderControls}>
+              <Pressable
+                style={styles.cameraControlButton}
+                accessibilityLabel={`Full screen kamera ${slot + 1}`}
+                onPress={async () => {
+                  const enteringFullscreen =
+                    fullscreenSlot !== slot;
+
+                  try {
+                    if (enteringFullscreen) {
+                      setFullscreenSlot(slot);
+                      await ScreenOrientation.lockAsync(
+                        ScreenOrientation.OrientationLock.LANDSCAPE
+                      );
+                    } else {
+                      setFullscreenSlot(null);
+                      await ScreenOrientation.unlockAsync();
+                    }
+                  } catch (error) {
+                    console.warn(
+                      "Gagal mengubah orientasi layar:",
+                      error
+                    );
+                  }
+                }}
+              >
+                <Text style={styles.cameraControlText}>
+                  {fullscreenSlot === slot ? "⊡" : "⛶"}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={styles.cameraControlButton}
+                accessibilityLabel={`Mute kamera ${slot + 1}`}
+                onPress={() => {
+                  setCameraMuted((previous) => {
+                    const next = [...previous];
+                    next[slot] = !(next[slot] ?? false);
+                    return next;
+                  });
+                }}
+              >
+                <Text style={styles.cameraControlText}>
+                  {(cameraMuted[slot] ?? false) ? "🔇" : "🔊"}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={styles.cameraControlButton}
+                accessibilityLabel={`Pengaturan kamera ${slot + 1}`}
+                onPress={() => openCameraSettings(slot)}
+              >
+                <Text style={styles.cameraControlText}>⚙</Text>
+              </Pressable>
+            </View>
+          
           <View
             style={[
               styles.cameraVideoArea,
@@ -1983,36 +2019,6 @@ const renderCameraSlot =
 {stream ? (
 <>
 <View style={styles.cameraControlRow}>
-  {/* Tombol Full Screen */}
-  <Pressable
-    style={styles.cameraControlButton}
-    onPress={async () => {
-      const enteringFullscreen =
-        fullscreenSlot !== slot;
-
-      try {
-        if (enteringFullscreen) {
-          setFullscreenSlot(slot);
-          await ScreenOrientation.lockAsync(
-            ScreenOrientation.OrientationLock.LANDSCAPE
-          );
-        } else {
-          setFullscreenSlot(null);
-          await ScreenOrientation.unlockAsync();
-        }
-      } catch (error) {
-        console.warn(
-          "Gagal mengubah orientasi layar:",
-          error
-        );
-      }
-    }}
-  >
-    <Text style={styles.cameraControlText}>
-      {fullscreenSlot === slot ? "⊡" : "⛶"}
-    </Text>
-  </Pressable>
-
   {/* Tombol Talkback per kamera */}
   <Pressable
     style={[
@@ -2033,7 +2039,6 @@ const renderCameraSlot =
       setTalkbackBusySlot(slot);
 
       try {
-        // Jika kamera ini sedang aktif, hentikan Talkback.
         if (talkbackActiveSlot === slot) {
           const stopped = await stopTalkback();
 
@@ -2105,7 +2110,6 @@ const renderCameraSlot =
           return;
         }
 
-        // Modul native hanya menangani satu sesi Talkback.
         if (talkbackActiveSlot !== null) {
           await stopTalkback();
           setTalkbackActiveSlot(null);
@@ -2137,7 +2141,6 @@ const renderCameraSlot =
           return;
         }
 
-        // Port DVRIP yang digunakan modul native.
         const result = await startTalkback(
           parsedUrl.hostname,
           34567,
@@ -2179,24 +2182,9 @@ const renderCameraSlot =
           : "🎤"}
     </Text>
   </Pressable>
-    {/* Tombol Mute / Unmute per kamera */}
-  <Pressable
-    style={styles.cameraControlButton}
-    onPress={() => {
-      setCameraMuted((previous) => {
-        const next = [...previous];
-        next[slot] = !(next[slot] ?? false);
-        return next;
-      });
-    }}
-  >
-    <Text style={styles.cameraControlText}>
-      {(cameraMuted[slot] ?? false) ? "🔇" : "🔊"}
-    </Text>
-  </Pressable>
-
 </View>
-
+  
+</View>
     <CameraVideo
       url={stream}
       nativeControls={nativeControls}
