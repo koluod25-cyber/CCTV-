@@ -2101,82 +2101,6 @@ const renderCameraSlot =
           PermissionsAndroid.RESULTS.GRANTED
         ) {
           Alert.alert(
-            "Izin mikrofon diperlukan",
-            "Izinkan akses mikrofon Android, lalu coba lagi."
-          );
-          return;
-        }
-
-        // Modul native hanya menangani satu sesi Talkback.
-        if (talkbackActiveSlot !== null) {
-          await stopTalkback();
-          setTalkbackActiveSlot(null);
-        }
-
-        const credentials =
-          cameraTalkbackCredentials[slot];
-
-        const username =
-          credentials?.username?.trim() ||
-          decodeURIComponent(
-            parsedUrl.username || "",
-          ).trim();
-
-        const password =
-          credentials?.password ??
-          decodeURIComponent(
-            parsedUrl.password || "",
-          );
-
-        if (!username || !password) {
-          openCameraSettings(slot);
-
-          Alert.alert(
-            "Username dan Password Kamera",
-            `Isi username dan password untuk Kamera ${slot + 1}, lalu simpan sebelum menekan tombol Mic kembali.`,
-          );
-
-          return;
-        }
-
-        // Port DVRIP yang digunakan modul native.
-        const result = await startTalkback(
-          parsedUrl.hostname,
-          34567,
-          username,
-          password
-        );
-
-        if (result.success) {
-          setTalkbackActiveSlot(slot);
-        }
-
-        setStatusText(result.message);
-
-        Alert.alert(
-          result.success
-            ? "Talkback aktif"
-            : "Talkback gagal",
-          result.message
-        );
-      } catch (error) {
-        const message = formatError(error);
-
-        setTalkbackActiveSlot(null);
-        setStatusText(
-          `Talkback kamera ${slot + 1}: ${message}`
-        );
-
-        Alert.alert("Talkback gagal", message);
-      } finally {
-        setTalkbackBusySlot(null);
-      }
-    }}
-  >
-    <Text style={styles.cameraControlText}>
-      {talkbackBusySlot === slot
-        ? "…"
-        : talkbackActiveSlot === slot
 
           <View
             style={styles.cameraCardHeader}
@@ -2496,11 +2420,8 @@ const renderCameraSlot =
                 </Text>
               </View>
             )}
+            
           </View>                 
-)}
-
-          </View>
-
           {stream ? (
             <View
               style={styles.cameraMeta}
