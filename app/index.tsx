@@ -1983,6 +1983,8 @@ const renderCameraSlot =
           >
 
 {stream ? (
+<>
+<View style={styles.cameraControlRow}>
   
 <View style={styles.cameraControlRow}>
 
@@ -2238,12 +2240,8 @@ const renderCameraSlot =
   }
   onStop={() => stopPtz(slot)}
 />
-
-
 </>
-) : 
-
-(
+) : (
   <View
     style={styles.emptyCameraSlot}
   >
