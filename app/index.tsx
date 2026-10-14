@@ -1982,6 +1982,8 @@ const renderCameraSlot =
             ]}
           >
 
+{stream ? (
+  
 <View style={styles.cameraControlRow}>
 
   {/* Tombol Full Screen */}
@@ -2199,9 +2201,6 @@ const renderCameraSlot =
 
 </View>
       
-{stream ? (
-  <>
-
     <CameraVideo
       url={stream}
       nativeControls={nativeControls}
