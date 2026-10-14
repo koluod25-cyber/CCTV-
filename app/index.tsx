@@ -2184,7 +2184,6 @@ const renderCameraSlot =
   </Pressable>
 </View>
   
-</View>
     <CameraVideo
       url={stream}
       nativeControls={nativeControls}
