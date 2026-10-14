@@ -248,11 +248,13 @@ useEffect(() => {
 
   return (
     <View style={styles.videoBox}>
-  <Video
 
-  key={url}
-  focusable
-  useTextureView={true}
+  <Video
+    key={url}
+    focusable
+    disableFocus={true}
+    useTextureView={true}
+
   source={{
     uri: url,
     ...(isRtsp
