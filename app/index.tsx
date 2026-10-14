@@ -182,13 +182,16 @@ function CameraVideo({
   onError,
   onPlaybackStateChange,
 }: {
+ 
   url: string;
   nativeControls: boolean;
   muted: boolean;
   zoom: number;
   onLoad?: () => void;
   onError?: (message: string) => void;
+  onPlaybackStateChange?: (isPlaying: boolean) => void;
 }) {
+
   const [loaded, setLoaded] =
     useState(false);
 
