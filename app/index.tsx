@@ -180,6 +180,7 @@ function CameraVideo({
   zoom,
   onLoad,
   onError,
+  onPlaybackStateChange,
 }: {
   url: string;
   nativeControls: boolean;
@@ -282,8 +283,10 @@ onBuffer={({ isBuffering }) => {
 }}
 
 onPlaybackStateChanged={({ isPlaying }) => {
-  setIsPlaying(isPlaying);
+setIsPlaying(isPlaying);
+onPlaybackStateChange?.(isPlaying);
 }}
+
 playInBackground={false}
 playWhenInactive={false}
 repeat={false}
@@ -1985,6 +1988,7 @@ const renderCameraSlot =
       onLoad={() => {
         setCameraSlotConnected(slot, true);
       }}
+
       onError={(message) => {
         updateCameraConnected(
           slot,
@@ -1996,6 +2000,13 @@ const renderCameraSlot =
           stream,
           message,
         );
+      }}
+      onPlaybackStateChange={(isPlaying) => {
+        if (!isPlaying) {
+          console.warn(
+            `Kamera ${slot + 1}: pemutar tidak sedang berjalan.`,
+          );
+        }
       }}
     />
 
