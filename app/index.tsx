@@ -2081,26 +2081,6 @@ const renderCameraSlot =
             "Talkback",
             "Talkback memerlukan alamat RTSP kamera."
           );
-          return;
-        }
-
-        const permission =
-          await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-            {
-              title: "Izin mikrofon untuk Talkback",
-              message:
-                "Izinkan mikrofon HP untuk mengirim suara ke speaker CCTV.",
-              buttonPositive: "Izinkan",
-              buttonNegative: "Batal",
-            }
-          );
-
-        if (
-          permission !==
-          PermissionsAndroid.RESULTS.GRANTED
-        ) {
-          Alert.alert(
 
           >
             <View
