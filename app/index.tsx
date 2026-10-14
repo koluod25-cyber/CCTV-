@@ -4067,35 +4067,30 @@ settingsSaveButton: {
   tabTextActive: {
     color: "#ffffff",
   },
+ 
+cameraControlRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: 4,
+  marginLeft: 6,
+},
 
-  
-  cameraControlRow: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    zIndex: 20,
-    elevation: 20,
-  },
+cameraControlButton: {
+  width: 30,
+  height: 30,
+  borderRadius: 6,
+  backgroundColor: "#1b2938",
+  borderWidth: 1,
+  borderColor: "#526273",
+  alignItems: "center",
+  justifyContent: "center",
+},
 
-  cameraControlButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 8,
-    backgroundColor: "rgba(15, 25, 35, 0.9)",
-    borderWidth: 1,
-    borderColor: "#526273",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  cameraControlText: {
-    color: "#ffffff",
-    fontSize: 20,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-
+cameraControlText: {
+  color: "#ffffff",
+  fontSize: 17,
+  fontWeight: "700",
+  textAlign: "center",
+},
 });
