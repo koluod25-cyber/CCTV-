@@ -1985,9 +1985,6 @@ const renderCameraSlot =
 {stream ? (
 <>
 <View style={styles.cameraControlRow}>
-  
-<View style={styles.cameraControlRow}>
-
   {/* Tombol Full Screen */}
   <Pressable
     style={styles.cameraControlButton}
