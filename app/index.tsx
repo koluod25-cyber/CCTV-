@@ -2005,6 +2005,7 @@ const renderCameraSlot =
                 <Text style={styles.cameraControlText}>⚙</Text>
               </Pressable>
             </View>
+          </View>
           
           <View
             style={[
