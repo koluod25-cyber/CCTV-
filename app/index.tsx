@@ -351,18 +351,6 @@ onError={(videoError) => {
   <View style={styles.liveBadge}>
     <View style={styles.liveDot} />
 
-   <Text style={styles.liveText}>
-  {buffering
-    ? "BUFFERING"
-    : isPlaying
-      ? "PLAYING"
-      : "STOP"}
-  {" · "}
-  {playbackTime.toFixed(1)}s
-</Text>
-  </View>
-) : null}
-
       {error ? (
         <View style={styles.overlay}>
           <Text style={styles.errorIcon}>
