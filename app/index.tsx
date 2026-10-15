@@ -3531,19 +3531,7 @@ const styles = StyleSheet.create({
     fontSize: 34,
     marginBottom: 8,
   },
-
-  liveBadge: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 6,
-    backgroundColor: "rgba(0,0,0,0.7)",
-  },
-
+  
   liveDot: {
     width: 7,
     height: 7,
