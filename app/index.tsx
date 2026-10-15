@@ -347,10 +347,6 @@ onError={(videoError) => {
         }}
       />
 
-      {loaded && !error ? (
-  <View style={styles.liveBadge}>
-    <View style={styles.liveDot} />
-
       {error ? (
         <View style={styles.overlay}>
           <Text style={styles.errorIcon}>
