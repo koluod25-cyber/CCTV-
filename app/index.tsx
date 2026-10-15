@@ -2522,8 +2522,44 @@ cameras.map((camera) => {
             );
           },
         )}
+        
               </ScrollView>
-{cameraSettingsSlot !== null ? (
+      <Pressable
+        style={[
+          styles.secondaryButton,
+          connecting === camera.id &&
+            styles.buttonDisabled,
+        ]}
+        disabled={
+          connecting === camera.id
+        }
+        onPress={() =>
+          connectCamera(camera)
+        }
+      >
+        {connecting === camera.id ? (
+          <ActivityIndicator
+            size="small"
+          />
+        ) : (
+          <Text
+            style={
+              styles.secondaryButtonText
+            }
+          >
+            Hubungkan Otomatis
+          </Text>
+        )}
+      </Pressable>
+    </View>
+  );
+})
+        )}
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>
+          {cameraSettingsSlot !== null ? (
   <View style={styles.card}>
     <Text style={styles.sectionTitle}>
       Pengaturan Kamera {cameraSettingsSlot + 1}
@@ -2631,42 +2667,6 @@ cameras.map((camera) => {
     </Pressable>
   </View>
 ) : null}
-
-      <Pressable
-        style={[
-          styles.secondaryButton,
-          connecting === camera.id &&
-            styles.buttonDisabled,
-        ]}
-        disabled={
-          connecting === camera.id
-        }
-        onPress={() =>
-          connectCamera(camera)
-        }
-      >
-        {connecting === camera.id ? (
-          <ActivityIndicator
-            size="small"
-          />
-        ) : (
-          <Text
-            style={
-              styles.secondaryButtonText
-            }
-          >
-            Hubungkan Otomatis
-          </Text>
-        )}
-      </Pressable>
-    </View>
-  );
-})
-        )}
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>
           Tambah Stream Manual
         </Text>
 
