@@ -3540,12 +3540,6 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
 
-  liveText: {
-    color: "#ffffff",
-    fontSize: 10,
-    fontWeight: "800",
-  },
-
   cameraGrid: {
     marginBottom: 12,
   },
