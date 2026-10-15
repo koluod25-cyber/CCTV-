@@ -609,6 +609,7 @@ useState<number | null>(null);
 const [cameraStreams, setCameraStreams] = useState<string[]>([]);
 const [cameraIds, setCameraIds] = useState<string[]>([]);
 const [cameraConnected, setCameraConnected] = useState<boolean[]>([]);
+const [cameraPlaying, setCameraPlaying] = useState<boolean[]>([]);
 const [cameraMuted, setCameraMuted] = useState<boolean[]>([]);
 const [
   cameraTalkbackCredentials,
@@ -1947,6 +1948,20 @@ const renderCameraSlot =
 </View>
 </View>
 
+<View style={styles.cameraPlayingStatus}>
+  <View
+    style={[
+      styles.liveDot,
+      !cameraPlaying[slot] && {
+        backgroundColor: "#718092",
+      },
+    ]}
+  />
+  <Text style={styles.cameraPlayingText}>
+    {cameraPlaying[slot] ? "PLAYING" : "STOP"}
+  </Text>
+</View>
+            
 <View style={styles.cameraHeaderControls}>
   <Pressable
     style={styles.cameraControlButton}
@@ -2166,12 +2181,18 @@ const renderCameraSlot =
           addHistory("error", stream, message);
         }}
         onPlaybackStateChange={(isPlaying) => {
-          if (!isPlaying) {
-            console.warn(
-              `Kamera ${slot + 1}: pemutar tidak sedang berjalan.`
-            );
-          }
-        }}
+  setCameraPlaying((previous) => {
+    const next = [...previous];
+    next[slot] = isPlaying;
+    return next;
+  });
+
+  if (!isPlaying) {
+    console.warn(
+      `Kamera ${slot + 1}: pemutar tidak sedang berjalan.`
+    );
+  }
+}}
       />
 
       <PtzSwipeControl
@@ -4016,6 +4037,18 @@ cameraHeaderControls: {
   justifyContent: "flex-end",
   gap: 4,
   marginLeft: 8,
+},
+cameraPlayingStatus: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 4,
+  marginHorizontal: 6,
+},
+
+cameraPlayingText: {
+  color: "#9ba8b6",
+  fontSize: 10,
+  fontWeight: "700",
 },
 });
 
