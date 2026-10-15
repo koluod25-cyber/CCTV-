@@ -3277,16 +3277,19 @@ const styles = StyleSheet.create({
   main: {
     flex: 1,
   },
-    header: {
-  minHeight: 58,
-  paddingHorizontal: 8,
-  paddingVertical: 6,
-  backgroundColor: "#111923",
-  flexDirection: "row",
-  alignItems: "center",
-  borderBottomWidth: 1,
-  borderBottomColor: "#263341",
-},
+
+  header: {
+    minHeight: 58,
+    width: "100%",
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    backgroundColor: "#111923",
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#263341",
+    overflow: "hidden",
+  },
 
   marqueeContainer: {
   ...StyleSheet.absoluteFillObject,
