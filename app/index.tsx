@@ -1158,8 +1158,8 @@ const openCameraSettings = useCallback(
       config?.credentials.password || "",
     );
 
-    setActiveTab("settings");
-  },
+    setActiveTab("cctv");
+    
   [cameraPtzConfig, cameraStreams],
 );
 
