@@ -318,11 +318,7 @@ if (!discovered.searchUrl) {
             </Pressable>
           ) : null}
         </View>
-      ))}
-                  </Text>
-                </Pressable>
-              ) : null}           
-                style={[styles.primaryButton, busy && styles.disabled]}
+                                       style={[styles.primaryButton, busy && styles.disabled]}
                 onPress={() => playRecording(recording)}
                 disabled={busy}
               >
