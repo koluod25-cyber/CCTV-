@@ -157,7 +157,7 @@ when (ret) {
           .put("OPTalk", JSONObject().put("Action", "Start"))
           .put("SessionID", String.format(Locale.ROOT, "0x%08x", sessionId))
         writeJson(output, TALK_START, sessionId, nextSequence(), startJson)
-        
+            
         var startFrame = readFrame(input)
         var audioPacketsSkipped = 0
 
@@ -188,23 +188,7 @@ when (ret) {
               "(Ret=${startJsonResponse.optInt("Ret", -1)})."
           )
         }
-        
-
-          error(
-            "Respons Start Talkback tidak dapat dibaca. " +
-              "ID pesan kamera=${startFrame.messageId}; " +
-              "data awal (hex)=${payloadHex.ifBlank { "(kosong)" }}. " +
-              "Detail: ${e.message}"
-          )
-        }
-
-        if (startJsonResponse.optInt("Ret", -1) != 100) {
-          error(
-            "Kamera menolak Start Talkback " +
-              "(Ret=${startJsonResponse.optInt("Ret", -1)})."
-          )
-        }
-        
+     
         val minBuffer = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         if (minBuffer <= 0) error("Perangkat Android tidak mendukung perekaman audio 8 kHz.")
         val recorder = AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, maxOf(minBuffer, 4096))
