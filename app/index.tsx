@@ -2638,6 +2638,7 @@ cameras.map((camera) => {
     <Pressable
       style={styles.secondaryButton}
       
+
 onPress={() => {
   if (cameraSettingsSlot === null) {
     return;
@@ -2646,11 +2647,23 @@ onPress={() => {
   const slot = cameraSettingsSlot;
   const username = cameraSettingsUsername.trim();
   const password = cameraSettingsPassword;
+  const deviceServiceUrl =
+    cameraSettingsServiceUrl.trim();
+  const profileToken =
+    cameraSettingsProfileToken.trim();
 
   if (!username || !password) {
     Alert.alert(
       "Kredensial belum lengkap",
-      "Isi username dan password kamera terlebih dahulu.",
+      "Isi username dan password kamera.",
+    );
+    return;
+  }
+
+  if (!deviceServiceUrl) {
+    Alert.alert(
+      "Alamat ONVIF kosong",
+      "Isi ONVIF Device Service URL terlebih dahulu.",
     );
     return;
   }
@@ -2662,42 +2675,34 @@ onPress={() => {
 
   setCameraTalkbackCredentials((current) => {
     const next = [...current];
-
-    next[slot] = {
-      username,
-      password,
-    };
-
+    next[slot] = { username, password };
     return next;
   });
 
   setCameraPtzConfig((current) => {
     const next = [...current];
-    const config = next[slot];
 
-    if (config) {
-      next[slot] = {
-        ...config,
-        credentials: {
-          username,
-          password,
-        },
-      };
-    }
+    next[slot] = {
+      deviceServiceUrl,
+      profileToken,
+      credentials: {
+        username,
+        password,
+      },
+    };
 
     return next;
   });
 
   Alert.alert(
-    "Kredensial disimpan",
-    "Username dan password kamera disimpan. Buka Playback dan coba Cari Rekaman kembali.",
+    "Konfigurasi disimpan",
+    `Konfigurasi ONVIF dan kredensial Kamera ${
+      slot + 1
+    } sudah diperbarui. Buka Playback dan coba Cari Rekaman kembali.`,
   );
 }}
-      
-    >
-      <Text style={styles.secondaryButtonText}>
-        Simpan Kredensial Talkback
-      </Text>
+
+
     </Pressable>
   </View>
 ) : null}
