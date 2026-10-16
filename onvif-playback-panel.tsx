@@ -114,8 +114,6 @@ export default function OnvifPlaybackPanel({
   }
 
   async function playRecording(recording: OnvifRecording) {
-
-  async function playRecording(recording: OnvifRecording) {
     if (!selectedCamera || !services?.replayUrl) {
       setStatus("Layanan Replay ONVIF belum tersedia untuk kamera ini.");
       return;
