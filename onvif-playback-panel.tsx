@@ -275,8 +275,7 @@ if (!discovered.searchUrl) {
         <Text style={styles.statusText}>{status}</Text>
       </View>
 
-      
-      {recordings.length > 0 ? (
+{recordings.length > 0 ? (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Rekaman Tersedia</Text>
 
@@ -319,7 +318,11 @@ if (!discovered.searchUrl) {
                   </Text>
                 </Pressable>
               ) : null}
-           
+            </View>
+          ))}
+        </View>
+      ) : null}
+              
       {playbackUri ? (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Pemutar Rekaman</Text>
