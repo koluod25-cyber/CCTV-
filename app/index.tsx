@@ -2529,7 +2529,8 @@ const renderCameraSlot =
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>
-          {cameraSettingsSlot !== null ? (
+    
+{cameraSettingsSlot !== null ? (
   <View style={styles.card}>
     <Text style={styles.sectionTitle}>
       Pengaturan Kamera {cameraSettingsSlot + 1}
@@ -2580,11 +2581,13 @@ const renderCameraSlot =
       value={cameraSettingsUsername}
       onChangeText={setCameraSettingsUsername}
       autoCapitalize="none"
+      autoCorrect={false}
       placeholder="Username"
       placeholderTextColor="#7b8794"
       style={styles.input}
     />
-        <Text style={styles.fieldLabel}>
+
+    <Text style={styles.fieldLabel}>
       Password ONVIF
     </Text>
     <TextInput
@@ -2597,80 +2600,80 @@ const renderCameraSlot =
     />
 
     <Text style={styles.saveHint}>
-      Simpan URL dan konfigurasi PTZ untuk channel ini saja.
+      Simpan URL, konfigurasi ONVIF, dan kredensial untuk channel ini.
     </Text>
 
     <Pressable
       style={styles.secondaryButton}
-      
+      onPress={() => {
+        if (cameraSettingsSlot === null) {
+          return;
+        }
 
-onPress={() => {
-  if (cameraSettingsSlot === null) {
-    return;
-  }
+        const slot = cameraSettingsSlot;
+        const username = cameraSettingsUsername.trim();
+        const password = cameraSettingsPassword;
+        const deviceServiceUrl =
+          cameraSettingsServiceUrl.trim();
+        const profileToken =
+          cameraSettingsProfileToken.trim();
 
-  const slot = cameraSettingsSlot;
-  const username = cameraSettingsUsername.trim();
-  const password = cameraSettingsPassword;
-  const deviceServiceUrl =
-    cameraSettingsServiceUrl.trim();
-  const profileToken =
-    cameraSettingsProfileToken.trim();
+        if (!username || !password) {
+          Alert.alert(
+            "Kredensial belum lengkap",
+            "Isi username dan password kamera.",
+          );
+          return;
+        }
 
-  if (!username || !password) {
-    Alert.alert(
-      "Kredensial belum lengkap",
-      "Isi username dan password kamera.",
-    );
-    return;
-  }
+        if (!deviceServiceUrl) {
+          Alert.alert(
+            "Alamat ONVIF kosong",
+            "Isi ONVIF Device Service URL terlebih dahulu.",
+          );
+          return;
+        }
 
-  if (!deviceServiceUrl) {
-    Alert.alert(
-      "Alamat ONVIF kosong",
-      "Isi ONVIF Device Service URL terlebih dahulu.",
-    );
-    return;
-  }
+        setCameraStream(
+          slot,
+          cameraSettingsUrl.trim(),
+        );
 
-  setCameraStream(
-    slot,
-    cameraSettingsUrl.trim(),
-  );
+        setCameraTalkbackCredentials((current) => {
+          const next = [...current];
+          next[slot] = { username, password };
+          return next;
+        });
 
-  setCameraTalkbackCredentials((current) => {
-    const next = [...current];
-    next[slot] = { username, password };
-    return next;
-  });
+        setCameraPtzConfig((current) => {
+          const next = [...current];
+          next[slot] = {
+            deviceServiceUrl,
+            profileToken,
+            credentials: { username, password },
+          };
+          return next;
+        });
 
-  setCameraPtzConfig((current) => {
-    const next = [...current];
-
-    next[slot] = {
-      deviceServiceUrl,
-      profileToken,
-      credentials: {
-        username,
-        password,
-      },
-    };
-
-    return next;
-  });
-
-  Alert.alert(
-    "Konfigurasi disimpan",
-    `Konfigurasi ONVIF dan kredensial Kamera ${
-      slot + 1
-    } sudah diperbarui. Buka Playback dan coba Cari Rekaman kembali.`,
-  );
-}}
-
-
+        Alert.alert(
+          "Konfigurasi disimpan",
+          `Konfigurasi Kamera ${slot + 1} diperbarui. Coba Cari Rekaman di Playback.`,
+        );
+      }}
+    >
+      <Text style={styles.secondaryButtonText}>
+        Simpan Konfigurasi Kamera
+      </Text>
     </Pressable>
   </View>
 ) : null}
+
+<View style={styles.card}>
+  <Text style={styles.cardTitle}>
+    Tambah Stream Manual
+  </Text>
+</View>
+
           Tambah Stream Manual
         </Text>
 
