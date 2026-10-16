@@ -255,23 +255,21 @@ if (!discovered.searchUrl) {
           ))
         )}
 
+
         <Pressable
           style={[styles.primaryButton, busy && styles.disabled]}
-     
-{!recording.token.startsWith("dvrip:") ? (
-  <Pressable
-    style={[styles.primaryButton, busy && styles.disabled]}
-    onPress={() => playRecording(recording)}
-    disabled={busy}
-  >
-    <Text style={styles.buttonText}>
-      {selectedToken === recording.token && playbackUri
-        ? "Putar Ulang"
-        : "Putar Rekaman"}
-    </Text>
-  </Pressable>
-) : null}
- </View>
+          onPress={searchRecordings}
+          disabled={busy || cameras.length === 0}
+        >
+          {busy ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text style={styles.buttonText}>
+              Cari Rekaman
+            </Text>
+          )}
+        </Pressable>
+      </View>
 
       <View style={styles.statusBox}>
         <Text style={styles.statusText}>{status}</Text>
@@ -282,21 +280,24 @@ if (!discovered.searchUrl) {
           <Text style={styles.cardTitle}>Rekaman Tersedia</Text>
           {recordings.map((recording, index) => (
             <View
-              key={recording.token + "-" + index}
-              style={styles.recording}
-            >
-              <Text style={styles.recordingTitle}>
-                {recording.source ||
-                  recording.content ||
-                  "Rekaman " + (index + 1)}
-              </Text>
-              {recording.startTime ? (
-                <Text style={styles.muted}>Mulai: {recording.startTime}</Text>
+
+              {!recording.token.startsWith("dvrip:") ? (
+                <Pressable
+                  style={[
+                    styles.primaryButton,
+                    busy && styles.disabled,
+                  ]}
+                  onPress={() => playRecording(recording)}
+                  disabled={busy}
+                >
+                  <Text style={styles.buttonText}>
+                    {selectedToken === recording.token && playbackUri
+                      ? "Putar Ulang"
+                      : "Putar Rekaman"}
+                  </Text>
+                </Pressable>
               ) : null}
-              {recording.endTime ? (
-                <Text style={styles.muted}>Selesai: {recording.endTime}</Text>
-              ) : null}
-              <Pressable
+            
                 style={[styles.primaryButton, busy && styles.disabled]}
                 onPress={() => playRecording(recording)}
                 disabled={busy}
