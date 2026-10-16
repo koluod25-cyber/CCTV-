@@ -152,43 +152,36 @@ when (ret) {
         if (claimFrame.messageId != TALK_CLAIM_RESPONSE) error("Respons Claim Talkback tidak sesuai (ID ${claimFrame.messageId}).")
         val claimJson = parseJsonObject(claimFrame.payload,"Respons Claim Talkback",)
         if (claimJson.optInt("Ret", -1) != 100) error("Kamera menolak Claim Talkback (Ret=${claimJson.optInt("Ret", -1)}).")
+        
         val startJson = JSONObject()
           .put("Name", "OPTalk")
-          .put("OPTalk", JSONObject().put("Action", "Start"))
-          .put("SessionID", String.format(Locale.ROOT, "0x%08x", sessionId))
-        writeJson(output, TALK_START, sessionId, nextSequence(), startJson)
-            
-        var startFrame = readFrame(input)
-        var audioPacketsSkipped = 0
-
-        while (
-          startFrame.messageId == TALK_AUDIO_FROM_CAMERA &&
-          audioPacketsSkipped < 50
-        ) {
-          audioPacketsSkipped++
-          startFrame = readFrame(input)
-        }
-
-        if (startFrame.messageId != TALK_START_RESPONSE) {
-          error(
-            "Respons Start Talkback tidak sesuai. " +
-              "ID pesan kamera=${startFrame.messageId}; " +
-              "paket audio dilewati=$audioPacketsSkipped."
+          .put(
+            "OPTalk",
+            JSONObject()
+              .put("Action", "Start")
+              .put(
+                "AudioFormat",
+                JSONObject().put("EncodeType", "G711_ALAW")
+              )
           )
-        }
+          .put(
+            "SessionID",
+            String.format(Locale.ROOT, "0x%08x", sessionId)
+          )
 
-        val startJsonResponse = parseJsonObject(
-          startFrame.payload,
-          "Respons Start Talkback",
+        // Start Talkback adalah perintah fire-and-forget.
+        // Jangan menunggu readFrame() di sini karena kamera
+        // dapat mengirim paket audio biner dengan ID 1433.
+        writeJson(
+          output,
+          TALK_START,
+          sessionId,
+          nextSequence(),
+          startJson
         )
 
-        if (startJsonResponse.optInt("Ret", -1) != 100) {
-          error(
-            "Kamera menolak Start Talkback " +
-              "(Ret=${startJsonResponse.optInt("Ret", -1)})."
-          )
-        }
-     
+        // Langsung lanjutkan ke inisialisasi mikrofon Android.
+   
         val minBuffer = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         if (minBuffer <= 0) error("Perangkat Android tidak mendukung perekaman audio 8 kHz.")
         val recorder = AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, maxOf(minBuffer, 4096))
