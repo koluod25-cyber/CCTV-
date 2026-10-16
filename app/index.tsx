@@ -2390,176 +2390,141 @@ const renderCameraSlot =
           Kamera Ditemukan
         </Text>
 
-        {cameras.length === 0 ? (
-          <Text style={styles.mutedText}>
-            Belum ada kamera ditemukan.
-            Tekan "Cari CCTV".
-          </Text>
-        ) : (
 
-cameras.map((camera) => {
-  const assignedSlot =
-    cameraIds.findIndex(
+{cameras.length === 0 ? (
+  <Text style={styles.mutedText}>
+    Belum ada kamera ditemukan.
+    Tekan "Cari CCTV".
+  </Text>
+) : (
+  cameras.map((camera) => {
+    const assignedSlot = cameraIds.findIndex(
       (id) => id === camera.id,
     );
 
-  return (
-    <View
-      key={camera.id}
-      style={styles.cameraListItem}
-    >
+    return (
       <View
-        style={styles.cameraListInfo}
+        key={camera.id}
+        style={styles.cameraListItem}
       >
+        <View style={styles.cameraListInfo}>
+          <Text style={styles.cameraListName}>
+            {camera.name || "Kamera ONVIF"}
+          </Text>
+
+          <Text style={styles.cameraListAddress}>
+            {camera.host}:{camera.port}
+          </Text>
+
+          {camera.xaddrs?.length ? (
+            <Text
+              style={styles.endpointText}
+              numberOfLines={1}
+            >
+              {camera.xaddrs[0]}
+            </Text>
+          ) : null}
+
+          {assignedSlot >= 0 ? (
+            <Text
+              style={[
+                styles.mutedText,
+                { marginTop: 4 },
+              ]}
+            >
+              Terpasang pada Kamera {assignedSlot + 1}
+            </Text>
+          ) : null}
+        </View>
+
         <Text
-          style={styles.cameraListName}
+          style={[
+            styles.fieldLabel,
+            { marginTop: 8 },
+          ]}
         >
-          {camera.name ||
-            "Kamera ONVIF"}
+          Pilih Channel
         </Text>
 
-        <Text
-          style={
-            styles.cameraListAddress
-          }
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            gap: 6,
+            paddingVertical: 4,
+          }}
         >
-          {camera.host}:{camera.port}
-        </Text>
+          {Array.from(
+            { length: cameraCount },
+            (_, slot) => {
+              const isAssigned =
+                cameraIds[slot] === camera.id;
 
-        {camera.xaddrs?.length ? (
-          <Text
-            style={styles.endpointText}
-            numberOfLines={1}
-          >
-            {camera.xaddrs[0]}
-          </Text>
-        ) : null}
+              const assignedElsewhere =
+                assignedSlot >= 0 &&
+                assignedSlot !== slot;
 
-        {assignedSlot >= 0 ? (
-          <Text
-            style={[
-              styles.mutedText,
-              {
-                marginTop: 4,
-              },
-            ]}
-          >
-            Terpasang pada Kamera{" "}
-            {assignedSlot + 1}
-          </Text>
-        ) : null}
-      </View>
-
-      <Text
-        style={[
-          styles.fieldLabel,
-          {
-            marginTop: 8,
-          },
-        ]}
-      >
-        Pilih Channel
-      </Text>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{
-          gap: 6,
-          paddingVertical: 4,
-        }}
-      >
-        {Array.from(
-          {
-            length: cameraCount,
-          },
-          (_, slot) => {
-            const isAssigned =
-              cameraIds[slot] ===
-              camera.id;
-
-            const assignedElsewhere =
-              assignedSlot >= 0 &&
-              assignedSlot !== slot;
-
-            return (
-              <Pressable
-                key={`camera-${camera.id}-slot-${slot}`}
-                disabled={
-                  connecting === camera.id ||
-                  assignedElsewhere
-                }
-                onPress={() =>
-                  connectCamera(
-                    camera,
-                    slot,
-                  )
-                }
-                style={[
-                  styles.vendorButton,
-                  isAssigned &&
-                    styles.vendorButtonActive,
-                  assignedElsewhere && {
-                    opacity: 0.35,
-                  },
-                  connecting ===
-                    camera.id && {
-                    opacity: 0.6,
-                  },
-                ]}
-              >
-                <Text
+              return (
+                <Pressable
+                  key={`camera-${camera.id}-slot-${slot}`}
+                  disabled={
+                    connecting === camera.id ||
+                    assignedElsewhere
+                  }
+                  onPress={() =>
+                    connectCamera(camera, slot)
+                  }
                   style={[
-                    styles.vendorButtonText,
+                    styles.vendorButton,
                     isAssigned &&
-                      styles.vendorButtonTextActive,
+                      styles.vendorButtonActive,
+                    assignedElsewhere && {
+                      opacity: 0.35,
+                    },
+                    connecting === camera.id && {
+                      opacity: 0.6,
+                    },
                   ]}
                 >
-                  {isAssigned
-                    ? `Kamera ${
-                        slot + 1
-                      } ✓`
-                    : `Kamera ${
-                        slot + 1
-                      }`}
-                </Text>
-              </Pressable>
-            );
-          },
-        )}
-        
-              </ScrollView>
-      <Pressable
-        style={[
-          styles.secondaryButton,
-          connecting === camera.id &&
-            styles.buttonDisabled,
-        ]}
-        disabled={
-          connecting === camera.id
-        }
-        onPress={() =>
-          connectCamera(camera)
-        }
-      >
-        {connecting === camera.id ? (
-          <ActivityIndicator
-            size="small"
-          />
-        ) : (
-          <Text
-            style={
-              styles.secondaryButtonText
-            }
-          >
-            Hubungkan Otomatis
-          </Text>
-        )}
-      </Pressable>
-    </View>
-  );
-})
-        )}
+                  <Text
+                    style={[
+                      styles.vendorButtonText,
+                      isAssigned &&
+                        styles.vendorButtonTextActive,
+                    ]}
+                  >
+                    {isAssigned
+                      ? `Kamera ${slot + 1} ✓`
+                      : `Kamera ${slot + 1}`}
+                  </Text>
+                </Pressable>
+              );
+            },
+          )}
+        </ScrollView>
+
+        <Pressable
+          style={[
+            styles.secondaryButton,
+            connecting === camera.id &&
+              styles.buttonDisabled,
+          ]}
+          disabled={connecting === camera.id}
+          onPress={() => connectCamera(camera)}
+        >
+          {connecting === camera.id ? (
+            <ActivityIndicator size="small" />
+          ) : (
+            <Text style={styles.secondaryButtonText}>
+              Hubungkan Otomatis
+            </Text>
+          )}
+        </Pressable>
+      </View>
+    );
+  })
+)}
+
       </View>
 
       <View style={styles.card}>
