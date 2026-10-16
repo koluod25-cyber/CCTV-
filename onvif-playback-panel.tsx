@@ -17,6 +17,8 @@ import {
   type OnvifReplayServices,
 } from "@/onvif-replay";
 
+import { searchDvripRecordings } from "@/modules/cctv-talkback";
+
 type PlaybackCamera = {
   slot: number;
   deviceServiceUrl: string;
@@ -79,14 +81,77 @@ export default function OnvifPlaybackPanel({
       );
       setServices(discovered);
 
-            if (!discovered.searchUrl) {
-        setStatus(
-          discovered.replayUrl
-            ? "Layanan ONVIF Replay ditemukan, tetapi layanan Search tidak tersedia. Kamera mungkin memerlukan API khusus pabrikan."
-            : "Layanan ONVIF Search dan Replay tidak ditemukan pada GetCapabilities. Rekaman tetap ada di microSD, tetapi diperlukan pemeriksaan API playback kamera."
-        );
-        return;
-      }
+
+if (!discovered.searchUrl) {
+  setStatus(
+    "ONVIF Search tidak tersedia. Mencoba pencarian rekaman DVRIP...",
+  );
+
+  try {
+    const host = new URL(
+      selectedCamera.deviceServiceUrl,
+    ).hostname;
+
+    const username =
+      selectedCamera.credentials.username || "";
+    const password =
+      selectedCamera.credentials.password || "";
+
+    if (!username.trim() || !password) {
+      throw new Error(
+        "Username atau password kamera ONVIF belum diisi.",
+      );
+    }
+
+    const now = new Date();
+    const date =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(now.getDate()).padStart(2, "0");
+
+    const result = await searchDvripRecordings(
+      host,
+      username,
+      password,
+      date + " 00:00:00",
+      date + " 23:59:59",
+      selectedCamera.slot,
+    );
+
+    const dvripResults: OnvifRecording[] =
+      result.recordings.map((item, index) => ({
+        token: "dvrip:" + index + ":" + item.fileName,
+        source: item.fileName || "Rekaman DVRIP",
+        startTime: item.startTime,
+        endTime: item.endTime,
+        content: "DVRIP • " + item.fileLength,
+      }));
+
+    setRecordings(dvripResults);
+
+    setStatus(
+      result.count > 0
+        ? "DVRIP menemukan " +
+            result.count +
+            " rekaman untuk tanggal " +
+            date +
+            ". Pemutaran DVRIP belum tersedia pada tahap ini."
+        : "Pencarian DVRIP berhasil, tetapi tidak menemukan rekaman pada tanggal " +
+            date +
+            ".",
+    );
+  } catch (error) {
+    setStatus(
+      "ONVIF Search tidak tersedia dan pencarian DVRIP gagal: " +
+        errorMessage(error),
+    );
+  }
+
+  return;
+}
+
 
           const results = await searchOnvifRecordings(
         discovered.searchUrl,
@@ -192,16 +257,20 @@ export default function OnvifPlaybackPanel({
 
         <Pressable
           style={[styles.primaryButton, busy && styles.disabled]}
-          onPress={searchRecordings}
-          disabled={busy || cameras.length === 0}
-        >
-          {busy ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <Text style={styles.buttonText}>Cari Rekaman ONVIF</Text>
-          )}
-        </Pressable>
-      </View>
+     
+{!recording.token.startsWith("dvrip:") ? (
+  <Pressable
+    style={[styles.primaryButton, busy && styles.disabled]}
+    onPress={() => playRecording(recording)}
+    disabled={busy}
+  >
+    <Text style={styles.buttonText}>
+      {selectedToken === recording.token && playbackUri
+        ? "Putar Ulang"
+        : "Putar Rekaman"}
+    </Text>
+  </Pressable>
+) : null}
 
       <View style={styles.statusBox}>
         <Text style={styles.statusText}>{status}</Text>
