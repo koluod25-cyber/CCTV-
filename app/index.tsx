@@ -3002,20 +3002,41 @@ const renderCameraSlot =
 const renderPlayback = () => (
   <OnvifPlaybackPanel
     cameras={cameraPtzConfig.flatMap(
-      (config, index) =>
-        config?.deviceServiceUrl
-          ? [
-              {
-                slot: index,
-                deviceServiceUrl:
-                  config.deviceServiceUrl,
-                credentials:
-                  config.credentials,
-                connected:
-                  cameraConnected[index],
-              },
-            ]
-          : [],
+      (config, index) => {
+        if (!config?.deviceServiceUrl) {
+          return [];
+        }
+
+        const ptzCredentials =
+          config.credentials;
+
+        const talkbackCredentials =
+          cameraTalkbackCredentials[index];
+
+        const username =
+          ptzCredentials?.username?.trim() ||
+          talkbackCredentials?.username?.trim() ||
+          "";
+
+        const password =
+          ptzCredentials?.password ||
+          talkbackCredentials?.password ||
+          "";
+
+        return [
+          {
+            slot: index,
+            deviceServiceUrl:
+              config.deviceServiceUrl,
+            credentials: {
+              username,
+              password,
+            },
+            connected:
+              cameraConnected[index],
+          },
+        ];
+      },
     )}
     muted={muted}
     onHistory={(url, message) =>
