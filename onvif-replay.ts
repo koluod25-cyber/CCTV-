@@ -129,11 +129,8 @@ export async function discoverOnvifReplayServices(
     recordingUrl: serviceAddress(xml, "Recording"),
     searchUrl: serviceAddress(xml, "Search"),
   };
-  if (!services.replayUrl) {
-    throw new Error("Kamera/decoder tidak mengumumkan layanan ONVIF Replay. Periksa dukungan Profile G atau API resmi perangkat.");
-  }
-  return services;
-}
+  
+ return services;
 
 /**
  * Starts an ONVIF recording search and returns stored recordings reported by
