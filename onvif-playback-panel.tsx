@@ -88,17 +88,32 @@ export default function OnvifPlaybackPanel({
         return;
       }
 
-      const results = await searchOnvifRecordings(
+          const results = await searchOnvifRecordings(
         discovered.searchUrl,
         selectedCamera.credentials,
       );
+
       setRecordings(results);
-            setStatus(
+
+      setStatus(
         !discovered.replayUrl
-          ? "Ditemukan " + results.length +
+          ? "Ditemukan " +
+            results.length +
             " rekaman melalui ONVIF Search, tetapi layanan Replay tidak tersedia. Pemutaran memerlukan URI atau API playback yang didukung kamera."
-          : "Ditemukan " + results.length + " rekaman tersimpan."
+          : "Ditemukan " +
+            results.length +
+            " rekaman tersimpan.",
       );
+    } catch (error) {
+      setStatus(
+        "Pencarian Playback gagal: " + errorMessage(error),
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function playRecording(recording: OnvifRecording) {
 
   async function playRecording(recording: OnvifRecording) {
     if (!selectedCamera || !services?.replayUrl) {
