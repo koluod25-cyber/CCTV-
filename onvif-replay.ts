@@ -131,6 +131,7 @@ export async function discoverOnvifReplayServices(
   };
   
  return services;
+}
 
 /**
  * Starts an ONVIF recording search and returns stored recordings reported by
