@@ -271,6 +271,7 @@ if (!discovered.searchUrl) {
     </Text>
   </Pressable>
 ) : null}
+ </View>
 
       <View style={styles.statusBox}>
         <Text style={styles.statusText}>{status}</Text>
