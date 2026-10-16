@@ -79,9 +79,11 @@ export default function OnvifPlaybackPanel({
       );
       setServices(discovered);
 
-      if (!discovered.searchUrl) {
+            if (!discovered.searchUrl) {
         setStatus(
-          "Perangkat tidak mengumumkan layanan ONVIF Search. Periksa dukungan Profile G atau API khusus pabrikan.",
+          discovered.replayUrl
+            ? "Layanan ONVIF Replay ditemukan, tetapi layanan Search tidak tersedia. Kamera mungkin memerlukan API khusus pabrikan."
+            : "Layanan ONVIF Search dan Replay tidak ditemukan pada GetCapabilities. Rekaman tetap ada di microSD, tetapi diperlukan pemeriksaan API playback kamera."
         );
         return;
       }
@@ -91,17 +93,12 @@ export default function OnvifPlaybackPanel({
         selectedCamera.credentials,
       );
       setRecordings(results);
-      setStatus(
-        results.length
-          ? "Ditemukan " + results.length + " rekaman tersimpan."
-          : "Pencarian selesai, tetapi perangkat tidak mengembalikan rekaman. Periksa media penyimpanan, jadwal rekam, atau dukungan ONVIF perangkat.",
+            setStatus(
+        !discovered.replayUrl
+          ? "Ditemukan " + results.length +
+            " rekaman melalui ONVIF Search, tetapi layanan Replay tidak tersedia. Pemutaran memerlukan URI atau API playback yang didukung kamera."
+          : "Ditemukan " + results.length + " rekaman tersimpan."
       );
-    } catch (error) {
-      setStatus("Pencarian Playback gagal: " + errorMessage(error));
-    } finally {
-      setBusy(false);
-    }
-  }
 
   async function playRecording(recording: OnvifRecording) {
     if (!selectedCamera || !services?.replayUrl) {
