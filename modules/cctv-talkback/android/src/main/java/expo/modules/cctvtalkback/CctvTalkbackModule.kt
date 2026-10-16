@@ -158,22 +158,37 @@ when (ret) {
           .put("SessionID", String.format(Locale.ROOT, "0x%08x", sessionId))
         writeJson(output, TALK_START, sessionId, nextSequence(), startJson)
         
-        val startFrame = readFrame(input)
+        var startFrame = readFrame(input)
+        var audioPacketsSkipped = 0
 
-        val startJsonResponse = try {
-          parseJsonObject(
-            startFrame.payload,
-            "Respons Start Talkback",
+        while (
+          startFrame.messageId == TALK_AUDIO_FROM_CAMERA &&
+          audioPacketsSkipped < 50
+        ) {
+          audioPacketsSkipped++
+          startFrame = readFrame(input)
+        }
+
+        if (startFrame.messageId != TALK_START_RESPONSE) {
+          error(
+            "Respons Start Talkback tidak sesuai. " +
+              "ID pesan kamera=${startFrame.messageId}; " +
+              "paket audio dilewati=$audioPacketsSkipped."
           )
-        } catch (e: Exception) {
-          val payloadHex = startFrame.payload
-            .take(16)
-            .joinToString(" ") { byte ->
-              "%02X".format(
-                Locale.ROOT,
-                byte.toInt() and 0xff,
-              )
-            }
+        }
+
+        val startJsonResponse = parseJsonObject(
+          startFrame.payload,
+          "Respons Start Talkback",
+        )
+
+        if (startJsonResponse.optInt("Ret", -1) != 100) {
+          error(
+            "Kamera menolak Start Talkback " +
+              "(Ret=${startJsonResponse.optInt("Ret", -1)})."
+          )
+        }
+        
 
           error(
             "Respons Start Talkback tidak dapat dibaca. " +
@@ -190,7 +205,6 @@ when (ret) {
           )
         }
         
-
         val minBuffer = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         if (minBuffer <= 0) error("Perangkat Android tidak mendukung perekaman audio 8 kHz.")
         val recorder = AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, maxOf(minBuffer, 4096))
@@ -360,5 +374,8 @@ private fun parseJsonObject(
     private const val TALK_CLAIM_RESPONSE = 1435
     private const val SAMPLE_RATE = 8000
     private const val FRAME_SAMPLES = 320
+    private const val TALK_START_RESPONSE = 1431
+    private const val TALK_AUDIO_FROM_CAMERA = 1433
+    
   }
 }
