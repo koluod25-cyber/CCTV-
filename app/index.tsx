@@ -1840,7 +1840,7 @@ const clearCameraSlot =
       ? 1
       : 2;
 
-const caneraAspectRatio =
+const cameraAspectRatio =
       cameraCount === 1
       ? 16 / 9
       : cameraCount <= 4
