@@ -2637,34 +2637,63 @@ cameras.map((camera) => {
 
     <Pressable
       style={styles.secondaryButton}
-      onPress={() => {
-        if (cameraSettingsSlot === null) {
-          return;
-        }
+      
+onPress={() => {
+  if (cameraSettingsSlot === null) {
+    return;
+  }
 
-        setCameraStream(
-          cameraSettingsSlot,
-          cameraSettingsUrl.trim(),
-        );
+  const slot = cameraSettingsSlot;
+  const username = cameraSettingsUsername.trim();
+  const password = cameraSettingsPassword;
 
-        setCameraTalkbackCredentials((current) => {
-          const next = [...current];
+  if (!username || !password) {
+    Alert.alert(
+      "Kredensial belum lengkap",
+      "Isi username dan password kamera terlebih dahulu.",
+    );
+    return;
+  }
 
-          next[cameraSettingsSlot] = {
-            username: cameraSettingsUsername.trim(),
-            password: cameraSettingsPassword,
-          };
+  setCameraStream(
+    slot,
+    cameraSettingsUrl.trim(),
+  );
 
-          return next;
-        });
+  setCameraTalkbackCredentials((current) => {
+    const next = [...current];
 
-        Alert.alert(
-          "Kredensial disimpan",
-          `Kredensial Talkback Kamera ${
-            cameraSettingsSlot + 1
-          } telah disimpan.`,
-        );
-      }}
+    next[slot] = {
+      username,
+      password,
+    };
+
+    return next;
+  });
+
+  setCameraPtzConfig((current) => {
+    const next = [...current];
+    const config = next[slot];
+
+    if (config) {
+      next[slot] = {
+        ...config,
+        credentials: {
+          username,
+          password,
+        },
+      };
+    }
+
+    return next;
+  });
+
+  Alert.alert(
+    "Kredensial disimpan",
+    "Username dan password kamera disimpan. Buka Playback dan coba Cari Rekaman kembali.",
+  );
+}}
+      
     >
       <Text style={styles.secondaryButtonText}>
         Simpan Kredensial Talkback
