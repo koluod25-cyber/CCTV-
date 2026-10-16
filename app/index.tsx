@@ -3935,18 +3935,18 @@ settingsSaveButton: {
     marginTop: 5,
   },
 
+  
   bottomTabs: {
-  minHeight: 56,
-  flexDirection: "row",
-  backgroundColor: "#111923",
-  borderTopWidth: 1,
-  borderTopColor: "#263341",
-  paddingHorizontal: 6,
-  paddingTop: 3,
-  paddingBottom: 3,
-  marginBottom: 2,
-},
-
+    minHeight: 84,
+    flexDirection: "row",
+    backgroundColor: "#111923",
+    borderTopWidth: 1,
+    borderTopColor: "#263341",
+    paddingHorizontal: 6,
+    paddingTop: 3,
+    paddingBottom: 28,
+  },
+  
   tab: {
   flex: 1,
   minHeight: 48,
