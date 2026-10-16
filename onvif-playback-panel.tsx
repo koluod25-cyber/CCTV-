@@ -319,12 +319,7 @@ if (!discovered.searchUrl) {
                   </Text>
                 </Pressable>
               ) : null}
-            </View>
-          ))}
-        </View>
-      ) : null}
-
-
+           
       {playbackUri ? (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Pemutar Rekaman</Text>
