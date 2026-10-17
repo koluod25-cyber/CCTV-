@@ -285,7 +285,7 @@ class CctvPlaybackModule : Module() {
 
     Socket().use { socket ->
       socket.connect(InetSocketAddress(host, 34567), 8000)
-      socket.soTimeout = 180000
+      socket.soTimeout = 150000
 
       val input = BufferedInputStream(socket.getInputStream())
       val output = BufferedOutputStream(socket.getOutputStream())
@@ -395,13 +395,21 @@ class CctvPlaybackModule : Module() {
             error("Batas ukuran unduhan rekaman tercapai.")
           }
         }
-      } catch (error: SocketTimeoutException) {
+            } catch (error: SocketTimeoutException) {
         if (data.size() == 0) {
           throw IllegalStateException(
-            "Waktu tunggu unduhan habis. Kamera belum mengirim data rekaman."
+            "Kamera tidak mengirim data rekaman dalam 15 detik. " +
+              "Periksa dukungan playback DVRIP dan koneksi kamera."
           )
         }
-        // Beberapa firmware tidak mengirim paket terminasi.
+
+        throw IllegalStateException(
+          "Kamera mengirim sebagian data rekaman (" +
+            data.size() +
+            " byte), tetapi proses belum selesai. " +
+            "File tidak dibuat agar rekaman yang terpotong " +
+            "tidak dianggap berhasil."
+        )
       } finally {
         runCatching {
           send(1420, playbackCommand("DownloadStop"), session)
