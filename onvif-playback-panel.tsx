@@ -420,6 +420,7 @@ async function playRecording(recording: OnvifRecording) {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Rekaman Tersedia</Text>
 
+          
           {recordings.map((recording, index) => (
             <View
               key={recording.token + "-" + index}
@@ -443,7 +444,6 @@ async function playRecording(recording: OnvifRecording) {
                 </Text>
               ) : null}
 
-              
               <Pressable
                 style={[
                   styles.primaryButton,
@@ -473,9 +473,11 @@ async function playRecording(recording: OnvifRecording) {
                   </Text>
                 </Pressable>
               ) : null}
-
+            </View>
+          ))}
         </View>
       ) : null}
+
               
       {playbackUri ? (
         <View style={styles.card}>
