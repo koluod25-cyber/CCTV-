@@ -443,8 +443,7 @@ async function playRecording(recording: OnvifRecording) {
                 </Text>
               ) : null}
 
-              {true ? (
-  
+              
               <Pressable
                 style={[
                   styles.primaryButton,
@@ -475,8 +474,6 @@ async function playRecording(recording: OnvifRecording) {
                 </Pressable>
               ) : null}
 
-            </View>
-          ))}
         </View>
       ) : null}
               
