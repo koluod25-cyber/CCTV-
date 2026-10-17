@@ -1,4 +1,3 @@
-
 import { Platform } from "react-native";
 import { requireNativeModule } from "expo-modules-core";
 
@@ -47,6 +46,20 @@ type CctvPlaybackNativeModule = {
     success: boolean;
     count: number;
     recordings: string;
+  }>;
+
+  downloadRecordingToPhone(
+    host: string,
+    username: string,
+    password: string,
+    fileName: string,
+    startTime: string,
+    endTime: string,
+  ): Promise<{
+    success: boolean;
+    uri: string;
+    size: number;
+    fileName: string;
   }>;
 
   prepareRecordingPlayback(
@@ -205,6 +218,37 @@ export async function searchDvripRecordings(
     count: result.count,
     recordings,
   };
+}
+
+export async function downloadDvripRecordingToPhone(
+  host: string,
+  username: string,
+  password: string,
+  fileName: string,
+  startTime: string,
+  endTime: string,
+): Promise<{
+  success: boolean;
+  uri: string;
+  size: number;
+  fileName: string;
+}> {
+  if (!playbackNativeModule) {
+    throw new Error(
+      "Modul DVRIP belum tersedia. " +
+        playbackNativeModuleError +
+        " Pastikan modul CctvPlayback terdaftar di Android.",
+    );
+  }
+
+  return playbackNativeModule.downloadRecordingToPhone(
+    host,
+    username,
+    password,
+    fileName,
+    startTime,
+    endTime,
+  );
 }
 
 export async function prepareDvripRecordingPlayback(
