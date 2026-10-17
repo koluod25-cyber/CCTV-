@@ -1,4 +1,3 @@
-
 package expo.modules.cctvtalkback
 
 import android.net.Uri
@@ -107,8 +106,17 @@ class CctvPlaybackModule : Module() {
         "Waktu rekaman belum lengkap."
       }
 
-      val safeName = fileName.substringAfterLast('/').substringAfterLast('\\')
-      require(safeName == fileName && safeName.length <= 255) {
+      
+      val normalizedName = fileName.replace('\\', '/')
+      val pathParts = normalizedName.split('/')
+
+      require(
+        normalizedName.startsWith("/") &&
+          normalizedName.length <= 1024 &&
+          pathParts.none { it == ".." } &&
+          pathParts.lastOrNull()
+            ?.matches(Regex("[A-Za-z0-9._@\\[\\]-]+")) == true
+      ) {
         "Nama file rekaman tidak valid."
       }
 
