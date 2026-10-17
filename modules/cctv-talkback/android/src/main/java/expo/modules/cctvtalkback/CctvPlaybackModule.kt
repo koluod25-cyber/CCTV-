@@ -1,6 +1,9 @@
 package expo.modules.cctvtalkback
 
 import android.net.Uri
+import android.content.ContentValues
+import android.os.Build
+import android.provider.MediaStore
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import org.json.JSONArray
@@ -156,11 +159,118 @@ class CctvPlaybackModule : Module() {
         )
       }
 
+      
       mapOf(
         "success" to true,
         "uri" to Uri.fromFile(outputFile).toString(),
         "size" to outputFile.length()
       )
+    }
+
+    AsyncFunction("downloadRecordingToPhone") {
+      host: String,
+      username: String,
+      password: String,
+      fileName: String,
+      startTime: String,
+      endTime: String ->
+
+      require(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        "Simpan ke Unduhan memerlukan Android 10 atau lebih baru."
+      }
+      require(host.isNotBlank()) { "IP kamera belum diisi." }
+      require(username.isNotBlank()) { "Username kamera belum diisi." }
+      require(password.isNotEmpty()) { "Password kamera belum diisi." }
+      require(fileName.startsWith("/") &&
+        !fileName.contains("..") &&
+        fileName.length <= 1024 &&
+        startTime.isNotBlank() &&
+        endTime.isNotBlank()
+      ) {
+        "Informasi rekaman tidak valid."
+      }
+
+      val raw = downloadRecording(
+        host,
+        username,
+        password,
+        fileName,
+        startTime,
+        endTime
+      )
+
+      require(raw.isNotEmpty()) {
+        "Kamera tidak mengirim data rekaman."
+      }
+
+      val tempFile = File(
+        appContext.cacheDirectory,
+        "cctv_export_${System.currentTimeMillis()}.mp4"
+      )
+
+      try {
+        XmHevcMuxer.writeMp4(
+          raw,
+          tempFile,
+          durationUs = clipDurationUs(startTime, endTime)
+        )
+
+        val baseName = fileName
+          .substringAfterLast("/")
+          .substringBeforeLast(".")
+          .replace(Regex("[^A-Za-z0-9_-]"), "_")
+          .ifBlank { "cctv_recording" }
+
+        val displayName =
+          "${baseName}_${System.currentTimeMillis()}.mp4"
+
+        val values = ContentValues().apply {
+          put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+          put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
+          put(
+            MediaStore.MediaColumns.RELATIVE_PATH,
+            "Download/CCTV Universal Monitor"
+          )
+          put(MediaStore.MediaColumns.IS_PENDING, 1)
+        }
+
+        val context = appContext.reactContext
+          ?: error("Konteks Android tidak tersedia.")
+
+        val resolver = context.contentResolver
+        val savedUri = resolver.insert(
+          MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+          values
+        ) ?: error("Tidak dapat membuat file di folder Unduhan.")
+
+        try {
+          val destination = resolver.openOutputStream(savedUri)
+            ?: error("Tidak dapat menulis file Unduhan.")
+
+          destination.use { output ->
+            tempFile.inputStream().use { input ->
+              input.copyTo(output)
+            }
+          }
+
+          val completed = ContentValues().apply {
+            put(MediaStore.MediaColumns.IS_PENDING, 0)
+          }
+          resolver.update(savedUri, completed, null, null)
+        } catch (error: Exception) {
+          resolver.delete(savedUri, null, null)
+          throw error
+        }
+
+        mapOf(
+          "success" to true,
+          "uri" to savedUri.toString(),
+          "size" to tempFile.length(),
+          "fileName" to displayName
+        )
+      } finally {
+        tempFile.delete()
+      }
     }
   }
 
@@ -172,6 +282,7 @@ class CctvPlaybackModule : Module() {
     startTime: String,
     endTime: String
   ): ByteArray {
+
     Socket().use { socket ->
       socket.connect(InetSocketAddress(host, 34567), 8000)
       socket.soTimeout = 180000
