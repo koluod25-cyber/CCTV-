@@ -17,7 +17,11 @@ import {
   type OnvifReplayServices,
 } from "@/onvif-replay";
 
-import { searchDvripRecordings } from "@/modules/cctv-talkback";
+import {
+  searchDvripRecordings,
+  prepareDvripRecordingPlayback,
+  type CctvDvripRecording,
+} from "@/modules/cctv-talkback";
 
 type PlaybackCamera = {
   slot: number;
@@ -49,6 +53,8 @@ export default function OnvifPlaybackPanel({
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [services, setServices] = useState<OnvifReplayServices | null>(null);
   const [recordings, setRecordings] = useState<OnvifRecording[]>([]);
+  const [dvripRecordings, setDvripRecordings] =
+  useState<CctvDvripRecording[]>([]);
   const [selectedToken, setSelectedToken] = useState("");
   const [playbackUri, setPlaybackUri] = useState("");
   const [busy, setBusy] = useState(false);
@@ -70,6 +76,7 @@ export default function OnvifPlaybackPanel({
     setBusy(true);
     setServices(null);
     setRecordings([]);
+    setDvripRecordings([]);
     setSelectedToken("");
     setPlaybackUri("");
     setStatus("Memeriksa layanan ONVIF Playback dan Search...");
@@ -130,6 +137,7 @@ if (!discovered.searchUrl) {
       }));
 
     setRecordings(dvripResults);
+    setDvripRecordings(result.recordings);
 
     setStatus(
       result.count > 0
@@ -177,35 +185,97 @@ if (!discovered.searchUrl) {
       setBusy(false);
     }
   }
+ 
+async function playRecording(recording: OnvifRecording) {
+  if (!selectedCamera) {
+    setStatus("Pilih kamera terlebih dahulu.");
+    return;
+  }
 
-  async function playRecording(recording: OnvifRecording) {
-    if (!selectedCamera || !services?.replayUrl) {
-      setStatus("Layanan Replay ONVIF belum tersedia untuk kamera ini.");
+  setBusy(true);
+  setPlaybackUri("");
+
+  try {
+    if (recording.token.startsWith("dvrip:")) {
+      const index = Number(recording.token.split(":")[1]);
+      const item = dvripRecordings[index];
+
+      if (!item) {
+        throw new Error("Data rekaman DVRIP tidak ditemukan.");
+      }
+
+      const host = new URL(
+        selectedCamera.deviceServiceUrl,
+      ).hostname;
+
+      const username =
+        selectedCamera.credentials.username || "";
+      const password =
+        selectedCamera.credentials.password || "";
+
+      if (!username.trim() || !password) {
+        throw new Error(
+          "Username atau password kamera belum diisi.",
+        );
+      }
+
+      setStatus(
+        "Mengunduh rekaman dari kamera dan menyiapkan video MP4. Mohon tunggu...",
+      );
+
+      const result = await prepareDvripRecordingPlayback(
+        host,
+        username,
+        password,
+        item.fileName,
+        item.startTime,
+        item.endTime,
+      );
+
+      if (!result.success || !result.uri) {
+        throw new Error("Kamera tidak menghasilkan file video.");
+      }
+
+      setSelectedToken(recording.token);
+      setPlaybackUri(result.uri);
+      setStatus(
+        "MP4 berhasil disiapkan. Pemutaran rekaman dimulai.",
+      );
+
+      onHistory?.(
+        result.uri,
+        "Memutar rekaman DVRIP lokal",
+      );
       return;
     }
 
-    setBusy(true);
-    setStatus("Meminta URI rekaman dari kamera/decoder...");
-    setPlaybackUri("");
-
-    try {
-      const uri = await getOnvifReplayUri(
-        services.replayUrl,
-        recording.token,
-        selectedCamera.credentials,
+    if (!services?.replayUrl) {
+      throw new Error(
+        "Layanan Replay ONVIF belum tersedia untuk kamera ini.",
       );
-      setSelectedToken(recording.token);
-      setPlaybackUri(uri);
-      setStatus(
-        "URI rekaman diterima. Pemutaran dimulai langsung dari perangkat jika stream dan autentikasi didukung.",
-      );
-      onHistory?.(uri, "Memutar rekaman tersimpan ONVIF");
-    } catch (error) {
-      setStatus("Tidak dapat memutar rekaman: " + errorMessage(error));
-    } finally {
-      setBusy(false);
     }
+
+    setStatus("Meminta URI rekaman dari kamera/decoder...");
+
+    const uri = await getOnvifReplayUri(
+      services.replayUrl,
+      recording.token,
+      selectedCamera.credentials,
+    );
+
+    setSelectedToken(recording.token);
+    setPlaybackUri(uri);
+    setStatus("URI rekaman diterima. Pemutaran dimulai.");
+
+    onHistory?.(uri, "Memutar rekaman tersimpan ONVIF");
+  } catch (error) {
+    setStatus(
+      "Tidak dapat memutar rekaman: " + errorMessage(error),
+    );
+  } finally {
+    setBusy(false);
   }
+}
 
   return (
     <ScrollView
@@ -302,7 +372,7 @@ if (!discovered.searchUrl) {
                 </Text>
               ) : null}
 
-              {!recording.token.startsWith("dvrip:") ? (
+              {!recording.token.startsWith("dvrip:") {true ? (
                 <Pressable
                   style={[
                     styles.primaryButton,
@@ -329,15 +399,12 @@ if (!discovered.searchUrl) {
           <View style={styles.videoBox}>
             <Video
               key={playbackUri}
-              source={{ uri: playbackUri, type: "rtsp" }}
-              style={styles.video}
-              controls
-              resizeMode="contain"
-              paused={false}
-              muted={muted}
-              onError={(event) => {
-                const details =
-                  event?.error?.errorString ||
+              source={
+  playbackUri.startsWith("rtsp://") ||
+  playbackUri.startsWith("rtsps://")
+    ? { uri: playbackUri, type: "rtsp" }
+    : { uri: playbackUri }
+}
                   event?.error?.errorException ||
                   "ExoPlayer gagal membuka stream rekaman.";
                 setStatus(
