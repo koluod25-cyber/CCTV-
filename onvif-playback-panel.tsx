@@ -187,12 +187,7 @@ if (!discovered.searchUrl) {
     }
   }
  
-async function playRecording(recording: OnvifRecording) {
-  if (!selectedCamera) {
-    setStatus("Pilih kamera terlebih dahulu.");
 
-
-  
 async function playRecording(recording: OnvifRecording) {
   if (!selectedCamera) {
     setStatus("Pilih kamera terlebih dahulu.");
