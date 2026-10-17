@@ -104,6 +104,8 @@ export type CctvDvripRecording = {
   fileLength: string;
 };
 
+
+
 type CctvPlaybackNativeModule = {
   searchRecordings(
     host: string,
@@ -117,58 +119,42 @@ type CctvPlaybackNativeModule = {
     count: number;
     recordings: string;
   }>;
+
+  prepareRecordingPlayback(
+    host: string,
+    username: string,
+    password: string,
+    fileName: string,
+    startTime: string,
+    endTime: string,
+  ): Promise<{
+    success: boolean;
+    uri: string;
+    size: number;
+  }>;
 };
 
-let playbackNativeModule: CctvPlaybackNativeModule | null = null;
 
-if (Platform.OS === "android") {
-  try {
-    playbackNativeModule =
-      requireNativeModule<CctvPlaybackNativeModule>(
-        "CctvPlayback",
-      );
-  } catch {
-    playbackNativeModule = null;
-  }
-}
-
-export async function searchDvripRecordings(
+export async function prepareDvripRecordingPlayback(
   host: string,
   username: string,
   password: string,
+  fileName: string,
   startTime: string,
   endTime: string,
-  channel: number,
-) {
+): Promise<{ success: boolean; uri: string; size: number }> {
   if (!playbackNativeModule) {
     throw new Error(
-      "Modul DVRIP belum tersedia. Pastikan modul CctvPlayback terdaftar dan APK dibangun ulang.",
+      "Modul DVRIP belum tersedia. Bangun ulang APK setelah perubahan native.",
     );
   }
 
-  const result =
-    await playbackNativeModule.searchRecordings(
-      host,
-      username,
-      password,
-      startTime,
-      endTime,
-      channel,
-    );
-
-  let recordings: CctvDvripRecording[] = [];
-
-  try {
-    recordings = JSON.parse(result.recordings || "[]");
-  } catch {
-    throw new Error(
-      "Format daftar rekaman DVRIP dari kamera tidak valid.",
-    );
-  }
-
-  return {
-    success: result.success,
-    count: result.count,
-    recordings,
-  };
+  return playbackNativeModule.prepareRecordingPlayback(
+    host,
+    username,
+    password,
+    fileName,
+    startTime,
+    endTime,
+  );
 }
