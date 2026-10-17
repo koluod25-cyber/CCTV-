@@ -192,74 +192,10 @@ async function playRecording(recording: OnvifRecording) {
     setStatus("Pilih kamera terlebih dahulu.");
 
 
-  async function downloadRecording(recording: OnvifRecording) {
-    if (!selectedCamera) {
-      setStatus("Pilih kamera terlebih dahulu.");
-      return;
-    }
-
-    if (!recording.token.startsWith("dvrip:")) {
-      setStatus(
-        "Unduh melalui DVRIP hanya tersedia untuk rekaman hasil pencarian DVRIP.",
-      );
-      return;
-    }
-
-    const index = Number(recording.token.split(":")[1]);
-    const item = dvripRecordings[index];
-
-    if (!item) {
-      setStatus("Data rekaman DVRIP tidak ditemukan.");
-      return;
-    }
-
-    setBusy(true);
-
-    try {
-      const host = new URL(
-        selectedCamera.deviceServiceUrl,
-      ).hostname;
-      const username =
-        selectedCamera.credentials.username || "";
-      const password =
-        selectedCamera.credentials.password || "";
-
-      if (!username.trim() || !password) {
-        throw new Error(
-          "Username atau password kamera belum diisi.",
-        );
-      }
-
-      setStatus(
-        "Mengunduh rekaman dan menyimpan MP4 ke folder Unduhan. Mohon tunggu...",
-      );
-
-      const result = await downloadDvripRecordingToPhone(
-        host,
-        username,
-        password,
-        item.fileName,
-        item.startTime,
-        item.endTime,
-      );
-
-      if (!result.success || !result.uri) {
-        throw new Error("File rekaman gagal disimpan.");
-      }
-
-      setStatus(
-        "Rekaman berhasil disimpan ke Unduhan/CCTV Universal Monitor: " +
-          result.fileName,
-      );
-    } catch (error) {
-      setStatus(
-        "Unduh rekaman gagal: " + errorMessage(error),
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-
+  
+async function playRecording(recording: OnvifRecording) {
+  if (!selectedCamera) {
+    setStatus("Pilih kamera terlebih dahulu.");
     return;
   }
 
@@ -342,6 +278,75 @@ async function playRecording(recording: OnvifRecording) {
   } catch (error) {
     setStatus(
       "Tidak dapat memutar rekaman: " + errorMessage(error),
+    );
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function downloadRecording(recording: OnvifRecording) {
+  if (!selectedCamera) {
+    setStatus("Pilih kamera terlebih dahulu.");
+    return;
+  }
+
+  if (!recording.token.startsWith("dvrip:")) {
+    setStatus(
+      "Unduh melalui DVRIP hanya tersedia untuk rekaman hasil pencarian DVRIP.",
+    );
+    return;
+  }
+
+  const index = Number(recording.token.split(":")[1]);
+  const item = dvripRecordings[index];
+
+  if (!item) {
+    setStatus("Data rekaman DVRIP tidak ditemukan.");
+    return;
+  }
+
+  setBusy(true);
+
+  try {
+    const host = new URL(
+      selectedCamera.deviceServiceUrl,
+    ).hostname;
+
+    const username =
+      selectedCamera.credentials.username || "";
+    const password =
+      selectedCamera.credentials.password || "";
+
+    if (!username.trim() || !password) {
+      throw new Error(
+        "Username atau password kamera belum diisi.",
+      );
+    }
+
+    setStatus(
+      "Mengunduh rekaman dan menyimpan MP4 ke folder Unduhan. Mohon tunggu...",
+    );
+
+    const result = await downloadDvripRecordingToPhone(
+      host,
+      username,
+      password,
+      item.fileName,
+      item.startTime,
+      item.endTime,
+    );
+
+    if (!result.success || !result.uri) {
+      throw new Error("File rekaman gagal disimpan.");
+    }
+
+    setStatus(
+      "Rekaman berhasil disimpan ke Unduhan/CCTV Universal Monitor: " +
+        result.fileName,
+    );
+  } catch (error) {
+    setStatus(
+      "Unduh rekaman gagal: " + errorMessage(error),
     );
   } finally {
     setBusy(false);
