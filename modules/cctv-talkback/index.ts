@@ -1,3 +1,4 @@
+
 import { Platform } from "react-native";
 import { requireNativeModule } from "expo-modules-core";
 
@@ -26,8 +27,47 @@ type TalkbackNativeModule = {
   stopTalkback(): Promise<TalkbackResult>;
 };
 
+export type CctvDvripRecording = {
+  fileName: string;
+  startTime: string;
+  endTime: string;
+  channel: number;
+  fileLength: string;
+};
+
+type CctvPlaybackNativeModule = {
+  searchRecordings(
+    host: string,
+    username: string,
+    password: string,
+    startTime: string,
+    endTime: string,
+    channel: number,
+  ): Promise<{
+    success: boolean;
+    count: number;
+    recordings: string;
+  }>;
+
+  prepareRecordingPlayback(
+    host: string,
+    username: string,
+    password: string,
+    fileName: string,
+    startTime: string,
+    endTime: string,
+  ): Promise<{
+    success: boolean;
+    uri: string;
+    size: number;
+  }>;
+};
+
 let nativeModule: TalkbackNativeModule | null = null;
+let playbackNativeModule: CctvPlaybackNativeModule | null = null;
+
 let nativeModuleError = "";
+let playbackNativeModuleError = "";
 
 if (Platform.OS === "android") {
   try {
@@ -37,6 +77,18 @@ if (Platform.OS === "android") {
       );
   } catch (error) {
     nativeModuleError =
+      error instanceof Error
+        ? error.message
+        : String(error);
+  }
+
+  try {
+    playbackNativeModule =
+      requireNativeModule<CctvPlaybackNativeModule>(
+        "CctvPlayback",
+      );
+  } catch (error) {
+    playbackNativeModuleError =
       error instanceof Error
         ? error.message
         : String(error);
@@ -95,45 +147,65 @@ export async function stopTalkback(): Promise<TalkbackResult> {
   return nativeModule.stopTalkback();
 }
 
+export async function searchDvripRecordings(
+  host: string,
+  username: string,
+  password: string,
+  startTime: string,
+  endTime: string,
+  channel: number,
+): Promise<{
+  success: boolean;
+  count: number;
+  recordings: CctvDvripRecording[];
+}> {
+  if (!playbackNativeModule) {
+    throw new Error(
+      "Modul DVRIP belum tersedia. " +
+        playbackNativeModuleError +
+        " Pastikan modul CctvPlayback terdaftar di Android.",
+    );
+  }
 
-export type CctvDvripRecording = {
-  fileName: string;
-  startTime: string;
-  endTime: string;
-  channel: number;
-  fileLength: string;
-};
+  const result =
+    await playbackNativeModule.searchRecordings(
+      host,
+      username,
+      password,
+      startTime,
+      endTime,
+      channel,
+    );
 
+  let recordings: CctvDvripRecording[];
 
+  try {
+    const parsed: unknown = JSON.parse(
+      result.recordings || "[]",
+    );
 
-type CctvPlaybackNativeModule = {
-  searchRecordings(
-    host: string,
-    username: string,
-    password: string,
-    startTime: string,
-    endTime: string,
-    channel: number,
-  ): Promise<{
-    success: boolean;
-    count: number;
-    recordings: string;
-  }>;
+    if (!Array.isArray(parsed)) {
+      throw new Error(
+        "Format daftar rekaman DVRIP bukan array.",
+      );
+    }
 
-  prepareRecordingPlayback(
-    host: string,
-    username: string,
-    password: string,
-    fileName: string,
-    startTime: string,
-    endTime: string,
-  ): Promise<{
-    success: boolean;
-    uri: string;
-    size: number;
-  }>;
-};
+    recordings = parsed as CctvDvripRecording[];
+  } catch (error) {
+    throw new Error(
+      "Gagal membaca daftar rekaman DVRIP: " +
+        (error instanceof Error
+          ? error.message
+          : String(error)),
+    );
+  }
 
+  return {
+    success: result.success,
+    count: result.count,
+    recordings,
+  };
+}
 
 export async function prepareDvripRecordingPlayback(
   host: string,
@@ -142,10 +214,16 @@ export async function prepareDvripRecordingPlayback(
   fileName: string,
   startTime: string,
   endTime: string,
-): Promise<{ success: boolean; uri: string; size: number }> {
+): Promise<{
+  success: boolean;
+  uri: string;
+  size: number;
+}> {
   if (!playbackNativeModule) {
     throw new Error(
-      "Modul DVRIP belum tersedia. Bangun ulang APK setelah perubahan native.",
+      "Modul DVRIP belum tersedia. " +
+        playbackNativeModuleError +
+        " Pastikan modul CctvPlayback terdaftar di Android.",
     );
   }
 
