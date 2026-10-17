@@ -372,22 +372,22 @@ async function playRecording(recording: OnvifRecording) {
                 </Text>
               ) : null}
 
-              {!recording.token.startsWith("dvrip:") {true ? (
-                <Pressable
-                  style={[
-                    styles.primaryButton,
-                    busy && styles.disabled,
-                  ]}
-                  onPress={() => playRecording(recording)}
-                  disabled={busy}
-                >
-                  <Text style={styles.buttonText}>
-                    {selectedToken === recording.token && playbackUri
-                      ? "Putar Ulang"
-                      : "Putar Rekaman"}
-                  </Text>
-                </Pressable>
-              ) : null}
+              {true ? (
+  <Pressable
+    style={[
+      styles.primaryButton,
+      busy && styles.disabled,
+    ]}
+    onPress={() => playRecording(recording)}
+    disabled={busy}
+  >
+    <Text style={styles.buttonText}>
+      {selectedToken === recording.token && playbackUri
+        ? "Putar Ulang"
+        : "Putar Rekaman"}
+    </Text>
+  </Pressable>
+) : null}
             </View>
           ))}
         </View>
@@ -398,21 +398,30 @@ async function playRecording(recording: OnvifRecording) {
           <Text style={styles.cardTitle}>Pemutar Rekaman</Text>
           <View style={styles.videoBox}>
             <Video
-              key={playbackUri}
-              source={
-  playbackUri.startsWith("rtsp://") ||
-  playbackUri.startsWith("rtsps://")
-    ? { uri: playbackUri, type: "rtsp" }
-    : { uri: playbackUri }
-}
-                  event?.error?.errorException ||
-                  "ExoPlayer gagal membuka stream rekaman.";
-                setStatus(
-                  "Perangkat memberikan URI, tetapi pemutar gagal membuka stream: " +
-                    details,
-                );
-              }}
-            />
+  key={playbackUri}
+  source={
+    playbackUri.startsWith("rtsp://") ||
+    playbackUri.startsWith("rtsps://")
+      ? { uri: playbackUri, type: "rtsp" }
+      : { uri: playbackUri }
+  }
+  style={styles.video}
+  controls
+  resizeMode="contain"
+  paused={false}
+  muted={muted}
+  onError={(event) => {
+    const details =
+      event?.error?.errorString ||
+      event?.error?.errorException ||
+      "ExoPlayer gagal membuka stream rekaman.";
+
+    setStatus(
+      "Perangkat memberikan URI, tetapi pemutar gagal membuka stream: " +
+        details,
+    );
+  }}
+/>
           </View>
           <Text style={styles.muted}>
             Jika perangkat tidak mendukung ONVIF Profile G, atau URI/codec
