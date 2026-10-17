@@ -420,6 +420,16 @@ internal class BitReader(private val data: ByteArray) {
     return result
   }
 
+  fun skip(count: Int) {
+    require(count >= 0) {
+      "Jumlah bit tidak valid."
+    }
+
+    repeat(count) {
+      read(1)
+    }
+  }
+
   fun ue(): Int {
     var zeros = 0
 
