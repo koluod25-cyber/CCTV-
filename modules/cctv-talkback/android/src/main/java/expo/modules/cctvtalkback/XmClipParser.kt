@@ -98,7 +98,8 @@ internal object XmClipParser {
       "Data rekaman kosong. Unduhan DVRIP belum menghasilkan data."
     }
 
-    val nals = splitAnnexB(raw)
+    val videoData = unwrapDvripFrames(raw)
+val nals = splitAnnexB(videoData)
 
     require(nals.isNotEmpty()) {
       "Format rekaman tidak memiliki pemisah NAL Annex-B."
