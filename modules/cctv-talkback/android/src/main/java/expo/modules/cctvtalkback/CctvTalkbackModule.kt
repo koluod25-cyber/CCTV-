@@ -268,18 +268,27 @@ private fun parseJsonObject(
   val raw = String(
     payload,
     Charsets.UTF_8,
-  ).trim('\u0000', '\n', '\r', ' ')
+  )
 
-  if (raw.isBlank()) {
-    error("$label: respons kamera kosong.")
+  val start = raw.indexOf('{')
+  val end = raw.lastIndexOf('}')
+
+  if (start < 0 || end < start) {
+    error(
+      "$label: objek JSON tidak ditemukan. " +
+        "Panjang respons: ${payload.size} byte."
+    )
   }
 
+  val jsonText = raw.substring(start, end + 1)
+
   return try {
-    JSONObject(raw)
+    JSONObject(jsonText)
   } catch (e: Exception) {
     error(
-      "$label: respons bukan JSON valid. " +
-        "Data awal: ${raw.take(120)}"
+      "$label: JSON tidak valid. " +
+        "Panjang respons: ${payload.size} byte. " +
+        "Penyebab: ${e.message ?: "format tidak dikenal"}"
     )
   }
 }
