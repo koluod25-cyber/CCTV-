@@ -24,6 +24,75 @@ internal object XmClipParser {
     val frames: List<ByteArray>
   )
 
+  /**
+   * Mengubah paket media DVRIP/XM menjadi aliran video Annex-B.
+   * Format yang dikenali:
+   * FC/FE = keyframe dengan header 16 byte
+   * FD    = frame lanjutan dengan header 8 byte
+   */
+  private fun unwrapDvripFrames(raw: ByteArray): ByteArray {
+    val output = ByteArrayOutputStream()
+    var i = 0
+    var recognized = 0
+
+    fun u8(index: Int): Int =
+      raw[index].toInt() and 0xff
+
+    fun le32(index: Int): Long =
+      (u8(index).toLong()) or
+      (u8(index + 1).toLong() shl 8) or
+      (u8(index + 2).toLong() shl 16) or
+      (u8(index + 3).toLong() shl 24)
+
+    while (i + 4 <= raw.size) {
+      if (
+        raw[i] != 0.toByte() ||
+        raw[i + 1] != 0.toByte() ||
+        raw[i + 2] != 1.toByte()
+      ) {
+        i++
+        continue
+      }
+
+      val type = u8(i + 3)
+
+      if (type == 0xFC || type == 0xFE) {
+        if (i + 16 > raw.size) break
+
+        val length = le32(i + 12)
+        if (length <= 0 || length > raw.size - i - 16) {
+          i++
+          continue
+        }
+
+        val start = i + 16
+        val end = start + length.toInt()
+        output.write(raw, start, length.toInt())
+        recognized++
+        i = end
+      } else if (type == 0xFD) {
+        if (i + 8 > raw.size) break
+
+        val length = le32(i + 4)
+        if (length <= 0 || length > raw.size - i - 8) {
+          i++
+          continue
+        }
+
+        val start = i + 8
+        val end = start + length.toInt()
+        output.write(raw, start, length.toInt())
+        recognized++
+        i = end
+      } else {
+        i++
+      }
+    }
+
+    // Jangan merusak data yang ternyata sudah berupa Annex-B.
+    return if (recognized > 0) output.toByteArray() else raw
+  }
+
   fun parse(raw: ByteArray): VideoTrack {
     require(raw.isNotEmpty()) {
       "Data rekaman kosong. Unduhan DVRIP belum menghasilkan data."
