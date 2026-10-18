@@ -188,7 +188,6 @@ if (!discovered.searchUrl) {
     }
   }
  
-
 async function playRecording(recording: OnvifRecording) {
   if (!selectedCamera) {
     setStatus("Pilih kamera terlebih dahulu.");
@@ -199,20 +198,63 @@ async function playRecording(recording: OnvifRecording) {
   setPlaybackUri("");
 
   try {
-    // DVRIP hanya digunakan untuk mencari dan mengunduh
-    // rekaman. Jangan memulai unduhan ketika tombol Putar ditekan.
     if (recording.token.startsWith("dvrip:")) {
+      const index = Number(recording.token.split(":")[1]);
+      const item = dvripRecordings[index];
+
+      if (!item) {
+        throw new Error("Data rekaman DVRIP tidak ditemukan.");
+      }
+
+      const host = new URL(
+        selectedCamera.deviceServiceUrl,
+      ).hostname;
+
+      const username =
+        selectedCamera.credentials.username || "";
+      const password =
+        selectedCamera.credentials.password || "";
+
+      if (!username.trim() || !password) {
+        throw new Error(
+          "Username atau password kamera belum diisi.",
+        );
+      }
+
       setStatus(
-        "Rekaman ditemukan melalui DVRIP, tetapi pemutaran langsung DVRIP belum didukung oleh modul saat ini. Tidak ada unduhan yang dimulai. Gunakan tombol Unduh ke HP untuk mencoba menyimpan rekaman, atau gunakan kamera/decoder yang mendukung ONVIF Replay."
+        "Meminta data playback DVRIP dan menyiapkan video. Mohon tunggu...",
       );
+
+      const result = await prepareDvripRecordingPlayback(
+        host,
+        username,
+        password,
+        item.fileName,
+        item.startTime,
+        item.endTime,
+      );
+
+      if (!result.success || !result.uri) {
+        throw new Error("Video playback gagal disiapkan.");
+      }
+
+      setSelectedToken(recording.token);
+      setPlaybackUri(result.uri);
+      setStatus(
+        "Video rekaman siap diputar. Gunakan kontrol pemutar di bawah.",
+      );
+
+      onHistory?.(
+        result.uri,
+        "Memutar rekaman DVRIP",
+      );
+
       return;
     }
 
-    // Playback langsung hanya dilanjutkan jika layanan
-    // ONVIF Replay tersedia.
     if (!services?.replayUrl) {
       throw new Error(
-        "Layanan Replay ONVIF belum tersedia untuk kamera ini."
+        "Layanan Replay ONVIF belum tersedia untuk kamera ini.",
       );
     }
 
@@ -221,12 +263,12 @@ async function playRecording(recording: OnvifRecording) {
     const uri = await getOnvifReplayUri(
       services.replayUrl,
       recording.token,
-      selectedCamera.credentials
+      selectedCamera.credentials,
     );
 
     if (!uri) {
       throw new Error(
-        "Kamera tidak memberikan URI pemutaran rekaman."
+        "Kamera tidak memberikan URI pemutaran rekaman.",
       );
     }
 
@@ -236,11 +278,12 @@ async function playRecording(recording: OnvifRecording) {
 
     onHistory?.(
       uri,
-      "Memutar rekaman tersimpan ONVIF"
+      "Memutar rekaman tersimpan ONVIF",
     );
   } catch (error) {
     setStatus(
-      "Tidak dapat memutar rekaman: " + errorMessage(error)
+      "Tidak dapat memutar rekaman: " +
+        errorMessage(error),
     );
   } finally {
     setBusy(false);
