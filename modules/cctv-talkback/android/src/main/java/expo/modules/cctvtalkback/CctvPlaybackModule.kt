@@ -644,7 +644,7 @@ if (messageId == 1426 && payload.isNotEmpty()) {
         }
       }
 
-            return demuxDvripFrames(data.toByteArray())
+            return data.toByteArray()
     }
   }
 
