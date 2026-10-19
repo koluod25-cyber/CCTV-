@@ -644,7 +644,7 @@ if (messageId == 1426 && payload.isNotEmpty()) {
         }
       }
 
-      return data.toByteArray()
+            return demuxDvripFrames(data.toByteArray())
     }
   }
 
@@ -847,7 +847,8 @@ if (messageId == 1426 && payload.isNotEmpty()) {
       "Tidak ditemukan frame video dalam rekaman DVRIP."
     }
 
-   return demuxDvripFrames(data.toByteArray())
+       return video.toByteArray()
+  }
 
   private fun containsAnnexBPrefix(data: ByteArray): Boolean {
     for (i in 0 until data.size - 2) {
