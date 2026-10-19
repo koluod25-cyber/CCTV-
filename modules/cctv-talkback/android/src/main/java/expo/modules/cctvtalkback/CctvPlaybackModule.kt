@@ -824,10 +824,10 @@ private fun demuxDvripFrames(raw: ByteArray): ByteArray {
 
         else -> {
           val prefixEnd = minOf(raw.size, offset + 32)
-          val prefix = (offset until prefixEnd).joinToString(" ") { index ->
-            "%02X".format(raw[index].toInt() and 0xFF)
-          }
-
+          val prefixEnd = minOf(raw.size, offset + 64)
+val prefix = (offset until prefixEnd).joinToString(" ") { index ->
+  "%02X".format(raw[index].toInt() and 0xFF)
+}
           throw IllegalStateException(
             "Jenis frame DVRIP tidak dikenal: 0x" +
               type.toString(16) +
