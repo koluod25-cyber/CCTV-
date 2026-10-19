@@ -151,15 +151,20 @@ if (!discovered.searchUrl) {
             date +
             ".",
     );
+  
   } catch (error) {
-    setStatus(
-      "ONVIF Search tidak tersedia dan pencarian DVRIP gagal: " +
-        errorMessage(error),
-    );
-  }
+    const detail =
+      error instanceof Error
+        ? error.message
+        : String(error);
 
-  return;
-}
+    setStatus(
+      "Playback DVRIP gagal: " +
+        (detail || "Penyebab tidak diberikan oleh modul Android."),
+    );
+  } finally {
+    setBusy(false);
+  }
 
 
           const results = await searchOnvifRecordings(
