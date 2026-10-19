@@ -190,14 +190,14 @@ class CctvPlaybackModule : Module() {
         "Informasi rekaman tidak valid."
       }
 
-      val raw = downloadRecording(
-        host,
-        username,
-        password,
-        fileName,
-        startTime,
-        endTime
-      )
+      val raw = playbackRecording(
+  host,
+  username,
+  password,
+  fileName,
+  startTime,
+  endTime
+)
 
       require(raw.isNotEmpty()) {
         "Kamera tidak mengirim data rekaman."
@@ -273,6 +273,210 @@ class CctvPlaybackModule : Module() {
       }
     }
   }
+
+
+private fun playbackRecording(
+  host: String,
+  username: String,
+  password: String,
+  fileName: String,
+  startTime: String,
+  endTime: String
+): ByteArray {
+  Socket().use { controlSocket ->
+    controlSocket.connect(InetSocketAddress(host, 34567), 8000)
+    controlSocket.soTimeout = 15000
+
+    val controlInput =
+      BufferedInputStream(controlSocket.getInputStream())
+    val controlOutput =
+      BufferedOutputStream(controlSocket.getOutputStream())
+
+    sendPacket(
+      controlOutput,
+      1000,
+      JSONObject()
+        .put("EncryptType", "MD5")
+        .put("LoginType", "DVRIP-Web")
+        .put("PassWord", sofiaHash(password))
+        .put("UserName", username),
+      0L,
+      1L
+    )
+
+    val login = readJsonPacket(controlInput)
+    val loginRet = login.optInt("Ret", -1)
+
+    require(loginRet == 100 || loginRet == 110 || loginRet == 111) {
+      "Login DVRIP ditolak kamera (Ret=$loginRet)."
+    }
+
+    val sessionText = login.optString("SessionID", "0")
+    val session = if (sessionText.startsWith("0x", true)) {
+      sessionText.substring(2).toLong(16) and 0xffffffffL
+    } else {
+      sessionText.toLongOrNull() ?: 0L
+    }
+
+    require(session != 0L) {
+      "Kamera tidak memberikan SessionID DVRIP yang valid."
+    }
+
+    fun playbackCommand(action: String) = JSONObject()
+      .put("Name", "OPPlayBack")
+      .put(
+        "OPPlayBack",
+        JSONObject()
+          .put("Action", action)
+          .put("StartTime", startTime)
+          .put("EndTime", endTime)
+          .put(
+            "Parameter",
+            JSONObject()
+              .put("PlayMode", "ByName")
+              .put("FileName", fileName)
+              .put("StreamType", 0)
+              .put("Value", 0)
+              .put("TransMode", "TCP")
+          )
+      )
+      .put("SessionID", "0x%08x".format(session))
+
+    Socket().use { dataSocket ->
+      dataSocket.connect(InetSocketAddress(host, 34567), 8000)
+      dataSocket.soTimeout = 15000
+
+      val dataInput =
+        BufferedInputStream(dataSocket.getInputStream())
+      val dataOutput =
+        BufferedOutputStream(dataSocket.getOutputStream())
+      val data = java.io.ByteArrayOutputStream()
+      var started = false
+
+      try {
+        // Klaim aliran video melalui koneksi data.
+        sendPacket(
+          dataOutput,
+          1424,
+          playbackCommand("Claim"),
+          session,
+          1L
+        )
+
+        val claimResponse = readJsonPacket(dataInput)
+        val claimRet = claimResponse.optInt("Ret", -1)
+
+        require(
+          claimRet == 100 ||
+            claimRet == 110 ||
+            claimRet == 111
+        ) {
+          "Kamera menolak Claim playback DVRIP (Ret=$claimRet)."
+        }
+
+        // Mulai playback melalui koneksi kontrol.
+        sendPacket(
+          controlOutput,
+          1420,
+          playbackCommand("Start"),
+          session,
+          2L
+        )
+
+        val startResponse = readJsonPacket(controlInput)
+        val startRet = startResponse.optInt("Ret", -1)
+
+        require(
+          startRet == 100 ||
+            startRet == 110 ||
+            startRet == 111
+        ) {
+          "Kamera menolak Start playback DVRIP (Ret=$startRet)."
+        }
+
+        started = true
+
+        var finished = false
+
+        while (!finished) {
+          val header = readExact(dataInput, 20)
+
+          require((header[0].toInt() and 0xff) == 0xff) {
+            "Header data playback DVRIP tidak valid."
+          }
+
+          val messageId =
+            (header[14].toInt() and 0xff) or
+              ((header[15].toInt() and 0xff) shl 8)
+
+          val payloadSize = readU32(header, 16).toInt()
+
+          require(payloadSize in 0..(16 * 1024 * 1024)) {
+            "Ukuran paket playback DVRIP tidak valid."
+          }
+
+          val payload =
+            if (payloadSize > 0) {
+              readExact(dataInput, payloadSize)
+            } else {
+              ByteArray(0)
+            }
+
+          // Akhir aliran playback.
+          if (messageId == 1423) {
+            finished = true
+            continue
+          }
+
+          if (messageId == 1422 && payloadSize == 0) {
+            finished = true
+            continue
+          }
+
+          // 1422 adalah paket data playback.
+          if (messageId == 1422 && payload.isNotEmpty()) {
+            require(
+              data.size().toLong() + payload.size <=
+                MAX_DOWNLOAD_BYTES
+            ) {
+              "Rekaman terlalu besar untuk diolah dalam memori."
+            }
+
+            data.write(payload)
+          }
+        }
+
+        require(data.size() > 0) {
+          "Playback selesai tanpa menerima paket video DVRIP."
+        }
+      } catch (error: SocketTimeoutException) {
+        throw IllegalStateException(
+          if (data.size() == 0) {
+            "Playback DVRIP timeout: kamera tidak mengirim " +
+              "paket video 1422. Periksa dukungan playback firmware."
+          } else {
+            "Playback terhenti setelah menerima " +
+              "${data.size()} byte. Data rekaman belum lengkap."
+          }
+        )
+      } finally {
+        if (started) {
+          runCatching {
+            sendPacket(
+              controlOutput,
+              1420,
+              playbackCommand("Stop"),
+              session,
+              3L
+            )
+          }
+        }
+      }
+
+      return data.toByteArray()
+    }
+  }
+}
 
   private fun downloadRecording(
     host: String,
