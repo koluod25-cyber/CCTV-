@@ -753,7 +753,8 @@ if (messageId == 1426 && payload.isNotEmpty()) {
   }
 
 
-  private fun demuxDvripFrames(raw: ByteArray): ByteArray {
+  
+private fun demuxDvripFrames(raw: ByteArray): ByteArray {
     require(raw.isNotEmpty()) {
       "Data rekaman DVRIP kosong."
     }
@@ -764,18 +765,31 @@ if (messageId == 1426 && payload.isNotEmpty()) {
 
     while (offset < raw.size) {
       require(raw.size - offset >= 4) {
-        "Header frame DVRIP terpotong."
+        val prefix = raw.takeLast(minOf(raw.size, 32))
+          .joinToString(" ") {
+            "%02X".format(it.toInt() and 0xFF)
+          }
+        "Header frame DVRIP terpotong pada offset $offset. " +
+          "Data=${raw.size} byte; awal=$prefix"
       }
 
-      require(
-        raw[offset] == 0.toByte() &&
-        raw[offset + 1] == 0.toByte() &&
-        raw[offset + 2] == 1.toByte()
+      if (
+        raw[offset] != 0.toByte() ||
+        raw[offset + 1] != 0.toByte() ||
+        raw[offset + 2] != 1.toByte()
       ) {
-        "Penanda frame DVRIP tidak valid pada offset $offset."
+        val prefixEnd = minOf(raw.size, offset + 32)
+        val prefix = (offset until prefixEnd).joinToString(" ") { index ->
+          "%02X".format(raw[index].toInt() and 0xFF)
+        }
+
+        throw IllegalArgumentException(
+          "Penanda frame DVRIP tidak valid pada offset $offset. " +
+            "Data=${raw.size} byte; awal=$prefix"
+        )
       }
 
-      val type = raw[offset + 3].toInt() and 0xff
+      val type = raw[offset + 3].toInt() and 0xFF
 
       val headerSize: Int
       val payloadSize: Long
@@ -784,7 +798,7 @@ if (messageId == 1426 && payload.isNotEmpty()) {
         0xFC, 0xFE -> {
           headerSize = 16
           require(raw.size - offset >= headerSize) {
-            "Header frame keyframe terpotong."
+            "Header frame keyframe terpotong pada offset $offset."
           }
           payloadSize = readU32(raw, offset + 12)
         }
@@ -792,7 +806,7 @@ if (messageId == 1426 && payload.isNotEmpty()) {
         0xFD -> {
           headerSize = 8
           require(raw.size - offset >= headerSize) {
-            "Header frame video terpotong."
+            "Header frame video terpotong pada offset $offset."
           }
           payloadSize = readU32(raw, offset + 4)
         }
@@ -800,36 +814,43 @@ if (messageId == 1426 && payload.isNotEmpty()) {
         0xFA, 0xF9 -> {
           headerSize = 8
           require(raw.size - offset >= headerSize) {
-            "Header audio/informasi terpotong."
+            "Header audio/informasi terpotong pada offset $offset."
           }
 
           payloadSize =
-            (raw[offset + 6].toLong() and 0xff) or
-            ((raw[offset + 7].toLong() and 0xff) shl 8)
+            (raw[offset + 6].toLong() and 0xFF) or
+            ((raw[offset + 7].toLong() and 0xFF) shl 8)
         }
 
         else -> {
+          val prefixEnd = minOf(raw.size, offset + 32)
+          val prefix = (offset until prefixEnd).joinToString(" ") { index ->
+            "%02X".format(raw[index].toInt() and 0xFF)
+          }
+
           throw IllegalStateException(
             "Jenis frame DVRIP tidak dikenal: 0x" +
-              type.toString(16)
+              type.toString(16) +
+              " pada offset $offset; awal=$prefix"
           )
         }
       }
 
       require(payloadSize <= MAX_DOWNLOAD_BYTES) {
-        "Ukuran frame DVRIP terlalu besar."
+        "Ukuran frame DVRIP terlalu besar pada offset $offset."
       }
 
       val frameEnd = offset.toLong() +
         headerSize.toLong() + payloadSize
 
       require(frameEnd <= raw.size.toLong()) {
-        "Frame DVRIP belum lengkap; data rekaman terpotong."
+        "Frame DVRIP belum lengkap pada offset $offset; " +
+          "ukuran data=${raw.size}, akhir frame=$frameEnd."
       }
 
       if (type == 0xFC || type == 0xFE || type == 0xFD) {
         require(payloadSize > 0) {
-          "Frame video tidak memiliki payload."
+          "Frame video tidak memiliki payload pada offset $offset."
         }
 
         video.write(
@@ -847,8 +868,8 @@ if (messageId == 1426 && payload.isNotEmpty()) {
       "Tidak ditemukan frame video dalam rekaman DVRIP."
     }
 
-       return video.toByteArray()
-  }
+    return video.toByteArray()
+}
 
   private fun containsAnnexBPrefix(data: ByteArray): Boolean {
     for (i in 0 until data.size - 2) {
