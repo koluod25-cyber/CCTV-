@@ -752,6 +752,103 @@ if (messageId == 1426 && payload.isNotEmpty()) {
     return JSONObject(raw.substring(start, end + 1))
   }
 
+
+  private fun demuxDvripFrames(raw: ByteArray): ByteArray {
+    require(raw.isNotEmpty()) {
+      "Data rekaman DVRIP kosong."
+    }
+
+    val video = java.io.ByteArrayOutputStream()
+    var offset = 0
+    var frameCount = 0
+
+    while (offset < raw.size) {
+      require(raw.size - offset >= 4) {
+        "Header frame DVRIP terpotong."
+      }
+
+      require(
+        raw[offset] == 0.toByte() &&
+        raw[offset + 1] == 0.toByte() &&
+        raw[offset + 2] == 1.toByte()
+      ) {
+        "Penanda frame DVRIP tidak valid pada offset $offset."
+      }
+
+      val type = raw[offset + 3].toInt() and 0xff
+
+      val headerSize: Int
+      val payloadSize: Long
+
+      when (type) {
+        0xFC, 0xFE -> {
+          headerSize = 16
+          require(raw.size - offset >= headerSize) {
+            "Header frame keyframe terpotong."
+          }
+          payloadSize = readU32(raw, offset + 12)
+        }
+
+        0xFD -> {
+          headerSize = 8
+          require(raw.size - offset >= headerSize) {
+            "Header frame video terpotong."
+          }
+          payloadSize = readU32(raw, offset + 4)
+        }
+
+        0xFA, 0xF9 -> {
+          headerSize = 8
+          require(raw.size - offset >= headerSize) {
+            "Header audio/informasi terpotong."
+          }
+
+          payloadSize =
+            (raw[offset + 6].toLong() and 0xff) or
+            ((raw[offset + 7].toLong() and 0xff) shl 8)
+        }
+
+        else -> {
+          throw IllegalStateException(
+            "Jenis frame DVRIP tidak dikenal: 0x" +
+              type.toString(16)
+          )
+        }
+      }
+
+      require(payloadSize <= MAX_DOWNLOAD_BYTES) {
+        "Ukuran frame DVRIP terlalu besar."
+      }
+
+      val frameEnd = offset.toLong() +
+        headerSize.toLong() + payloadSize
+
+      require(frameEnd <= raw.size.toLong()) {
+        "Frame DVRIP belum lengkap; data rekaman terpotong."
+      }
+
+      if (type == 0xFC || type == 0xFE || type == 0xFD) {
+        require(payloadSize > 0) {
+          "Frame video tidak memiliki payload."
+        }
+
+        video.write(
+          raw,
+          offset + headerSize,
+          payloadSize.toInt()
+        )
+        frameCount++
+      }
+
+      offset = frameEnd.toInt()
+    }
+
+    require(frameCount > 0 && video.size() > 0) {
+      "Tidak ditemukan frame video dalam rekaman DVRIP."
+    }
+
+   return demuxDvripFrames(data.toByteArray())
+
   private fun containsAnnexBPrefix(data: ByteArray): Boolean {
     for (i in 0 until data.size - 2) {
       if (
