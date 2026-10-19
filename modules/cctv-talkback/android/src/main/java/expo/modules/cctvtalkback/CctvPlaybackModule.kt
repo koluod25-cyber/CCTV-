@@ -753,7 +753,6 @@ if (messageId == 1426 && payload.isNotEmpty()) {
   }
 
 
-  
 private fun demuxDvripFrames(raw: ByteArray): ByteArray {
     require(raw.isNotEmpty()) {
       "Data rekaman DVRIP kosong."
@@ -765,12 +764,7 @@ private fun demuxDvripFrames(raw: ByteArray): ByteArray {
 
     while (offset < raw.size) {
       require(raw.size - offset >= 4) {
-        val prefix = raw.takeLast(minOf(raw.size, 32))
-          .joinToString(" ") {
-            "%02X".format(it.toInt() and 0xFF)
-          }
-        "Header frame DVRIP terpotong pada offset $offset. " +
-          "Data=${raw.size} byte; awal=$prefix"
+        "Header frame DVRIP terpotong pada offset $offset."
       }
 
       if (
@@ -778,7 +772,7 @@ private fun demuxDvripFrames(raw: ByteArray): ByteArray {
         raw[offset + 1] != 0.toByte() ||
         raw[offset + 2] != 1.toByte()
       ) {
-        val prefixEnd = minOf(raw.size, offset + 32)
+        val prefixEnd = minOf(raw.size, offset + 64)
         val prefix = (offset until prefixEnd).joinToString(" ") { index ->
           "%02X".format(raw[index].toInt() and 0xFF)
         }
@@ -823,11 +817,11 @@ private fun demuxDvripFrames(raw: ByteArray): ByteArray {
         }
 
         else -> {
-          val prefixEnd = minOf(raw.size, offset + 32)
           val prefixEnd = minOf(raw.size, offset + 64)
-val prefix = (offset until prefixEnd).joinToString(" ") { index ->
-  "%02X".format(raw[index].toInt() and 0xFF)
-}
+          val prefix = (offset until prefixEnd).joinToString(" ") { index ->
+            "%02X".format(raw[index].toInt() and 0xFF)
+          }
+
           throw IllegalStateException(
             "Jenis frame DVRIP tidak dikenal: 0x" +
               type.toString(16) +
