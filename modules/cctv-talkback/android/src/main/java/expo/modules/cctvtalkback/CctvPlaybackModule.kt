@@ -511,11 +511,34 @@ private fun playbackRecording(
       )
 
       val login = readJsonPacket(input)
-      val ret = login.optInt("Ret", -1)
+      
 
-      require(ret == 100 || ret == 110 || ret == 111) {
-        "Login DVRIP ditolak kamera (Ret=$ret)."
-      }
+val ret = login.optInt("Ret", -1)
+
+when (ret) {
+  100, 110, 111 -> Unit
+
+  203 -> throw IllegalStateException(
+    "Password DVRIP salah (Ret=203). " +
+      "Periksa kredensial kamera."
+  )
+
+  205 -> throw IllegalStateException(
+    "IP terkunci oleh kamera (Ret=205). " +
+      "Hentikan percobaan login dan tunggu " +
+      "sampai akses DVRIP pulih."
+  )
+
+  206, 207 -> throw IllegalStateException(
+    "Akses DVRIP dibatasi kamera (Ret=$ret). " +
+      "Periksa status blokir atau sesi login."
+  )
+
+  else -> throw IllegalStateException(
+    "Login DVRIP ditolak kamera (Ret=$ret)."
+  )
+}
+
 
       val sessionText = login.optString("SessionID", "0")
       val session = if (sessionText.startsWith("0x", true)) {
