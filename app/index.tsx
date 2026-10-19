@@ -201,9 +201,6 @@ function CameraVideo({
   const [errorDetail, setErrorDetail] =
     useState("");
 
-  const [playbackTime, setPlaybackTime] =
-  useState(0);
-
 const [buffering, setBuffering] =
   useState(false);
 
@@ -217,7 +214,7 @@ useEffect(() => {
   setLoaded(false);
   setError(false);
   setErrorDetail("");
-  setPlaybackTime(0);
+ 
 }, [url]);
 
   if (!url) {
@@ -279,9 +276,6 @@ resizeMode="contain"
 paused={false}
 progressUpdateInterval={1000}
 
-onProgress={({ currentTime }) => {
-  setPlaybackTime(currentTime);
-}}
 
 onBuffer={({ isBuffering }) => {
   setBuffering(isBuffering);
