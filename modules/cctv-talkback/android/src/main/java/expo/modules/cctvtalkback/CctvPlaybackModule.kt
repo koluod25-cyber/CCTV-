@@ -606,17 +606,18 @@ when (ret) {
 
           val payload = readExact(input, payloadSize)
 
-          // Abaikan ACK/JSON. Terima paket video DVRIP dan
-          // paket yang jelas mengandung pemisah Annex-B.
-          val isJson = payload.firstOrNull()?.toInt()?.toChar() == '{'
-          val hasAnnexB = containsAnnexBPrefix(payload)
+  // Paket 1426 adalah data rekaman DVRIP.
+// Jangan menyaring berdasarkan isi payload karena frame
+// video dapat terpecah di antara beberapa paket.
+if (messageId == 1426 && payload.isNotEmpty()) {
+  require(
+    data.size().toLong() + payload.size <= MAX_DOWNLOAD_BYTES
+  ) {
+    "Rekaman terlalu besar untuk diolah dalam memori."
+  }
 
-          if (!isJson && (messageId == 1426 || hasAnnexB)) {
-            require(data.size().toLong() + payload.size <= MAX_DOWNLOAD_BYTES) {
-              "Rekaman terlalu besar untuk diolah dalam memori."
-            }
-            data.write(payload)
-          }
+  data.write(payload)
+}
 
           if (data.size() >= MAX_DOWNLOAD_BYTES) {
             error("Batas ukuran unduhan rekaman tercapai.")
