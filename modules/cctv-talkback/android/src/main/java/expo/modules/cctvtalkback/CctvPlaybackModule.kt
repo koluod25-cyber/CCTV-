@@ -123,14 +123,16 @@ class CctvPlaybackModule : Module() {
         "Nama file rekaman tidak valid."
       }
 
-      val raw = downloadRecording(
-        host,
-        username,
-        password,
-        fileName,
-        startTime,
-        endTime
-      )
+      
+val raw = playbackRecording(
+  host,
+  username,
+  password,
+  fileName,
+  startTime,
+  endTime
+)
+
 
       require(raw.isNotEmpty()) {
         "Kamera tidak mengirim data rekaman."
