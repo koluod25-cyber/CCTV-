@@ -253,8 +253,14 @@ internal object XmClipParser {
     val normalized = unwrapDvripFrames(raw)
     val nals = splitAnnexB(normalized)
 
-    require(nals.isNotEmpty()) {
-      "Frame video Annex-B tidak ditemukan."
+        require(nals.isNotEmpty()) {
+      val preview = raw.take(32).joinToString(" ") {
+        "%02X".format(it.toInt() and 0xFF)
+      }
+
+      "Format video DVRIP belum dikenali. " +
+        "Ukuran=${raw.size} byte; " +
+        "Data awal=$preview"
     }
 
     fun avcType(nal: ByteArray): Int =
