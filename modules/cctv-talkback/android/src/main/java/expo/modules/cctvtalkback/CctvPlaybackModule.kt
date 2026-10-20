@@ -439,28 +439,18 @@ var firstPayloadPreview = ""
             continue
           }
 
-          // Catat paket media untuk diagnosis format DVRIP.
-if (messageId == 1422 && payload.isNotEmpty()) {
-  packet1422Count++
+ 
+          // Catat dan simpan paket media DVRIP.
+          if (messageId == 1422 && payload.isNotEmpty()) {
+            packet1422Count++
 
-  if (firstPayloadPreview.isEmpty()) {
-    firstPayloadPreview = payload
-      .take(64)
-      .joinToString(" ") {
-        "%02X".format(it.toInt() and 0xFF)
-      }
-  }
-
-  require(
-    data.size().toLong() + payload.size <= MAX_DOWNLOAD_BYTES
-  ) {
-    "Rekaman terlalu besar untuk diolah dalam memori."
-  }
-
-  data.write(payload)
-} else {
-  otherPacketCount++
-}
+            if (firstPayloadPreview.isEmpty()) {
+              firstPayloadPreview = payload
+                .take(64)
+                .joinToString(" ") {
+                  "%02X".format(it.toInt() and 0xFF)
+                }
+            }
 
             require(
               data.size().toLong() + payload.size <=
@@ -470,6 +460,8 @@ if (messageId == 1422 && payload.isNotEmpty()) {
             }
 
             data.write(payload)
+          } else {
+            otherPacketCount++
           }
         }
 
