@@ -530,7 +530,7 @@ return result
       val input = BufferedInputStream(socket.getInputStream())
       val output = BufferedOutputStream(socket.getOutputStream())
 
-      var sequence = 1L
+      var sequence = 2L
 
       fun send(id: Int, data: JSONObject, session: Long) {
         sendPacket(output, id, data, session, sequence++)
@@ -610,15 +610,16 @@ when (ret) {
       val data = java.io.ByteArrayOutputStream()
 
       
+      
       try {
-        // 1. Minta izin transfer rekaman.
+        // Minta izin transfer rekaman.
         send(
           1424,
           playbackCommand("Claim"),
           session
         )
 
-        // Tunggu respons Claim sebelum memulai transfer.
+        // Tunggu respons Claim terlebih dahulu.
         val claimResponse = readJsonPacket(input)
         val claimRet = claimResponse.optInt("Ret", -1)
 
@@ -628,10 +629,10 @@ when (ret) {
             claimRet == 111
         ) {
           "Kamera menolak Claim rekaman DVRIP " +
-            "(Ret=$claimRet)."
+            "(Ret=$claimRet). Respons=$claimResponse"
         }
 
-        // 2. Mulai transfer rekaman dari kamera.
+        // Mulai transfer pada koneksi yang sama.
         send(
           1420,
           playbackCommand("DownloadStart"),
@@ -639,15 +640,15 @@ when (ret) {
         )
 
         var finished = false
+        val packetCounts = linkedMapOf<Int, Int>()
 
-        // 3. Baca paket sampai kamera menandai akhir transfer.
         while (!finished) {
           val header = readExact(input, 20)
 
           require(
             (header[0].toInt() and 0xff) == 0xff
           ) {
-            "Header transfer rekaman DVRIP tidak valid."
+            "Header transfer DVRIP tidak valid."
           }
 
           val messageId =
@@ -659,10 +660,10 @@ when (ret) {
           require(
             payloadSize in 0..(16 * 1024 * 1024)
           ) {
-            "Ukuran paket rekaman DVRIP tidak valid."
+            "Ukuran paket DVRIP tidak valid."
           }
 
-          // Payload nol menandakan akhir transfer.
+          // Transfer berakhir saat panjang payload nol.
           if (payloadSize == 0) {
             finished = true
             continue
@@ -670,50 +671,37 @@ when (ret) {
 
           val payload = readExact(input, payloadSize)
 
-          // Abaikan respons JSON; simpan paket media.
-          val isJsonPayload =
+          packetCounts[messageId] =
+            (packetCounts[messageId] ?: 0) + 1
+
+          // ACK JSON bukan bagian dari aliran video.
+          val isJson =
             payload.firstOrNull() == '{'.code.toByte()
 
-          val startsXmFrame =
-            payload.size >= 3 &&
-              payload[0] == 0.toByte() &&
-              payload[1] == 0.toByte() &&
-              payload[2] == 1.toByte()
-
-          if (
-            !isJsonPayload &&
-            (messageId == 1426 || startsXmFrame)
-          ) {
+          if (!isJson) {
             require(
               data.size().toLong() + payload.size <=
                 MAX_DOWNLOAD_BYTES
             ) {
-              "Ukuran rekaman melampaui batas penyimpanan."
+              "Ukuran rekaman melewati batas memori."
             }
 
+            // Jangan menyaring hanya berdasarkan ID paket:
+            // firmware dapat membagi data di antara paket.
             data.write(payload)
-          }
-
-          require(data.size() < MAX_DOWNLOAD_BYTES) {
-            "Batas ukuran unduhan rekaman tercapai."
           }
         }
 
         require(data.size() > 0) {
-          "Transfer selesai tetapi tidak ada data media. " +
-            "Periksa respons DownloadStart dan paket DVRIP."
+          "Transfer selesai tanpa data rekaman. " +
+            "Paket diterima=$packetCounts"
         }
 
       } catch (error: SocketTimeoutException) {
         throw IllegalStateException(
-          if (data.size() == 0) {
-            "Timeout 150 detik: tidak ada data rekaman yang " +
-              "diterima. Periksa respons Claim, DownloadStart, " +
-              "dan dukungan playback DVRIP kamera."
-          } else {
-            "Transfer rekaman terhenti setelah menerima " +
-              "${data.size()} byte. Data belum lengkap."
-          }
+          "Timeout saat transfer DVRIP. " +
+            "Data diterima=${data.size()} byte. " +
+            "Periksa respons kamera dan koneksi."
         )
       } finally {
         runCatching {
