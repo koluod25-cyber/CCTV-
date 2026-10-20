@@ -1,4 +1,3 @@
-
 package expo.modules.cctvtalkback
 
 import android.media.MediaCodec
@@ -244,6 +243,72 @@ internal object XmClipParser {
     }
 
     return result
+  }
+
+  fun parse(raw: ByteArray): VideoTrack {
+    require(raw.isNotEmpty()) {
+      "Data rekaman DVRIP kosong."
+    }
+
+    val normalized = unwrapDvripFrames(raw)
+    val nals = splitAnnexB(normalized)
+
+    require(nals.isNotEmpty()) {
+      "Frame video Annex-B tidak ditemukan."
+    }
+
+    fun avcType(nal: ByteArray): Int =
+      nal[0].toInt() and 0x1f
+
+    fun hevcType(nal: ByteArray): Int =
+      (nal[0].toInt() shr 1) and 0x3f
+
+    val isHevc = nals.any {
+      it.size >= 2 && hevcType(it) == 33
+    }
+
+    if (isHevc) {
+      val vps = nals.firstOrNull { hevcType(it) == 32 }
+      val sps = nals.firstOrNull { hevcType(it) == 33 }
+        ?: error("SPS H.265 tidak ditemukan.")
+      val pps = nals.firstOrNull { hevcType(it) == 34 }
+      val (width, height) = HevcSps.dimensions(sps)
+      val frames = nals.filter { hevcType(it) in 0..31 }
+
+      require(frames.isNotEmpty()) {
+        "Frame gambar H.265 tidak ditemukan."
+      }
+
+      return VideoTrack(
+        codec = "video/hevc",
+        width = width,
+        height = height,
+        sps = sps,
+        pps = pps,
+        vps = vps,
+        frames = frames
+      )
+    }
+
+    val sps = nals.firstOrNull { avcType(it) == 7 }
+      ?: error("SPS H.264 tidak ditemukan.")
+    val pps = nals.firstOrNull { avcType(it) == 8 }
+    val (width, height) = AvcSps.dimensions(sps)
+    val frames = nals.filter { avcType(it) in 1..5 }
+
+    require(frames.isNotEmpty()) {
+      "Frame gambar H.264 tidak ditemukan."
+    }
+
+    return VideoTrack(
+      codec = "video/avc",
+      width = width,
+      height = height,
+      sps = sps,
+      pps = pps,
+      vps = null,
+      frames = frames
+    )
   }
 }
 
