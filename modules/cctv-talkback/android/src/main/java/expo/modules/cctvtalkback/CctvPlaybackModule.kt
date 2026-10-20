@@ -192,7 +192,7 @@ val raw = playbackRecording(
         "Informasi rekaman tidak valid."
       }
 
-      val raw = playbackRecording(
+      val raw = downloadRecording(
   host,
   username,
   password,
