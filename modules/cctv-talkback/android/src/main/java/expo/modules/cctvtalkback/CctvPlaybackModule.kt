@@ -123,8 +123,8 @@ class CctvPlaybackModule : Module() {
         "Nama file rekaman tidak valid."
       }
 
-      
-val raw = playbackRecording(
+
+val raw = downloadRecording(
   host,
   username,
   password,
