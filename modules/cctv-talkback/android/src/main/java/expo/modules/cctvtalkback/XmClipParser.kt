@@ -30,147 +30,165 @@ internal object XmClipParser {
    * FC/FE = keyframe dengan header 16 byte
    * FD    = frame lanjutan dengan header 8 byte
    */
+  
   private fun unwrapDvripFrames(raw: ByteArray): ByteArray {
+    require(raw.isNotEmpty()) {
+      "Data rekaman DVRIP kosong."
+    }
+
+    val startCode = byteArrayOf(0, 0, 0, 1)
     val output = ByteArrayOutputStream()
-    var i = 0
+    var offset = 0
     var recognized = 0
 
     fun u8(index: Int): Int =
       raw[index].toInt() and 0xff
 
     fun le32(index: Int): Long =
-      (u8(index).toLong()) or
-      (u8(index + 1).toLong() shl 8) or
-      (u8(index + 2).toLong() shl 16) or
-      (u8(index + 3).toLong() shl 24)
+      u8(index).toLong() or
+        (u8(index + 1).toLong() shl 8) or
+        (u8(index + 2).toLong() shl 16) or
+        (u8(index + 3).toLong() shl 24)
 
-    while (i + 4 <= raw.size) {
+    // Format DVRIP/XM: FC/FE memakai header 16 byte,
+    // FD memakai header 8 byte.
+    while (offset + 4 <= raw.size) {
       if (
-        raw[i] != 0.toByte() ||
-        raw[i + 1] != 0.toByte() ||
-        raw[i + 2] != 1.toByte()
+        u8(offset) != 0 ||
+        u8(offset + 1) != 0 ||
+        u8(offset + 2) != 1
       ) {
-        i++
+        offset++
         continue
       }
 
-      val type = u8(i + 3)
+      val type = u8(offset + 3)
 
-      if (type == 0xFC || type == 0xFE) {
-        if (i + 16 > raw.size) break
-
-        val length = le32(i + 12)
-        if (length <= 0 || length > raw.size - i - 16) {
-          i++
+      val headerSize = when (type) {
+        0xFC, 0xFE -> 16
+        0xFD -> 8
+        else -> {
+          offset++
           continue
         }
-
-        val start = i + 16
-        val end = start + length.toInt()
-        output.write(raw, start, length.toInt())
-        recognized++
-        i = end
-      } else if (type == 0xFD) {
-        if (i + 8 > raw.size) break
-
-        val length = le32(i + 4)
-        if (length <= 0 || length > raw.size - i - 8) {
-          i++
-          continue
-        }
-
-        val start = i + 8
-        val end = start + length.toInt()
-        output.write(raw, start, length.toInt())
-        recognized++
-        i = end
-      } else {
-        i++
       }
+
+      if (offset + headerSize > raw.size) break
+
+      val lengthOffset =
+        if (headerSize == 16) offset + 12 else offset + 4
+
+      val length = le32(lengthOffset)
+
+      if (
+        length <= 0 ||
+        length > raw.size.toLong() - offset - headerSize
+      ) {
+        offset++
+        continue
+      }
+
+      val payloadStart = offset + headerSize
+      val payloadLength = length.toInt()
+
+      output.write(raw, payloadStart, payloadLength)
+      recognized++
+      offset = payloadStart + payloadLength
     }
 
-    // Jangan merusak data yang ternyata sudah berupa Annex-B.
-    return if (recognized > 0) output.toByteArray() else raw
+    if (recognized > 0) {
+      val unwrapped = output.toByteArray()
+      if (hasAnnexB(unwrapped)) return unwrapped
+    }
+
+    // Data mungkin sudah berupa Annex-B.
+    if (hasAnnexB(raw)) return raw
+
+    // Coba format NAL dengan panjang 4 byte big-endian.
+    // Hanya terima jika seluruh rangkaian valid dan berisi
+    // SPS, PPS, serta frame H.264.
+    val converted = ByteArrayOutputStream()
+    var pos = 0
+    var nalCount = 0
+    var hasSps = false
+    var hasPps = false
+    var hasFrame = false
+    var valid = true
+
+    while (pos + 4 <= raw.size) {
+      val length =
+        (u8(pos).toLong() shl 24) or
+        (u8(pos + 1).toLong() shl 16) or
+        (u8(pos + 2).toLong() shl 8) or
+        u8(pos + 3).toLong()
+
+      pos += 4
+
+      if (length <= 0 || length > raw.size - pos) {
+        valid = false
+        break
+      }
+
+      val nalLength = length.toInt()
+      val nalType = u8(pos) and 0x1f
+
+      if (nalType !in 1..23) {
+        valid = false
+        break
+      }
+
+      if (nalType == 7) hasSps = true
+      if (nalType == 8) hasPps = true
+      if (nalType in 1..5) hasFrame = true
+
+      converted.write(startCode)
+      converted.write(raw, pos, nalLength)
+
+      pos += nalLength
+      nalCount++
+    }
+
+    if (
+      valid &&
+      pos == raw.size &&
+      nalCount >= 3 &&
+      hasSps &&
+      hasPps &&
+      hasFrame
+    ) {
+      return converted.toByteArray()
+    }
+
+    // Jangan mengubah data yang formatnya belum dikenali.
+    return raw
   }
 
-  fun parse(raw: ByteArray): VideoTrack {
-    require(raw.isNotEmpty()) {
-      "Data rekaman kosong. Unduhan DVRIP belum menghasilkan data."
-    }
+  private fun hasAnnexB(data: ByteArray): Boolean {
+    var i = 0
 
-    val videoData = unwrapDvripFrames(raw)
-val nals = splitAnnexB(videoData)
-
-    require(nals.isNotEmpty()) {
-      "Format rekaman tidak memiliki pemisah NAL Annex-B."
-    }
-
-    // Coba format H.264 terlebih dahulu.
-    val avcSps = nals.firstOrNull {
-      it.isNotEmpty() && (it[0].toInt() and 0x1f) == 7
-    }
-
-    if (avcSps != null) {
-      val pps = nals.firstOrNull {
-        it.isNotEmpty() && (it[0].toInt() and 0x1f) == 8
+    while (i + 3 <= data.size) {
+      if (
+        data[i] == 0.toByte() &&
+        data[i + 1] == 0.toByte() &&
+        data[i + 2] == 1.toByte()
+      ) {
+        return true
       }
 
-      val frames = nals.filter {
-        it.isNotEmpty() &&
-          ((it[0].toInt() and 0x1f) in 1..5)
+      if (
+        i + 4 <= data.size &&
+        data[i] == 0.toByte() &&
+        data[i + 1] == 0.toByte() &&
+        data[i + 2] == 0.toByte() &&
+        data[i + 3] == 1.toByte()
+      ) {
+        return true
       }
 
-      require(pps != null && frames.isNotEmpty()) {
-        "Data H.264 belum memiliki PPS atau frame video."
-      }
-
-      val dimensions = AvcSps.dimensions(avcSps)
-
-      return VideoTrack(
-        codec = "video/avc",
-        width = dimensions.first,
-        height = dimensions.second,
-        sps = avcSps,
-        pps = pps,
-        vps = null,
-        frames = frames
-      )
+      i++
     }
 
-    // Jika bukan H.264, coba HEVC/H.265.
-    val vps = nals.firstOrNull {
-      it.size >= 2 && ((it[0].toInt() and 0x7e) shr 1) == 32
-    }
-    val hevcSps = nals.firstOrNull {
-      it.size >= 2 && ((it[0].toInt() and 0x7e) shr 1) == 33
-    }
-    val hevcPps = nals.firstOrNull {
-      it.size >= 2 && ((it[0].toInt() and 0x7e) shr 1) == 34
-    }
-
-    require(hevcSps != null && hevcPps != null) {
-      "Parameter SPS/PPS H.264/H.265 tidak ditemukan. Rekaman mungkin masih memakai pembungkus XM."
-    }
-
-    val frames = nals.filter {
-      it.size >= 2 && (((it[0].toInt() and 0x7e) shr 1) in 0..31)
-    }
-
-    require(frames.isNotEmpty()) {
-      "Frame H.265 tidak ditemukan dalam data rekaman."
-    }
-
-    val dimensions = HevcSps.dimensions(hevcSps)
-
-    return VideoTrack(
-      codec = "video/hevc",
-      width = dimensions.first,
-      height = dimensions.second,
-      sps = hevcSps,
-      pps = hevcPps,
-      vps = vps,
-      frames = frames
-    )
+    return false
   }
 
   fun splitAnnexB(data: ByteArray): List<ByteArray> {
