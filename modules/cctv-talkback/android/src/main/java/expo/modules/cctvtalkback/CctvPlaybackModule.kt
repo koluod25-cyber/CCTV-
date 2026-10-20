@@ -352,10 +352,14 @@ private fun playbackRecording(
         BufferedInputStream(dataSocket.getInputStream())
       val dataOutput =
         BufferedOutputStream(dataSocket.getOutputStream())
-      val data = java.io.ByteArrayOutputStream()
-      var started = false
 
+      val data = java.io.ByteArrayOutputStream()
+var started = false
+var packet1422Count = 0
+var otherPacketCount = 0
+var firstPayloadPreview = ""
       try {
+
         // Klaim aliran video melalui koneksi data.
         sendPacket(
           dataOutput,
@@ -435,8 +439,29 @@ private fun playbackRecording(
             continue
           }
 
-          // 1422 adalah paket data playback.
-          if (messageId == 1422 && payload.isNotEmpty()) {
+          // Catat paket media untuk diagnosis format DVRIP.
+if (messageId == 1422 && payload.isNotEmpty()) {
+  packet1422Count++
+
+  if (firstPayloadPreview.isEmpty()) {
+    firstPayloadPreview = payload
+      .take(64)
+      .joinToString(" ") {
+        "%02X".format(it.toInt() and 0xFF)
+      }
+  }
+
+  require(
+    data.size().toLong() + payload.size <= MAX_DOWNLOAD_BYTES
+  ) {
+    "Rekaman terlalu besar untuk diolah dalam memori."
+  }
+
+  data.write(payload)
+} else {
+  otherPacketCount++
+}
+
             require(
               data.size().toLong() + payload.size <=
                 MAX_DOWNLOAD_BYTES
@@ -475,7 +500,24 @@ private fun playbackRecording(
         }
       }
 
-      return data.toByteArray()
+      val result = data.toByteArray()
+
+require(result.isNotEmpty()) {
+  "Tidak ada data media. Paket 1422=$packet1422Count; " +
+    "paket lainnya=$otherPacketCount."
+}
+
+require(XmClipParser.splitAnnexB(result).isNotEmpty()) {
+  "Diagnosis DVRIP: paket 1422=$packet1422Count; " +
+    "paket lainnya=$otherPacketCount; " +
+    "ukuran=${result.size} byte; " +
+    "data awal=" + result.take(64).joinToString(" ") {
+      "%02X".format(it.toInt() and 0xFF)
+    } +
+    "; payload pertama=$firstPayloadPreview"
+}
+
+return result
     }
   }
 }
