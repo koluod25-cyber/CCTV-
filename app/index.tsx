@@ -2008,6 +2008,79 @@ const renderCameraSlot =
           ? { opacity: 0.6 }
           : null,
       ]}
+
+  <Pressable
+    style={[
+      styles.cameraControlButton,
+      { backgroundColor: "#8f2929" },
+    ]}
+    accessibilityRole="button"
+    accessibilityLabel={`Hapus kamera ${slot + 1}`}
+    onPress={() => {
+      Alert.alert(
+        "Hapus Kamera",
+        `Hapus konfigurasi Kamera ${slot + 1}? Kamera lain tidak akan terpengaruh.`,
+        [
+          {
+            text: "Batal",
+            style: "cancel",
+          },
+          {
+            text: "Hapus",
+            style: "destructive",
+            onPress: async () => {
+              if (talkbackActiveSlot === slot) {
+                try {
+                  await stopTalkback();
+                } catch (error) {
+                  console.warn(
+                    "Gagal menghentikan Talkback:",
+                    error,
+                  );
+                }
+                setTalkbackActiveSlot(null);
+              }
+
+              if (fullscreenSlot === slot) {
+                setFullscreenSlot(null);
+                try {
+                  await ScreenOrientation.unlockAsync();
+                } catch {}
+              }
+
+              clearCameraSlot(slot);
+
+              setCameraMuted((items) => {
+                const next = [...items];
+                next[slot] = false;
+                return next;
+              });
+
+              setCameraPlaying((items) => {
+                const next = [...items];
+                next[slot] = false;
+                return next;
+              });
+
+              setCameraTalkbackCredentials((items) => {
+                const next = [...items];
+                next[slot] = null;
+                return next;
+              });
+
+              Alert.alert(
+                "Kamera Dihapus",
+                `Konfigurasi Kamera ${slot + 1} telah dihapus.`,
+              );
+            },
+          },
+        ],
+      );
+    }}
+  >
+    <Text style={styles.cameraControlText}>🗑</Text>
+  </Pressable>
+
       accessibilityRole="button"
       accessibilityLabel={`Talkback kamera ${slot + 1}`}
       disabled={talkbackBusySlot !== null}
