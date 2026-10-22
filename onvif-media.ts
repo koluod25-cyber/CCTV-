@@ -396,12 +396,17 @@ async function soapRequest(
       }
 
       const text = await response.text();
-
+   
       if (!response.ok) {
+        const responsePreview = text
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 180);
+
         errors.push(
-          `SOAP ${attempt.version}.0 ${
+          `Endpoint ${endpoint} | SOAP ${attempt.version}.0 ${
             attempt.useSecurity ? "WS-Security" : "tanpa WS-Security"
-          } HTTP ${response.status}: ${text.slice(0, 300)}`,
+          } HTTP ${response.status}: ${responsePreview}`,
         );
         continue;
       }
@@ -420,14 +425,14 @@ async function soapRequest(
       }
 
       return text;
+    
     } catch (error) {
       errors.push(
-        `SOAP ${attempt.version}.0 ${
+        `Endpoint ${endpoint} | SOAP ${attempt.version}.0 ${
           attempt.useSecurity ? "WS-Security" : "tanpa WS-Security"
         }: ${error instanceof Error ? error.message : "Network error"}`,
       );
     }
-  }
 
   throw new Error(
     errors.join(" | ") || "ONVIF SOAP request gagal.",
