@@ -51,6 +51,7 @@ import {
 
 import {
   discoverOnvifCameras,
+  discoverSsdpDevices,
   type DiscoveredCamera,
 } from "@/onvif-discovery";
 
@@ -1158,49 +1159,73 @@ const openCameraSettings = useCallback(
   [cameraPtzConfig, cameraStreams],
 );
 
-  const discoverCameras =
-    useCallback(
-      async () => {
-        setSearching(true);
+const discoverCameras = useCallback(
+  async () => {
+    setSearching(true);
+    setStatusText("Mencari kamera melalui ONVIF dan SSDP...");
 
+    try {
+      const results = await Promise.allSettled([
+        discoverOnvifCameras(),
+        discoverSsdpDevices(),
+      ]);
+
+      const onvifCameras =
+        results[0].status === "fulfilled"
+          ? results[0].value
+          : [];
+
+      const ssdpDevices =
+        results[1].status === "fulfilled"
+          ? results[1].value
+          : [];
+
+      // Utamakan hasil ONVIF agar perangkat yang sama
+      // tidak ditampilkan dua kali.
+      const knownHosts = new Set(
+        onvifCameras.map((camera) => camera.host),
+      );
+
+      const uniqueSsdpDevices = ssdpDevices.filter(
+        (device) => !knownHosts.has(device.host),
+      );
+
+      const combined: DiscoveredCamera[] = [
+        ...onvifCameras,
+        ...uniqueSsdpDevices,
+      ];
+
+      setCameras(combined);
+
+      if (results.every((result) => result.status === "rejected")) {
+        const message =
+          "Pencarian ONVIF dan SSDP gagal. Periksa izin jaringan dan koneksi Wi-Fi.";
+        setStatusText(message);
+        addHistory("error", "", message);
+        return;
+      }
+
+      if (combined.length === 0) {
         setStatusText(
-          "Mencari kamera ONVIF...",
+          "Tidak ada perangkat ditemukan melalui ONVIF atau SSDP. Kamera non-ONVIF mungkin memerlukan pencarian IP atau alamat stream manual.",
         );
+        return;
+      }
 
-        try {
-          const result =
-            await discoverOnvifCameras();
-
-          setCameras(result);
-
-          if (!result.length) {
-            setStatusText(
-              "Tidak ada kamera ONVIF yang ditemukan.",
-            );
-            return;
-          }
-
-          setStatusText(
-            `${result.length} kamera ditemukan.`,
-          );
-        } catch (error) {
-          const message =
-            formatError(error);
-
-          setStatusText(message);
-
-          addHistory(
-            "error",
-            "",
-            message,
-          );
-        } finally {
-          setSearching(false);
-        }
-      },
-      [addHistory],
-    );
-
+      setStatusText(
+        `Ditemukan ${combined.length} perangkat: ${onvifCameras.length} ONVIF dan ${uniqueSsdpDevices.length} SSDP. Perangkat SSDP belum tentu kamera.`,
+      );
+    } catch (error) {
+      const message = formatError(error);
+      setStatusText(message);
+      addHistory("error", "", message);
+    } finally {
+      setSearching(false);
+    }
+  },
+  [addHistory],
+);
+      
   const connectCamera =
   useCallback(
     async (
