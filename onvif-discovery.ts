@@ -4,7 +4,6 @@ const WS_DISCOVERY_ADDRESS = "239.255.255.250";
 const WS_DISCOVERY_PORT = 3702;
 
 export type DiscoveredCamera = {
-export type DiscoveredCamera = {
   id: string;
   name: string;
   host: string;
