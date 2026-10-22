@@ -433,6 +433,7 @@ async function soapRequest(
         }: ${error instanceof Error ? error.message : "Network error"}`,
       );
     }
+}
 
   throw new Error(
     errors.join(" | ") || "ONVIF SOAP request gagal.",
