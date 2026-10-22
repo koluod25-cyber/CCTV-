@@ -4,6 +4,7 @@ const WS_DISCOVERY_ADDRESS = "239.255.255.250";
 const WS_DISCOVERY_PORT = 3702;
 
 export type DiscoveredCamera = {
+export type DiscoveredCamera = {
   id: string;
   name: string;
   host: string;
@@ -12,6 +13,7 @@ export type DiscoveredCamera = {
   types: string;
   scopes: string;
   address: string;
+  protocol?: "onvif" | "ssdp";
 };
 
 function createProbeMessage(): string {
@@ -310,6 +312,156 @@ export async function discoverOnvifCameras(
       } catch (error) {
         await finish(error);
       }
-    }
+    } 
   );
 }
+
+
+const SSDP_ADDRESS = "239.255.255.250";
+const SSDP_PORT = 1900;
+
+export async function discoverSsdpDevices(
+  timeoutMs = 5000
+): Promise<DiscoveredCamera[]> {
+  const socket = await createSocket({
+    type: "udp4",
+    reuseAddress: true,
+  });
+
+  const discovered = new Map<string, DiscoveredCamera>();
+
+  return new Promise<DiscoveredCamera[]>(
+    async (resolve, reject) => {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      let subscription:
+        | { remove: () => void }
+        | undefined;
+      let finished = false;
+
+      const finish = async (error?: unknown) => {
+        if (finished) return;
+        finished = true;
+
+        if (timer) clearTimeout(timer);
+        subscription?.remove();
+
+        try {
+          await socket.close();
+        } catch {
+          // Abaikan kesalahan saat menutup socket.
+        }
+
+        if (error) {
+          reject(error);
+        } else {
+          resolve(Array.from(discovered.values()));
+        }
+      };
+
+      try {
+        await socket.bind({
+          port: 0,
+          address: "0.0.0.0",
+        });
+
+        try {
+          await socket.joinMulticastGroup(SSDP_ADDRESS);
+        } catch {
+          // Multicast mungkin sudah ditangani sistem.
+        }
+
+        subscription = socket.addListener(
+          "message",
+          (event: any) => {
+            const raw =
+              event?.data ??
+              event?.message ??
+              event?.buffer;
+
+            if (raw == null) return;
+
+            const response = decodeMessage(raw);
+            if (!response.trim()) return;
+
+            // Hanya proses balasan SSDP yang valid.
+            if (
+              !/^HTTP\/1\.[01]\s+200\b/im.test(response)
+            ) {
+              return;
+            }
+
+            const locationMatch = response.match(
+              /^location\s*:\s*(https?:\/\/\S+)/im
+            );
+
+            if (!locationMatch?.[1]) return;
+
+            const location = locationMatch[1].trim();
+
+            let url: URL;
+
+            try {
+              url = new URL(location);
+            } catch {
+              return;
+            }
+
+            const host = url.hostname;
+            const port = url.port
+              ? Number(url.port)
+              : url.protocol === "https:"
+                ? 443
+                : 80;
+
+            if (!host || !Number.isFinite(port)) return;
+
+            const server =
+              response.match(/^server\s*:\s*(.+)$/im)?.[1]?.trim();
+
+            const usn =
+              response.match(/^usn\s*:\s*(.+)$/im)?.[1]?.trim();
+
+            const st =
+              response.match(/^st\s*:\s*(.+)$/im)?.[1]?.trim();
+
+            const id = `ssdp:${host}:${port}:${usn || location}`;
+
+            discovered.set(id, {
+              id,
+              name: server || st || host,
+              host,
+              port,
+              xaddrs: [],
+              types: st || "",
+              scopes: server || "",
+              address: location,
+              protocol: "ssdp",
+            });
+          }
+        );
+
+        timer = setTimeout(() => {
+          void finish();
+        }, timeoutMs);
+
+        const message = [
+          "M-SEARCH * HTTP/1.1",
+          `HOST: ${SSDP_ADDRESS}:${SSDP_PORT}`,
+          'MAN: "ssdp:discover"',
+          "MX: 2",
+          "ST: ssdp:all",
+          "",
+          "",
+        ].join("\r\n");
+
+        await socket.send(message, {
+          host: SSDP_ADDRESS,
+          port: SSDP_PORT,
+        });
+      } catch (error) {
+        await finish(error);
+      }
+    }
+  );
+          }
+                       
