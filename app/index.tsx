@@ -1996,19 +1996,7 @@ const renderCameraSlot =
   >
     <Text style={styles.cameraControlText}>⚙</Text>
   </Pressable>
-
-  {stream ? (
-    <Pressable
-      style={[
-        styles.cameraControlButton,
-        talkbackActiveSlot === slot
-          ? { backgroundColor: "#b42318" }
-          : null,
-        talkbackBusySlot === slot
-          ? { opacity: 0.6 }
-          : null,
-      ]}
-
+  
   <Pressable
     style={[
       styles.cameraControlButton,
@@ -2080,6 +2068,18 @@ const renderCameraSlot =
   >
     <Text style={styles.cameraControlText}>🗑</Text>
   </Pressable>
+      
+  {stream ? (
+    <Pressable
+      style={[
+        styles.cameraControlButton,
+        talkbackActiveSlot === slot
+          ? { backgroundColor: "#b42318" }
+          : null,
+        talkbackBusySlot === slot
+          ? { opacity: 0.6 }
+          : null,
+      ]}
 
       accessibilityRole="button"
       accessibilityLabel={`Talkback kamera ${slot + 1}`}
