@@ -493,6 +493,9 @@ export default function HomeScreen() {
     cameras,
     setCameras,
   ] = useState<DiscoveredCamera[]>([]);
+  
+  const [manualCameraIp, setManualCameraIp] =
+  useState("192.168.1.8");
 
   const [
     selectedCamera,
@@ -1225,6 +1228,47 @@ const discoverCameras = useCallback(
   },
   [addHistory],
 );
+
+  const addManualIpCamera = useCallback(() => {
+  const ip = manualCameraIp.trim();
+
+  const ipv4Pattern =
+    /^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/;
+
+  if (!ipv4Pattern.test(ip)) {
+    Alert.alert(
+      "IP tidak valid",
+      "Masukkan alamat IPv4 kamera yang benar.",
+    );
+    return;
+  }
+
+  const camera: DiscoveredCamera = {
+    id: `manual-onvif:${ip}`,
+    name: `Kamera IP Manual (${ip})`,
+    host: ip,
+    port: 80,
+    xaddrs: [
+      `http://${ip}/onvif/device_service`,
+    ],
+    types: "NetworkVideoTransmitter",
+    scopes: "",
+    address: `http://${ip}/onvif/device_service`,
+    protocol: "onvif",
+  };
+
+  setCameras((current) => {
+    const withoutDuplicate = current.filter(
+      (item) => item.id !== camera.id,
+    );
+
+    return [...withoutDuplicate, camera];
+  });
+
+  setStatusText(
+    `IP ${ip} ditambahkan. Pilih Hubungkan Otomatis untuk menguji layanan ONVIF.`,
+  );
+}, [manualCameraIp]);
       
   const connectCamera =
   useCallback(
@@ -2476,6 +2520,41 @@ const renderCameraSlot =
           </Text>
         </View>
       ) : null}
+
+      <View style={styles.card}>
+  <Text style={styles.cardTitle}>
+    Tambahkan IP Kamera Manual
+  </Text>
+
+  <Text style={styles.fieldLabel}>
+    Alamat IP Kamera
+  </Text>
+
+  <TextInput
+    value={manualCameraIp}
+    onChangeText={setManualCameraIp}
+    autoCapitalize="none"
+    autoCorrect={false}
+    keyboardType="decimal-pad"
+    placeholder="192.168.1.8"
+    placeholderTextColor="#7b8794"
+    style={styles.input}
+  />
+
+  <Pressable
+    style={styles.primaryButton}
+    onPress={addManualIpCamera}
+  >
+    <Text style={styles.primaryButtonText}>
+      Tambahkan IP
+    </Text>
+  </Pressable>
+
+  <Text style={styles.saveHint}>
+    Menambahkan alamat IP untuk pengujian ONVIF.
+    IP saja belum cukup untuk memastikan RTSP tersedia.
+  </Text>
+</View>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>
