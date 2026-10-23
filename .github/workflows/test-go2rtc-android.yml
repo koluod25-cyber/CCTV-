@@ -1,0 +1,59 @@
+
+name: Test go2rtc Android ARM64
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-go2rtc:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout CCTV Universal Monitor
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+          cache: false
+
+      - name: Download go2rtc source
+        run: |
+          git clone \
+            --depth 1 \
+            --branch v1.9.14 \
+            https://github.com/AlexxIT/go2rtc.git \
+            /tmp/go2rtc
+
+      - name: Compile go2rtc for Android ARM64
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cd /tmp/go2rtc
+
+          GOOS=android \
+          GOARCH=arm64 \
+          CGO_ENABLED=0 \
+          go build \
+            -trimpath \
+            -ldflags="-s -w" \
+            -o "$GITHUB_WORKSPACE/go2rtc-android-arm64" \
+            .
+
+          test -s "$GITHUB_WORKSPACE/go2rtc-android-arm64"
+
+          file "$GITHUB_WORKSPACE/go2rtc-android-arm64"
+
+          go version -m "$GITHUB_WORKSPACE/go2rtc-android-arm64"
+
+      - name: Upload test binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: go2rtc-android-arm64-test
+          path: go2rtc-android-arm64
+          if-no-files-found: error
