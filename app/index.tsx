@@ -1455,20 +1455,77 @@ const talkbackCapability =
             slot + 1
           }.`,
         );
+      
       } catch (error) {
-        const message =
-          formatError(error);
+        const onvifError = formatError(error);
 
-        setStatusText(
-          message,
-        );
+        try {
+          const result = await startGo2rtc(
+            camera.host,
+            username,
+            password,
+          );
 
-        addHistory(
-          "error",
-          deviceUrl,
-          message,
-        );
-      } finally {
+          if (!result.running || !result.rtspUrl) {
+            throw new Error(
+              result.message ||
+                "Proses go2rtc tidak berjalan.",
+            );
+          }
+
+          const streamUri = result.rtspUrl;
+
+          setSelectedCamera(camera);
+          setProfile(null);
+          setActiveStream(streamUri);
+          setManualUrl(streamUri);
+
+          setCameraIds((current) => {
+            const next = [...current];
+            next[slot] = camera.id;
+            return next;
+          });
+
+          setCameraStream(slot, streamUri);
+
+          setCameraTalkbackCredentials((current) => {
+            const next = [...current];
+            next[slot] = { username, password };
+            return next;
+          });
+
+          setCameraPtz(slot, null);
+          setActiveTab("live");
+
+          setStatusText(
+            `go2rtc aktif untuk Kamera ${slot + 1}. ` +
+              `ONVIF tidak tersedia: ${onvifError}`,
+          );
+
+          addHistory(
+            "connected",
+            streamUri,
+            `Stream go2rtc disiapkan untuk Kamera ${slot + 1}.`,
+          );
+        } catch (go2rtcError) {
+          const message =
+            `ONVIF gagal: ${onvifError}\n\n` +
+            `go2rtc gagal: ${formatError(go2rtcError)}`;
+
+          setStatusText(message);
+
+          addHistory(
+            "error",
+            deviceUrl,
+            message,
+          );
+
+          Alert.alert(
+            "Kamera belum terhubung",
+            message,
+          );
+          }
+                } finally {
         setConnecting(null);
       }
     },
@@ -1590,20 +1647,21 @@ const talkbackCapability =
             finalUrl,
             "Stream manual berhasil disiapkan.",
           );
-        } catch (error) {
-          const message =
-            formatError(error);
+        
+      } catch (error) {
+        const message = formatError(error);
 
-          setStatusText(message);
+        setStatusText(message);
 
-          addHistory(
-            "error",
-            finalUrl,
-            message,
-          );
-        } finally {
-          setConnecting(null);
+        addHistory(
+          "error",
+          finalUrl,
+          message,
+        );
+      } finally {
+        setTesting(false);
         }
+        
       },
       [
   manualUrl,
