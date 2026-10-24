@@ -1675,11 +1675,12 @@ const talkbackCapability =
   addHistory,
 ],
     );
+
+
   const testManualConnection =
     useCallback(
       async () => {
-        const rawUrl =
-          manualUrl.trim();
+        const rawUrl = manualUrl.trim();
 
         if (!isCameraUrl(rawUrl)) {
           Alert.alert(
@@ -1689,130 +1690,48 @@ const talkbackCapability =
           return;
         }
 
-        const finalUrl =
-          addCredentials(
-            rawUrl,
-            username,
-            password,
-          );
-
-        setTesting(true);
-        setStatusText(
-          "Menguji koneksi kamera...",
+        const finalUrl = addCredentials(
+          rawUrl,
+          username,
+          password,
         );
 
-        try {
-          const result =
-            await testCameraConnection({
-              id: "manual",
-              name: "Manual",
-              url: finalUrl,
-              username,
-              password,
-              vendor,
-            });
+        setTesting(true);
+        setStatusText("Menguji koneksi kamera...");
 
-setStatusText(
-  result.message ||
-    (result.status === "offline"
-      ? "Kamera tidak merespons."
-      : "Tes koneksi selesai."),
-);
+        try {
+          const result = await testCameraConnection({
+            id: "manual",
+            name: "Manual",
+            url: finalUrl,
+            username,
+            password,
+            vendor,
+          });
+
+          setStatusText(
+            result.message ||
+              (result.status === "offline"
+                ? "Kamera tidak merespons."
+                : "Tes koneksi selesai."),
+          );
 
           addHistory(
             result.status === "offline"
               ? "error"
               : "connected",
             finalUrl,
-            result.message ||
-              "Tes koneksi selesai.",
+            result.message || "Tes koneksi selesai.",
           );
-  
-              } catch (error) {
+        } catch (error) {
           const message = formatError(error);
 
           setStatusText(message);
-
-          addHistory(
-            "error",
-            finalUrl,
-            message,
-          );
+          addHistory("error", finalUrl, message);
         } finally {
           setTesting(false);
         }
-
-        // Jika ONVIF gagal, coba sumber kamera melalui go2rtc.
-        try {
-          const result = await startGo2rtc(
-            camera.host,
-            username,
-            password,
-          );
-
-          if (!result.running || !result.rtspUrl) {
-            throw new Error(
-              result.message ||
-                "Proses go2rtc tidak berjalan.",
-            );
-          }
-
-          const streamUri = result.rtspUrl;
-
-          setSelectedCamera(camera);
-          setProfile(null);
-          setActiveStream(streamUri);
-          setManualUrl(streamUri);
-
-          setCameraIds((current) => {
-            const next = [...current];
-            next[slot] = camera.id;
-            return next;
-          });
-
-          setCameraStream(slot, streamUri);
-
-          setCameraTalkbackCredentials((current) => {
-            const next = [...current];
-            next[slot] = { username, password };
-            return next;
-          });
-
-          setCameraPtz(slot, null);
-          setActiveTab("live");
-
-          setStatusText(
-            `go2rtc aktif untuk Kamera ${slot + 1}. ` +
-              `ONVIF tidak tersedia: ${onvifError}`,
-          );
-
-          addHistory(
-            "connected",
-            streamUri,
-            `Stream go2rtc disiapkan untuk Kamera ${slot + 1}.`,
-          );
-        } catch (go2rtcError) {
-          const message =
-            `ONVIF gagal: ${onvifError}\n\n` +
-            `go2rtc gagal: ${formatError(go2rtcError)}`;
-
-          setStatusText(message);
-
-          addHistory(
-            "error",
-            deviceUrl,
-            message,
-          );
-
-          Alert.alert(
-            "Kamera belum terhubung",
-            message,
-          );
-        }
-      } finally {
-        setConnecting(null);
-      }
-     },
+      },
       [
         manualUrl,
         username,
@@ -1821,6 +1740,7 @@ setStatusText(
         addHistory,
       ],
     );
+        
     const disconnectCamera =
     useCallback(
       (slot?: number) => {
