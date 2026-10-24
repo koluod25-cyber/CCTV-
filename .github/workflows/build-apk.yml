@@ -30,6 +30,36 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+      - name: Setup Go for go2rtc
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+          cache: false
+
+      - name: Compile go2rtc for Android ARM64
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git clone \
+            --depth 1 \
+            --branch v1.9.14 \
+            https://github.com/AlexxIT/go2rtc.git \
+            /tmp/go2rtc
+
+          cd /tmp/go2rtc
+
+          GOOS=android \
+          GOARCH=arm64 \
+          CGO_ENABLED=0 \
+          go build \
+            -trimpath \
+            -ldflags="-s -w -checklinkname=0" \
+            -o "$GITHUB_WORKSPACE/go2rtc-android-arm64" \
+            .
+
+          test -s "$GITHUB_WORKSPACE/go2rtc-android-arm64"
+          file "$GITHUB_WORKSPACE/go2rtc-android-arm64"
 
       - name: Setup Android NDK
         shell: bash
@@ -106,6 +136,20 @@ jobs:
 
       - name: Generate Android project
         run: CI=1 npx expo prebuild --platform android --clean
+
+      - name: Package go2rtc binary in Android assets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p android/app/src/main/assets
+
+          install -m 0644 \
+            go2rtc-android-arm64 \
+            android/app/src/main/assets/go2rtc-android-arm64
+
+          test -s android/app/src/main/assets/go2rtc-android-arm64
+          ls -lh android/app/src/main/assets/go2rtc-android-arm64
 
       - name: Build release APK
         working-directory: android
