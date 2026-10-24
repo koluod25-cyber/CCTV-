@@ -30,7 +30,11 @@ import {
 
 import Video from "react-native-video";
 
-import { startTalkback, stopTalkback } from "cctv-talkback";
+import {
+  startGo2rtc,
+  startTalkback,
+  stopTalkback,
+} from "cctv-talkback";
 
 import * as ImagePicker from "expo-image-picker";
 
@@ -1665,21 +1669,81 @@ setStatusText(
             result.message ||
               "Tes koneksi selesai.",
           );
-        } catch (error) {
+  
+      } catch (error) {
+        const onvifError = formatError(error);
+
+        // Jika ONVIF gagal, coba sumber kamera melalui go2rtc.
+        try {
+          const result = await startGo2rtc(
+            camera.host,
+            username,
+            password,
+          );
+
+          if (!result.running || !result.rtspUrl) {
+            throw new Error(
+              result.message ||
+                "Proses go2rtc tidak berjalan.",
+            );
+          }
+
+          const streamUri = result.rtspUrl;
+
+          setSelectedCamera(camera);
+          setProfile(null);
+          setActiveStream(streamUri);
+          setManualUrl(streamUri);
+
+          setCameraIds((current) => {
+            const next = [...current];
+            next[slot] = camera.id;
+            return next;
+          });
+
+          setCameraStream(slot, streamUri);
+
+          setCameraTalkbackCredentials((current) => {
+            const next = [...current];
+            next[slot] = { username, password };
+            return next;
+          });
+
+          setCameraPtz(slot, null);
+          setActiveTab("live");
+
+          setStatusText(
+            `go2rtc aktif untuk Kamera ${slot + 1}. ` +
+              `ONVIF tidak tersedia: ${onvifError}`,
+          );
+
+          addHistory(
+            "connected",
+            streamUri,
+            `Stream go2rtc disiapkan untuk Kamera ${slot + 1}.`,
+          );
+        } catch (go2rtcError) {
           const message =
-            formatError(error);
+            `ONVIF gagal: ${onvifError}\n\n` +
+            `go2rtc gagal: ${formatError(go2rtcError)}`;
 
           setStatusText(message);
 
           addHistory(
             "error",
-            finalUrl,
+            deviceUrl,
             message,
           );
-        } finally {
-          setTesting(false);
+
+          Alert.alert(
+            "Kamera belum terhubung",
+            message,
+          );
         }
-      },
+      } finally {
+        setConnecting(null);
+      }
+     },
       [
         manualUrl,
         username,
