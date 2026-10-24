@@ -34,6 +34,25 @@ class Go2rtcModule : Module() {
       status()
     }
 
+    AsyncFunction("getGo2rtcLog") {
+      val file = logFile ?: File(
+        appContext.reactContext?.filesDir
+          ?: error("Konteks Android tidak tersedia."),
+        "go2rtc.log",
+      )
+
+      if (!file.exists()) {
+        "Log go2rtc belum tersedia."
+      } else {
+        file.readText()
+          .takeLast(6000)
+          .replace(
+            Regex("(?i)(://)[^/@\\s]+@"),
+            "$1***@",
+          )
+      }
+    }
+
     AsyncFunction("stopGo2rtc") {
       stop()
     }
