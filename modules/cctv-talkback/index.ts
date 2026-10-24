@@ -306,6 +306,8 @@ type Go2rtcNativeModule = {
     logPath: string;
   }>;
 
+  getGo2rtcLog(): Promise<string>;
+
   stopGo2rtc(): Promise<{
     success: boolean;
     running: boolean;
@@ -328,6 +330,16 @@ if (Platform.OS === "android") {
         ? error.message
         : String(error);
   }
+}
+
+export async function getGo2rtcLog(): Promise<string> {
+  if (!go2rtcModule) {
+    throw new Error(
+      "Modul go2rtc belum dimuat: " + go2rtcLoadError,
+    );
+  }
+
+  return go2rtcModule.getGo2rtcLog();
 }
 
 export async function startGo2rtc(
