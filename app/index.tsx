@@ -31,6 +31,7 @@ import {
 import Video from "react-native-video";
 
 import {
+  getGo2rtcLog,
   startGo2rtc,
   startTalkback,
   stopTalkback,
@@ -2355,10 +2356,32 @@ const renderCameraSlot =
         onLoad={() => {
           setCameraSlotConnected(slot, true);
         }}
-        onError={(message) => {
+        
+        onError={async (message) => {
           updateCameraConnected(slot, false);
           addHistory("error", stream, message);
+
+          if (
+            stream.includes("127.0.0.1:8556/eyecam")
+          ) {
+            try {
+              const log = await getGo2rtcLog();
+
+              Alert.alert(
+                "Diagnosis go2rtc - Kamera " + (slot + 1),
+                message + "\n\nLog go2rtc:\n" + log,
+              );
+            } catch (error) {
+              Alert.alert(
+                "Diagnosis go2rtc",
+                message +
+                  "\n\nGagal membaca log: " +
+                  formatError(error),
+              );
+            }
+          }
         }}
+
         onPlaybackStateChange={(isPlaying) => {
   setCameraPlaying((previous) => {
     const next = [...previous];
