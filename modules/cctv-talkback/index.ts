@@ -280,3 +280,90 @@ export async function prepareDvripRecordingPlayback(
     endTime,
   );
 }
+
+
+import { requireNativeModule as requireGo2rtcNativeModule } from "expo-modules-core";
+
+type Go2rtcNativeModule = {
+  startGo2rtc(
+    host: string,
+    username: string,
+    password: string,
+  ): Promise<{
+    success: boolean;
+    running: boolean;
+    apiReady: boolean;
+    message: string;
+    rtspUrl: string;
+    logPath: string;
+  }>;
+
+  getGo2rtcStatus(): Promise<{
+    running: boolean;
+    apiReady: boolean;
+    rtspReady: boolean;
+    message: string;
+    logPath: string;
+  }>;
+
+  stopGo2rtc(): Promise<{
+    success: boolean;
+    running: boolean;
+    message: string;
+  }>;
+};
+
+let go2rtcModule: Go2rtcNativeModule | null = null;
+let go2rtcLoadError = "";
+
+if (Platform.OS === "android") {
+  try {
+    go2rtcModule =
+      requireGo2rtcNativeModule<Go2rtcNativeModule>(
+        "CctvGo2rtc",
+      );
+  } catch (error) {
+    go2rtcLoadError =
+      error instanceof Error
+        ? error.message
+        : String(error);
+  }
+}
+
+export async function startGo2rtc(
+  host: string,
+  username = "",
+  password = "",
+) {
+  if (!go2rtcModule) {
+    throw new Error(
+      "Modul go2rtc belum dimuat: " + go2rtcLoadError,
+    );
+  }
+
+  return go2rtcModule.startGo2rtc(
+    host,
+    username,
+    password,
+  );
+}
+
+export async function getGo2rtcStatus() {
+  if (!go2rtcModule) {
+    throw new Error(
+      "Modul go2rtc belum dimuat: " + go2rtcLoadError,
+    );
+  }
+
+  return go2rtcModule.getGo2rtcStatus();
+}
+
+export async function stopGo2rtc() {
+  if (!go2rtcModule) {
+    throw new Error(
+      "Modul go2rtc belum dimuat: " + go2rtcLoadError,
+    );
+  }
+
+  return go2rtcModule.stopGo2rtc();
+}
