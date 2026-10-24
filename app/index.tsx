@@ -1728,8 +1728,19 @@ setStatusText(
               "Tes koneksi selesai.",
           );
   
-      } catch (error) {
-        const onvifError = formatError(error);
+              } catch (error) {
+          const message = formatError(error);
+
+          setStatusText(message);
+
+          addHistory(
+            "error",
+            finalUrl,
+            message,
+          );
+        } finally {
+          setTesting(false);
+        }
 
         // Jika ONVIF gagal, coba sumber kamera melalui go2rtc.
         try {
