@@ -150,13 +150,7 @@ jobs:
             /tmp/ffmpeg-android-build
 
           cd /tmp/ffmpeg-android-build
-
-          python3 - <<'PY'
-          from pathlib import Path
-
-          path = Path("scripts/build.sh")
-          lines = path.read_text().splitlines(keepends=True)
-          remove = (       
+        
           sed -i '/--enable-libfreetype/d; /--enable-libfribidi/d; /--enable-libharfbuzz/d; /--enable-libass/d; /--enable-libx265/d' scripts/build.sh
 
           bash scripts/build.sh arm64-v8a
