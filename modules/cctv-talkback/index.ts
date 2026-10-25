@@ -306,6 +306,15 @@ type Go2rtcNativeModule = {
     logPath: string;
   }>;
 
+  getGo2rtcDiagnostics(): Promise<{
+    running: boolean;
+    apiReady: boolean;
+    rtspReady: boolean;
+    logPath: string;
+    localLog: string;
+    apiLog: string;
+  }>;
+
   stopGo2rtc(): Promise<{
     success: boolean;
     running: boolean;
@@ -356,6 +365,16 @@ export async function getGo2rtcStatus() {
   }
 
   return go2rtcModule.getGo2rtcStatus();
+}
+
+export async function getGo2rtcDiagnostics() {
+  if (!go2rtcModule) {
+    throw new Error(
+      "Modul go2rtc belum dimuat: " + go2rtcLoadError,
+    );
+  }
+
+  return go2rtcModule.getGo2rtcDiagnostics();
 }
 
 export async function stopGo2rtc() {
