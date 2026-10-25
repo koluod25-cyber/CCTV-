@@ -1692,10 +1692,31 @@ const talkbackCapability =
             streamUri,
             `Stream go2rtc disiapkan untuk Kamera ${slot + 1}.`,
           );
+
         } catch (go2rtcError) {
+          let diagnosticText = "";
+
+          try {
+            const diagnostic =
+              await getGo2rtcDiagnostics();
+
+            diagnosticText =
+              "\n\n=== STATUS GO2RTC ===\n" +
+              `Proses berjalan: ${diagnostic.running}\n` +
+              `API siap: ${diagnostic.apiReady}\n` +
+              `RTSP siap: ${diagnostic.rtspReady}\n` +
+              `Lokasi log: ${diagnostic.logPath}\n\n` +
+              (diagnostic.localLog || diagnostic.apiLog || "");
+          } catch (diagnosticError) {
+            diagnosticText =
+              "\n\nDiagnostik gagal dibaca: " +
+              formatError(diagnosticError);
+          }
+
           const message =
             `ONVIF gagal: ${onvifError}\n\n` +
-            `go2rtc gagal: ${formatError(go2rtcError)}`;
+            `go2rtc gagal: ${formatError(go2rtcError)}` +
+            diagnosticText;
 
           setStatusText(message);
 
@@ -1706,10 +1727,24 @@ const talkbackCapability =
           );
 
           Alert.alert(
-            "Kamera belum terhubung",
+            "Diagnostik Kamera EYESEC",
             message,
+            [
+              {
+                text: "TUTUP",
+                style: "cancel",
+              },
+              {
+                text: "SALIN LOG",
+                onPress: () => {
+                  // Log tetap tersedia pada riwayat/status.
+                  setStatusText(message);
+                },
+              },
+            ],
           );
-          }
+        }
+          
                 } finally {
         setConnecting(null);
       }
