@@ -172,22 +172,43 @@ jobs:
 
       - name: Generate Android project
         run: CI=1 npx expo prebuild --platform android --clean
-
-      - name: Package go2rtc binary as Android native library
+  
+      - name: Package go2rtc and FFmpeg as Android native libraries
         shell: bash
         run: |
           set -euo pipefail
 
-          SOURCE="$GITHUB_WORKSPACE/go2rtc-android-arm64"
+          GO2RTC_SOURCE="$GITHUB_WORKSPACE/go2rtc-android-arm64"
+          FFMPEG_SOURCE="$GITHUB_WORKSPACE/ffmpeg-android-arm64"
+
           MODULE_TARGET="modules/cctv-talkback/android/src/main/jniLibs/arm64-v8a"
           APP_TARGET="android/app/src/main/jniLibs/arm64-v8a"
 
-          test -s "$SOURCE"
+          test -s "$GO2RTC_SOURCE" || {
+            echo "ERROR: Biner go2rtc tidak ditemukan."
+            exit 1
+          }
+
+          test -s "$FFMPEG_SOURCE" || {
+            echo "ERROR: Biner FFmpeg tidak ditemukan."
+            exit 1
+          }
 
           mkdir -p "$MODULE_TARGET" "$APP_TARGET"
 
-          install -m 0755 "$SOURCE" "$MODULE_TARGET/libgo2rtc.so"
-          install -m 0755 "$SOURCE" "$APP_TARGET/libgo2rtc.so"
+          install -m 0755 "$GO2RTC_SOURCE" \
+            "$MODULE_TARGET/libgo2rtc.so"
+          install -m 0755 "$GO2RTC_SOURCE" \
+            "$APP_TARGET/libgo2rtc.so"
+
+          install -m 0755 "$FFMPEG_SOURCE" \
+            "$MODULE_TARGET/libffmpeg.so"
+          install -m 0755 "$FFMPEG_SOURCE" \
+            "$APP_TARGET/libffmpeg.so"
+
+          echo "=== Biner yang akan dikemas ==="
+          ls -lh "$MODULE_TARGET"
+          ls -lh "$APP_TARGET"
 
           MANIFEST="android/app/src/main/AndroidManifest.xml"
           test -f "$MANIFEST"
@@ -202,7 +223,9 @@ jobs:
 
           match = re.search(r'<application\b[^>]*>', content)
           if not match:
-              raise SystemExit("Tag application tidak ditemukan di AndroidManifest.xml")
+              raise SystemExit(
+                  "Tag application tidak ditemukan di AndroidManifest.xml"
+              )
 
           tag = match.group(0)
           tag = re.sub(
@@ -213,16 +236,15 @@ jobs:
           tag = tag[:-1] + ' android:extractNativeLibs="true">'
           content = content[:match.start()] + tag + content[match.end():]
           path.write_text(content)
+
           print("extractNativeLibs=true diterapkan.")
           PY
 
-          echo "Biner sudah disalin ke modul dan aplikasi utama."
-          
       - name: Build release APK
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
 
-      - name: Verify go2rtc inside APK
+      - name: Verify go2rtc and FFmpeg inside APK
         shell: bash
         run: |
           set -euo pipefail
@@ -233,9 +255,18 @@ jobs:
           test -n "$APK"
           test -f "$APK"
 
-          echo "Memeriksa: $APK"
-          unzip -l "$APK" | grep 'lib/arm64-v8a/libgo2rtc.so'
-          
+          echo "Memeriksa APK: $APK"
+
+          unzip -l "$APK" > /tmp/apk-contents.txt
+
+          grep 'lib/arm64-v8a/libgo2rtc.so' \
+            /tmp/apk-contents.txt
+
+          grep 'lib/arm64-v8a/libffmpeg.so' \
+            /tmp/apk-contents.txt
+
+          echo "Kedua biner ditemukan di APK."
+        
       - name: Build release APK
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
