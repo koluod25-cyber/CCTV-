@@ -1744,7 +1744,7 @@ const talkbackCapability =
             ],
           );
         }
-          
+      
                 } finally {
         setConnecting(null);
       }
