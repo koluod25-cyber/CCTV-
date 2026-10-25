@@ -404,15 +404,18 @@ onError={(videoError) => {
 
         try {
           const result = await getGo2rtcDiagnostics();
+         
+setDiagnosticsText(
+  "Proses berjalan: " + result.running +
+  "\nAPI siap: " + result.apiReady +
+  "\nRTSP siap: " + result.rtspReady +
+  "\nLokasi log: " + result.logPath +
+  "\n\n=== LOG API / STATUS STREAM ===\n" +
+  result.apiLog +
+  "\n\n=== LOG LOKAL ===\n" +
+  result.localLog
+);
 
-          setDiagnosticsText(
-            "Proses berjalan: " + result.running +
-            "\nAPI siap: " + result.apiReady +
-            "\nRTSP siap: " + result.rtspReady +
-            "\nLokasi log: " + result.logPath +
-            "\n\n=== LOG LOKAL ===\n" + result.localLog +
-            "\n\n=== LOG API ===\n" + result.apiLog
-          );
         } catch (e) {
           setDiagnosticsText(
             "Gagal membaca diagnostik: " + formatError(e)
