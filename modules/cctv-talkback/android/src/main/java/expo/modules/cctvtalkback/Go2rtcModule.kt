@@ -103,16 +103,18 @@ check(ffmpeg.canExecute()) {
     }
     
     val yaml = """
-      api:
-        listen: "127.0.0.1:1985"
-      rtsp:
-        listen: "127.0.0.1:8556"
-      streams:
-        eyecam:
-          - "eseecloud://${credentials}${host}:80/livestream/12"
-        eyecam_h264:
-          - "ffmpeg:eyecam#video=h264"
-    """.trimIndent() + "\n"
+  ffmpeg:
+    bin: "${ffmpeg.absolutePath}"
+  api:
+    listen: "127.0.0.1:1985"
+  rtsp:
+    listen: "127.0.0.1:8556"
+  streams:
+    eyecam:
+      - "eseecloud://${credentials}${host}:80/livestream/12"
+    eyecam_h264:
+      - "ffmpeg:eyecam#video=h264"
+""".trimIndent() + "\n"
     
     config.writeText(yaml)
 
