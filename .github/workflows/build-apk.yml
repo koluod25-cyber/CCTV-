@@ -128,7 +128,6 @@ jobs:
 
           echo "Android NDK ${NDK_VERSION} installed successfully."
           cat "$NDK_DIR/source.properties"
-      
       - name: Build standalone FFmpeg for Android ARM64
         shell: bash
         run: |
