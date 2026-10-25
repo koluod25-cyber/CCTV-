@@ -1716,6 +1716,33 @@ const talkbackCapability =
           const message =
             `ONVIF gagal: ${onvifError}\n\n` +
             `go2rtc gagal: ${formatError(go2rtcError)}` +
+
+            
+        } catch (go2rtcError) {
+          let diagnosticText = "";
+
+          try {
+            const diagnostic =
+              await getGo2rtcDiagnostics();
+
+            diagnosticText =
+              "\n\n=== STATUS GO2RTC ===\n" +
+              `Proses berjalan: ${diagnostic.running}\n` +
+              `API siap: ${diagnostic.apiReady}\n` +
+              `RTSP siap: ${diagnostic.rtspReady}\n` +
+              `Lokasi log: ${diagnostic.logPath || "Tidak tersedia"}\n\n` +
+              (diagnostic.localLog ||
+                diagnostic.apiLog ||
+                "Log belum tersedia.");
+          } catch (diagnosticError) {
+            diagnosticText =
+              "\n\nDiagnostik gagal dibaca: " +
+              formatError(diagnosticError);
+          }
+
+          const message =
+            `ONVIF gagal: ${formatError(onvifError)}\n\n` +
+            `go2rtc gagal: ${formatError(go2rtcError)}` +
             diagnosticText;
 
           setStatusText(message);
@@ -1734,17 +1761,10 @@ const talkbackCapability =
                 text: "TUTUP",
                 style: "cancel",
               },
-              {
-                text: "SALIN LOG",
-                onPress: () => {
-                  // Log tetap tersedia pada riwayat/status.
-                  setStatusText(message);
-                },
-              },
             ],
           );
         }
-      
+                
                 } finally {
         setConnecting(null);
       }
