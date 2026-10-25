@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit
 
 class Go2rtcModule : Module() {
   private val lock = Any()
-
   @Volatile
   private var process: Process? = null
 
