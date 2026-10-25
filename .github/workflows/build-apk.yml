@@ -156,9 +156,8 @@ jobs:
 
           path = Path("scripts/build.sh")
           lines = path.read_text().splitlines(keepends=True)
-          remove = (
-          python3 -c 'from pathlib import Path; p=Path("scripts/build.sh"); s=p.read_text(); flags=("--enable-libfreetype", "--enable-libfribidi", "--enable-libharfbuzz", "--enable-libass", "--enable-libx265"); p.write_text("".join(line for line in s.splitlines(keepends=True) if not any(flag in line for flag in flags))); print("Opsi subtitle dan x265 dinonaktifkan jika ditemukan.")'
-          PY
+          remove = (       
+          sed -i '/--enable-libfreetype/d; /--enable-libfribidi/d; /--enable-libharfbuzz/d; /--enable-libass/d; /--enable-libx265/d' scripts/build.sh
 
           bash scripts/build.sh arm64-v8a
 
