@@ -32,6 +32,7 @@ import Video from "react-native-video";
 
 import {
   startGo2rtc,
+  getGo2rtcDiagnostics,
   startTalkback,
   stopTalkback,
 } from "cctv-talkback";
