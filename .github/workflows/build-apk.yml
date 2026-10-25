@@ -138,8 +138,6 @@ jobs:
         run: CI=1 npx expo prebuild --platform android --clean
 
       - name: Package go2rtc binary as Android native library
-
-      - name: Package go2rtc binary as Android native library
         shell: bash
         run: |
           set -euo pipefail
@@ -183,7 +181,7 @@ jobs:
           PY
 
           echo "Biner sudah disalin ke modul dan aplikasi utama."
-
+          
       - name: Build release APK
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
