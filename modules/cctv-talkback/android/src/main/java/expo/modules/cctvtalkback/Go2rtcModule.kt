@@ -1,4 +1,3 @@
-
 package expo.modules.cctvtalkback
 
 import android.net.Uri
@@ -80,21 +79,20 @@ class Go2rtcModule : Module() {
       )
     }
 
-    val binary = File(context.filesDir, "go2rtc")
+    val binary = File(
+  context.applicationInfo.nativeLibraryDir,
+  "libgo2rtc.so",
+)
     val config = File(context.filesDir, "go2rtc.yaml")
     val log = File(context.filesDir, "go2rtc.log")
 
-    if (!binary.exists() || binary.length() == 0L) {
-      context.assets.open("go2rtc-android-arm64").use { input ->
-        binary.outputStream().use { output ->
-          input.copyTo(output)
-        }
-      }
-    }
+    check(binary.exists() && binary.length() > 0L) {
+  "Biner go2rtc tidak ditemukan di direktori native Android: ${binary.absolutePath}"
+}
 
-    check(binary.setExecutable(true, true) || binary.canExecute()) {
-      "Biner go2rtc tidak dapat dijadikan executable."
-    }
+check(binary.canExecute()) {
+  "Android tidak mengizinkan eksekusi biner go2rtc: ${binary.absolutePath}"
+}
 
     val encodedUser = Uri.encode(username)
     val encodedPassword = Uri.encode(password)
