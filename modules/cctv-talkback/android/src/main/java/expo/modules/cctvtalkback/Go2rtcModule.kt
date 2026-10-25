@@ -179,22 +179,13 @@ private fun diagnostics(): Map<String, Any> = synchronized(lock) {
   val apiReady = running && canConnect("127.0.0.1", 1985)
   val rtspReady = running && canConnect("127.0.0.1", 8556)
 
-  val localLog = try {
-    logFile?.takeIf { it.exists() }
-      ?.readText()
-      ?.takeLast(7000)
-      ?: "File log go2rtc belum tersedia."
-  } catch (e: Exception) {
-    "Gagal membaca log lokal: ${e.message}"
-  }
-
   val streamInfo = try {
-    val connection =
-      java.net.URL("http://127.0.0.1:1985/api/streams")
-        .openConnection() as java.net.HttpURLConnection
+    val connection = java.net.URL(
+      "http://127.0.0.1:1985/api/streams?src=eyecam"
+    ).openConnection() as java.net.HttpURLConnection
 
-    connection.connectTimeout = 2000
-    connection.readTimeout = 3000
+    connection.connectTimeout = 3000
+    connection.readTimeout = 5000
     connection.requestMethod = "GET"
 
     try {
@@ -209,12 +200,33 @@ private fun diagnostics(): Map<String, Any> = synchronized(lock) {
         ?.use { it.readText() }
         ?: "(Respons API kosong)"
 
-      "HTTP $code\n$body".takeLast(7000)
+      "HTTP $code\n$body"
     } finally {
       connection.disconnect()
     }
   } catch (e: Exception) {
-    "Gagal membaca status stream: ${e.message}"
+    "Gagal membaca status stream eyecam: ${e.message}"
+  }
+
+  val localLog = try {
+    logFile?.takeIf { it.exists() }
+      ?.readText()
+      ?.takeLast(7000)
+      ?: "File log go2rtc belum tersedia."
+  } catch (e: Exception) {
+    "Gagal membaca log lokal: ${e.message}"
+  }
+
+  val configText = try {
+    configFile?.takeIf { it.exists() }
+      ?.readText()
+      ?.replace(
+        Regex("""(eseecloud://)[^@"]+@"""),
+        "$1[REDACTED]@"
+      )
+      ?: "File konfigurasi belum tersedia."
+  } catch (e: Exception) {
+    "Gagal membaca konfigurasi: ${e.message}"
   }
 
   mapOf(
@@ -222,8 +234,15 @@ private fun diagnostics(): Map<String, Any> = synchronized(lock) {
     "apiReady" to apiReady,
     "rtspReady" to rtspReady,
     "logPath" to (logFile?.absolutePath ?: ""),
-    "localLog" to localLog,
     "apiLog" to streamInfo,
+    "localLog" to (
+      "=== STATUS STREAM EYECAM ===\n" +
+      streamInfo +
+      "\n\n=== KONFIGURASI ===\n" +
+      configText +
+      "\n\n=== LOG LOKAL ===\n" +
+      localLog
+    ),
   )
 }
 
