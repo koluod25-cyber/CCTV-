@@ -128,49 +128,57 @@ jobs:
 
           echo "Android NDK ${NDK_VERSION} installed successfully."
           cat "$NDK_DIR/source.properties"
-    
-- name: Build standalone FFmpeg for Android ARM64
-    shell: bash
-    run: |
-      set -euo pipefail
+      
+      - name: Build standalone FFmpeg for Android ARM64
+        shell: bash
+        run: |
+          set -euo pipefail
 
-      sudo apt-get update
-      sudo apt-get install -y \
-        autoconf automake build-essential cmake git \
-        libtool meson nasm ninja-build pkg-config \
-        python3 texinfo wget yasm
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf automake build-essential cmake git \
+            libtool meson nasm ninja-build pkg-config \
+            python3 texinfo wget yasm
 
-      export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/27.1.12297006"
-      export API=28
-      export FFMPEG_VERSION=n7.1
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/27.1.12297006"
+          export API=28
+          export FFMPEG_VERSION=n7.1
 
-      test -f "$ANDROID_NDK_HOME/source.properties"
+          test -f "$ANDROID_NDK_HOME/source.properties"
 
-      git clone --depth 1 \
-        https://github.com/MPDL-Official/ffmpeg-android-build.git \
-        /tmp/ffmpeg-android-build
+          git clone --depth 1 \
+            https://github.com/MPDL-Official/ffmpeg-android-build.git \
+            /tmp/ffmpeg-android-build
 
-      cd /tmp/ffmpeg-android-build
+          cd /tmp/ffmpeg-android-build
 
-      # Nonaktifkan fitur subtitle yang memicu pemeriksaan HarfBuzz.
-      sed -i \
-        -e '/--enable-libfreetype \\/d' \
-        -e '/--enable-libfribidi \\/d' \
-        -e '/--enable-libharfbuzz \\/d' \
-        -e '/--enable-libass \\/d' \
-        scripts/build.sh
+          python3 - <<'PY'
+          from pathlib import Path
 
-      bash scripts/build.sh arm64-v8a
+          path = Path("scripts/build.sh")
+          lines = path.read_text().splitlines(keepends=True)
+          remove = (
+              "--enable-libfreetype",
+              "--enable-libfribidi",
+              "--enable-libharfbuzz",
+              "--enable-libass",
+          )
+          path.write_text(
+              "".join(line for line in lines
+                      if not any(flag in line for flag in remove))
+          )
+          PY
 
-      SOURCE="/tmp/ffmpeg-android-build/output/arm64-v8a/ffmpeg"
-      test -s "$SOURCE"
-      file "$SOURCE"
+          bash scripts/build.sh arm64-v8a
 
-      # Simpan sebagai executable, bukan sebagai shared library .so.
-      TARGET="$GITHUB_WORKSPACE/ffmpeg-android-arm64"
-      install -m 0755 "$SOURCE" "$TARGET"
+          SOURCE="/tmp/ffmpeg-android-build/output/arm64-v8a/ffmpeg"
+          test -s "$SOURCE"
+          file "$SOURCE"
 
-      echo "FFmpeg berhasil dibangun: $TARGET"
+          TARGET="$GITHUB_WORKSPACE/ffmpeg-android-arm64"
+          install -m 0755 "$SOURCE" "$TARGET"
+
+          echo "FFmpeg berhasil dibangun: $TARGET"
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
