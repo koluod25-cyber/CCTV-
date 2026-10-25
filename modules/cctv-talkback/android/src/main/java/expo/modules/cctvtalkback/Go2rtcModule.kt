@@ -150,7 +150,7 @@ check(binary.canExecute()) {
       } else {
         "Proses go2rtc berjalan, tetapi API belum siap."
       },
-      "rtspUrl" to "rtsp://127.0.0.1:8556/eyecam",
+      "rtspUrl" to "rtsp://127.0.0.1:8556/eyecam_h264",
       "logPath" to log.absolutePath,
     )
   }
