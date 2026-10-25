@@ -128,6 +128,43 @@ jobs:
 
           echo "Android NDK ${NDK_VERSION} installed successfully."
           cat "$NDK_DIR/source.properties"
+- name: Build standalone FFmpeg for Android ARM64
+    shell: bash
+    run: |
+      set -euo pipefail
+
+      sudo apt-get update
+      sudo apt-get install -y \
+        autoconf automake build-essential cmake git \
+        libtool meson nasm ninja-build pkg-config \
+        python3 texinfo wget yasm
+
+      export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/27.1.12297006"
+      export API=28
+      export FFMPEG_VERSION=n7.1
+
+      test -f "$ANDROID_NDK_HOME/source.properties"
+
+      git clone --depth 1 \
+        https://github.com/MPDL-Official/ffmpeg-android-build.git \
+        /tmp/ffmpeg-android-build
+
+      cd /tmp/ffmpeg-android-build
+      bash scripts/build.sh arm64-v8a
+
+      SOURCE="/tmp/ffmpeg-android-build/output/arm64-v8a/ffmpeg"
+      test -s "$SOURCE"
+      file "$SOURCE"
+
+      MODULE_TARGET="$GITHUB_WORKSPACE/modules/cctv-talkback/android/src/main/jniLibs/arm64-v8a"
+      APP_TARGET="$GITHUB_WORKSPACE/android/app/src/main/jniLibs/arm64-v8a"
+
+      mkdir -p "$MODULE_TARGET" "$APP_TARGET"
+      install -m 0755 "$SOURCE" "$MODULE_TARGET/libffmpeg.so"
+      install -m 0755 "$SOURCE" "$APP_TARGET/libffmpeg.so"
+
+      echo "FFmpeg ARM64 berhasil dibuat dan disalin."
+
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
