@@ -207,6 +207,12 @@ function CameraVideo({
   const [errorDetail, setErrorDetail] =
     useState("");
 
+  const [diagnosticsText, setDiagnosticsText] =
+    useState("");
+
+  const [diagnosticsLoading, setDiagnosticsLoading] =
+    useState(false);
+
 const [buffering, setBuffering] =
   useState(false);
 
@@ -347,26 +353,120 @@ onError={(videoError) => {
         }}
       />
 
-      {error ? (
-        <View style={styles.overlay}>
-          <Text style={styles.errorIcon}>
-            ⚠
-          </Text>
 
-          <Text style={styles.overlayTitle}>
-            Video tidak dapat diputar
-          </Text>
+{error ? (
+  <View
+    style={{
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 16,
+      backgroundColor: "#111827",
+    }}
+  >
+    <Text
+      style={{
+        color: "#ffffff",
+        fontSize: 16,
+        fontWeight: "bold",
+        textAlign: "center",
+        marginBottom: 8,
+      }}
+    >
+      Video tidak dapat diputar
+    </Text>
 
-          <Text style={styles.overlayText}>
-            {errorDetail}
-          </Text>
+    <Text
+      style={{
+        color: "#fca5a5",
+        fontSize: 12,
+        textAlign: "center",
+        marginBottom: 8,
+      }}
+    >
+      {errorDetail || String(error)}
+    </Text>
 
-          <Text style={styles.overlayText}>
-            Periksa URL RTSP, codec,
-            username/password, dan jaringan.
-          </Text>
-        </View>
-      ) : null}
+    <Text
+      style={{
+        color: "#d1d5db",
+        fontSize: 12,
+        textAlign: "center",
+      }}
+    >
+      Periksa URL RTSP, codec, username/password, dan jaringan.
+    </Text>
+
+    <Pressable
+      onPress={async () => {
+        setDiagnosticsLoading(true);
+        setDiagnosticsText("");
+
+        try {
+          const result = await getGo2rtcDiagnostics();
+
+          setDiagnosticsText(
+            "Proses berjalan: " + result.running +
+            "\nAPI siap: " + result.apiReady +
+            "\nRTSP siap: " + result.rtspReady +
+            "\nLokasi log: " + result.logPath +
+            "\n\n=== LOG LOKAL ===\n" + result.localLog +
+            "\n\n=== LOG API ===\n" + result.apiLog
+          );
+        } catch (e) {
+          setDiagnosticsText(
+            "Gagal membaca diagnostik: " + formatError(e)
+          );
+        } finally {
+          setDiagnosticsLoading(false);
+        }
+      }}
+      style={{
+        backgroundColor: "#2563eb",
+        padding: 12,
+        borderRadius: 8,
+        marginTop: 10,
+        width: "100%",
+      }}
+    >
+      <Text
+        style={{
+          color: "#ffffff",
+          textAlign: "center",
+          fontWeight: "bold",
+        }}
+      >
+        {diagnosticsLoading
+          ? "Membaca log..."
+          : "Diagnostik CCTV"}
+      </Text>
+    </Pressable>
+
+    {diagnosticsText ? (
+      <ScrollView
+        style={{
+          maxHeight: 240,
+          width: "100%",
+          marginTop: 8,
+          backgroundColor: "#1f2937",
+          padding: 8,
+          borderRadius: 6,
+        }}
+      >
+        <Text
+          selectable
+          style={{
+            color: "#ffffff",
+            fontSize: 11,
+          }}
+        >
+          {diagnosticsText}
+        </Text>
+      </ScrollView>
+    ) : null}
+  </View>
+) : null}
+
 
     </View>
   );
