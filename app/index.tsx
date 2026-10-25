@@ -527,12 +527,18 @@ setDiagnosticsText(
   {diagnosticsText ? (
     <ScrollView
       style={{
-        maxHeight: 180,
-        marginTop: 6,
-        backgroundColor: "#111827",
-        padding: 8,
-        borderRadius: 6,
-      }}
+  height: 180,
+  width: "100%",
+  flexGrow: 0,
+  flexShrink: 0,
+  marginTop: 6,
+  backgroundColor: "#111827",
+  padding: 8,
+  borderRadius: 6,
+}}
+nestedScrollEnabled={true}
+scrollEnabled={true}
+showsVerticalScrollIndicator={true}
     >
       <Text
         selectable
