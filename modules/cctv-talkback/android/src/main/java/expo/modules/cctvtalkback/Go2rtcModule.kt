@@ -81,6 +81,19 @@ check(binary.canExecute()) {
   "Android tidak mengizinkan eksekusi biner go2rtc: ${binary.absolutePath}"
 }
 
+val ffmpeg = File(
+  context.applicationInfo.nativeLibraryDir,
+  "libffmpeg.so",
+)
+
+check(ffmpeg.exists() && ffmpeg.length() > 0L) {
+  "Biner FFmpeg tidak ditemukan di APK: ${ffmpeg.absolutePath}"
+}
+
+check(ffmpeg.canExecute()) {
+  "Android tidak mengizinkan eksekusi FFmpeg: ${ffmpeg.absolutePath}"
+}
+
     val encodedUser = Uri.encode(username)
     val encodedPassword = Uri.encode(password)
     val credentials = if (username.isBlank() && password.isBlank()) {
