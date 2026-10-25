@@ -172,6 +172,7 @@ check(binary.canExecute()) {
     )
   }
 
+
 private fun diagnostics(): Map<String, Any> = synchronized(lock) {
   val current = process
   val running = current != null && isAlive(current)
@@ -187,24 +188,33 @@ private fun diagnostics(): Map<String, Any> = synchronized(lock) {
     "Gagal membaca log lokal: ${e.message}"
   }
 
-  val apiLog = try {
+  val streamInfo = try {
     val connection =
-      java.net.URL("http://127.0.0.1:1985/api/log")
+      java.net.URL("http://127.0.0.1:1985/api/streams")
         .openConnection() as java.net.HttpURLConnection
 
-    connection.connectTimeout = 1000
-    connection.readTimeout = 1500
+    connection.connectTimeout = 2000
+    connection.readTimeout = 3000
     connection.requestMethod = "GET"
 
     try {
-      connection.inputStream.bufferedReader()
-        .use { it.readText() }
-        .takeLast(7000)
+      val code = connection.responseCode
+      val responseStream = if (code in 200..299) {
+        connection.inputStream
+      } else {
+        connection.errorStream
+      }
+
+      val body = responseStream?.bufferedReader()
+        ?.use { it.readText() }
+        ?: "(Respons API kosong)"
+
+      "HTTP $code\n$body".takeLast(7000)
     } finally {
       connection.disconnect()
     }
   } catch (e: Exception) {
-    "API log tidak dapat dibaca: ${e.message}"
+    "Gagal membaca status stream: ${e.message}"
   }
 
   mapOf(
@@ -213,7 +223,7 @@ private fun diagnostics(): Map<String, Any> = synchronized(lock) {
     "rtspReady" to rtspReady,
     "logPath" to (logFile?.absolutePath ?: ""),
     "localLog" to localLog,
-    "apiLog" to apiLog,
+    "apiLog" to streamInfo,
   )
 }
 
