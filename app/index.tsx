@@ -405,6 +405,7 @@ onError={(videoError) => {
         try {
           const result = await getGo2rtcDiagnostics();
          
+
 setDiagnosticsText(
   "Proses berjalan: " + result.running +
   "\nAPI siap: " + result.apiReady +
