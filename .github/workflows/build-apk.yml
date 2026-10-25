@@ -137,19 +137,21 @@ jobs:
       - name: Generate Android project
         run: CI=1 npx expo prebuild --platform android --clean
 
-      - name: Package go2rtc binary in Android assets
+            - name: Package go2rtc binary as Android native library
         shell: bash
         run: |
           set -euo pipefail
 
-          mkdir -p android/app/src/main/assets
+          TARGET="modules/cctv-talkback/android/src/main/jniLibs/arm64-v8a"
+          mkdir -p "$TARGET"
 
-          install -m 0644 \
+          install -m 0755 \
             go2rtc-android-arm64 \
-            android/app/src/main/assets/go2rtc-android-arm64
+            "$TARGET/libgo2rtc.so"
 
-          test -s android/app/src/main/assets/go2rtc-android-arm64
-          ls -lh android/app/src/main/assets/go2rtc-android-arm64
+          test -s "$TARGET/libgo2rtc.so"
+          file "$TARGET/libgo2rtc.so"
+          ls -lh "$TARGET/libgo2rtc.so"
 
       - name: Build release APK
         working-directory: android
