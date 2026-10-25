@@ -1692,32 +1692,7 @@ const talkbackCapability =
             streamUri,
             `Stream go2rtc disiapkan untuk Kamera ${slot + 1}.`,
           );
-
-        } catch (go2rtcError) {
-          let diagnosticText = "";
-
-          try {
-            const diagnostic =
-              await getGo2rtcDiagnostics();
-
-            diagnosticText =
-              "\n\n=== STATUS GO2RTC ===\n" +
-              `Proses berjalan: ${diagnostic.running}\n` +
-              `API siap: ${diagnostic.apiReady}\n` +
-              `RTSP siap: ${diagnostic.rtspReady}\n` +
-              `Lokasi log: ${diagnostic.logPath}\n\n` +
-              (diagnostic.localLog || diagnostic.apiLog || "");
-          } catch (diagnosticError) {
-            diagnosticText =
-              "\n\nDiagnostik gagal dibaca: " +
-              formatError(diagnosticError);
-          }
-
-          const message =
-            `ONVIF gagal: ${onvifError}\n\n` +
-            `go2rtc gagal: ${formatError(go2rtcError)}` +
-
-            
+          
         } catch (go2rtcError) {
           let diagnosticText = "";
 
@@ -1763,8 +1738,8 @@ const talkbackCapability =
               },
             ],
           );
-        }
-                
+              }
+              
                 } finally {
         setConnecting(null);
       }
