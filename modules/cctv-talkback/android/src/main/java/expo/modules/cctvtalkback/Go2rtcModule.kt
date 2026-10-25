@@ -61,7 +61,7 @@ AsyncFunction("stopGo2rtc") {
         "success" to true,
         "running" to true,
         "message" to "go2rtc sudah berjalan.",
-        "rtspUrl" to "rtsp://127.0.0.1:8556/eyecam",
+        "rtspUrl" to "rtsp://127.0.0.1:8556/eyecam_h264",
       )
     }
 
