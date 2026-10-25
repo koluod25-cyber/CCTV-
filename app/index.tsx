@@ -462,12 +462,86 @@ onError={(videoError) => {
         >
           {diagnosticsText}
         </Text>
+      
       </ScrollView>
     ) : null}
   </View>
 ) : null}
 
+<View
+  style={{
+    position: "absolute",
+    bottom: 8,
+    left: 8,
+    right: 8,
+    zIndex: 999,
+  }}
+>
+  <Pressable
+    onPress={async () => {
+      setDiagnosticsLoading(true);
+      setDiagnosticsText("");
 
+      try {
+        const result = await getGo2rtcDiagnostics();
+
+        setDiagnosticsText(
+          "Proses berjalan: " + result.running +
+          "\nAPI siap: " + result.apiReady +
+          "\nRTSP siap: " + result.rtspReady +
+          "\nLokasi log: " + result.logPath +
+          "\n\n=== LOG LOKAL ===\n" +
+          result.localLog +
+          "\n\n=== LOG API ===\n" +
+          result.apiLog
+        );
+      } catch (e) {
+        setDiagnosticsText(
+          "Gagal membaca diagnostik: " + formatError(e)
+        );
+      } finally {
+        setDiagnosticsLoading(false);
+      }
+    }}
+    style={{
+      backgroundColor: "#2563eb",
+      padding: 10,
+      borderRadius: 8,
+    }}
+  >
+    <Text
+      style={{
+        color: "#ffffff",
+        textAlign: "center",
+        fontWeight: "bold",
+      }}
+    >
+      {diagnosticsLoading ? "Membaca log..." : "DIAGNOSTIK CCTV"}
+    </Text>
+  </Pressable>
+
+  {diagnosticsText ? (
+    <ScrollView
+      style={{
+        maxHeight: 180,
+        marginTop: 6,
+        backgroundColor: "#111827",
+        padding: 8,
+        borderRadius: 6,
+      }}
+    >
+      <Text
+        selectable
+        style={{
+          color: "#ffffff",
+          fontSize: 11,
+        }}
+      >
+        {diagnosticsText}
+      </Text>
+    </ScrollView>
+  ) : null}
+</View>
     </View>
   );
 }
