@@ -1,4 +1,3 @@
-
 package expo.modules.cctvtalkback
 
 import android.net.Uri
@@ -29,13 +28,19 @@ class Go2rtcModule : Module() {
       start(host, username, password)
     }
 
-    AsyncFunction("getGo2rtcStatus") {
-      status()
-    }
+    
+AsyncFunction("getGo2rtcStatus") {
+  status()
+}
 
-    AsyncFunction("stopGo2rtc") {
-      stop()
-    }
+AsyncFunction("getGo2rtcDiagnostics") {
+  diagnostics()
+}
+
+AsyncFunction("stopGo2rtc") {
+  stop()
+}
+
   }
 
   private fun start(
@@ -166,6 +171,51 @@ check(binary.canExecute()) {
       "logPath" to (logFile?.absolutePath ?: ""),
     )
   }
+
+private fun diagnostics(): Map<String, Any> = synchronized(lock) {
+  val current = process
+  val running = current != null && isAlive(current)
+  val apiReady = running && canConnect("127.0.0.1", 1985)
+  val rtspReady = running && canConnect("127.0.0.1", 8556)
+
+  val localLog = try {
+    logFile?.takeIf { it.exists() }
+      ?.readText()
+      ?.takeLast(7000)
+      ?: "File log go2rtc belum tersedia."
+  } catch (e: Exception) {
+    "Gagal membaca log lokal: ${e.message}"
+  }
+
+  val apiLog = try {
+    val connection =
+      java.net.URL("http://127.0.0.1:1985/api/log")
+        .openConnection() as java.net.HttpURLConnection
+
+    connection.connectTimeout = 1000
+    connection.readTimeout = 1500
+    connection.requestMethod = "GET"
+
+    try {
+      connection.inputStream.bufferedReader()
+        .use { it.readText() }
+        .takeLast(7000)
+    } finally {
+      connection.disconnect()
+    }
+  } catch (e: Exception) {
+    "API log tidak dapat dibaca: ${e.message}"
+  }
+
+  mapOf(
+    "running" to running,
+    "apiReady" to apiReady,
+    "rtspReady" to rtspReady,
+    "logPath" to (logFile?.absolutePath ?: ""),
+    "localLog" to localLog,
+    "apiLog" to apiLog,
+  )
+}
 
   private fun stop(): Map<String, Any> = synchronized(lock) {
     val current = process
