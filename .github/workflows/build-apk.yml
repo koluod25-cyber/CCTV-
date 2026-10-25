@@ -142,17 +142,25 @@ jobs:
         run: |
           set -euo pipefail
 
-          TARGET="modules/cctv-talkback/android/src/main/jniLibs/arm64-v8a"
-          mkdir -p "$TARGET"
+          SOURCE="$GITHUB_WORKSPACE/go2rtc-android-arm64"
+          MODULE_TARGET="modules/cctv-talkback/android/src/main/jniLibs/arm64-v8a"
+          APP_TARGET="android/app/src/main/jniLibs/arm64-v8a"
 
-          install -m 0755 \
-            go2rtc-android-arm64 \
-            "$TARGET/libgo2rtc.so"
+          test -s "$SOURCE"
 
-          test -s "$TARGET/libgo2rtc.so"
-          file "$TARGET/libgo2rtc.so"
-          ls -lh "$TARGET/libgo2rtc.so"
-          
+          mkdir -p "$MODULE_TARGET" "$APP_TARGET"
+
+          install -m 0755 "$SOURCE" "$MODULE_TARGET/libgo2rtc.so"
+          install -m 0755 "$SOURCE" "$APP_TARGET/libgo2rtc.so"
+
+          echo "=== Periksa biner di modul ==="
+          ls -l "$MODULE_TARGET/libgo2rtc.so"
+
+          echo "=== Periksa biner di aplikasi utama ==="
+          ls -l "$APP_TARGET/libgo2rtc.so"
+
+          file "$APP_TARGET/libgo2rtc.so"
+                 
       - name: Build release APK
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
