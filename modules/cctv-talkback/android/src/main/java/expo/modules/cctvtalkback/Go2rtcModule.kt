@@ -87,7 +87,7 @@ check(binary.canExecute()) {
     } else {
       "$encodedUser:$encodedPassword@"
     }
-
+    
     val yaml = """
       api:
         listen: "127.0.0.1:1985"
@@ -96,8 +96,10 @@ check(binary.canExecute()) {
       streams:
         eyecam:
           - "eseecloud://${credentials}${host}:80/livestream/12"
+        eyecam_h264:
+          - "ffmpeg:eyecam#video=h264"
     """.trimIndent() + "\n"
-
+    
     config.writeText(yaml)
 
     val builder = ProcessBuilder(
