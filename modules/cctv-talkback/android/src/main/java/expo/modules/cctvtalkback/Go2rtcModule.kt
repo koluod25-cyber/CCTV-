@@ -236,8 +236,60 @@ private fun diagnostics(): Map<String, Any> = synchronized(lock) {
     }
   }
 
+  
   val sourceStatus = readStreamStatus("eyecam")
   val convertedStatus = readStreamStatus("eyecam_h264")
+
+  val frameStatus = try {
+    val connection = java.net.URL(
+      "http://127.0.0.1:1985/api/frame.jpeg?src=eyecam_h264"
+    ).openConnection() as java.net.HttpURLConnection
+
+    connection.connectTimeout = 3000
+    connection.readTimeout = 15000
+    connection.requestMethod = "GET"
+
+    try {
+      val code = connection.responseCode
+      val contentType = connection.contentType ?: "(tidak diketahui)"
+      val contentLength = connection.contentLengthLong
+
+      if (code in 200..299 && contentType.startsWith("image/")) {
+        val bytesRead = connection.inputStream.use { input ->
+          val buffer = ByteArray(8192)
+          var total = 0L
+          var count: Int
+
+          while (input.read(buffer).also { count = it } != -1) {
+            total += count
+          }
+
+          total
+        }
+
+        "=== UJI FRAME H264 ===\n" +
+          "HTTP $code\n" +
+          "Tipe: $contentType\n" +
+          "Ukuran header: $contentLength byte\n" +
+          "Data diterima: $bytesRead byte\n" +
+          if (bytesRead > 0L) {
+            "\nHASIL: gambar berhasil diterima."
+          } else {
+            "\nHASIL: respons gambar kosong."
+          }
+      } else {
+        "=== UJI FRAME H264 ===\n" +
+          "HTTP $code\n" +
+          "Tipe: $contentType\n" +
+          "HASIL: endpoint tidak mengembalikan gambar."
+      }
+    } finally {
+      connection.disconnect()
+    }
+  } catch (e: Exception) {
+    "=== UJI FRAME H264 ===\n" +
+      "GAGAL: ${e.javaClass.simpleName}: ${e.message}"
+  }
 
   val localLog = try {
     logFile?.takeIf { it.exists() }
@@ -263,7 +315,12 @@ private fun diagnostics(): Map<String, Any> = synchronized(lock) {
   val diagnosticText =
     "$sourceStatus\n\n" +
     "$convertedStatus\n\n" +
+    "$frameStatus\n\n" +
     "=== KONFIGURASI ===\n" +
+    "$configText\n\n" +
+    "=== LOG LOKAL ===\n" +
+    localLog
+
     "$configText\n\n" +
     "=== LOG LOKAL ===\n" +
     localLog
