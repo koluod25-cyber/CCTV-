@@ -126,7 +126,7 @@ val yaml = """
     listen: "127.0.0.1:8556"
   streams:
     eyecam:
-      - "http://${host}:80/livestream/12#header=Authorization: Basic ${authHeader}"
+      - "eseecloud://${credentials}${host}:80/livestream/12"
     eyecam_h264:
       - "ffmpeg:eyecam#video=h264"
 """.trimIndent() + "\n"
