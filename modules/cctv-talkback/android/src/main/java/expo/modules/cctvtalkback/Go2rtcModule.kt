@@ -4,12 +4,16 @@ import android.net.Uri
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import java.io.File
+import java.net.HttpURLConnection
 import java.net.InetSocketAddress
 import java.net.Socket
+import java.net.URL
 import java.util.concurrent.TimeUnit
 
 class Go2rtcModule : Module() {
+
   private val lock = Any()
+
   @Volatile
   private var process: Process? = null
 
@@ -21,82 +25,124 @@ class Go2rtcModule : Module() {
     Name("CctvGo2rtc")
 
     AsyncFunction("startGo2rtc") {
-        host: String,
-        username: String,
-        password: String ->
-
+      host: String,
+      username: String,
+      password: String ->
       start(host, username, password)
     }
 
-    
-AsyncFunction("getGo2rtcStatus") {
-  status()
-}
+    AsyncFunction("getGo2rtcStatus") {
+      status()
+    }
 
-AsyncFunction("getGo2rtcDiagnostics") {
-  diagnostics()
-}
+    AsyncFunction("getGo2rtcDiagnostics") {
+      diagnostics()
+    }
 
-AsyncFunction("stopGo2rtc") {
-  stop()
-}
-
+    AsyncFunction("stopGo2rtc") {
+      stop()
+    }
   }
 
   private fun start(
     host: String,
     username: String,
-    password: String,
+    password: String
   ): Map<String, Any> = synchronized(lock) {
-    require(host.matches(Regex("[0-9a-zA-Z.:-]+"))) {
-      "Alamat kamera tidak valid."
-    }
 
     val context = appContext.reactContext
       ?: error("Konteks Android tidak tersedia.")
-   
-    val existing = process
-    if (existing != null) {
-      if (isAlive(existing)) {
-        existing.destroy()
-
-        if (!existing.waitFor(2, TimeUnit.SECONDS)) {
-          existing.destroyForcibly()
-          existing.waitFor(2, TimeUnit.SECONDS)
-        }
-      }
-
-      process = null
-    }
 
     val binary = File(
-  context.applicationInfo.nativeLibraryDir,
-  "libgo2rtc.so",
-)
+      context.applicationInfo.nativeLibraryDir,
+      "libgo2rtc.so"
+    )
+
+    val ffmpeg = File(
+      context.applicationInfo.nativeLibraryDir,
+      "libffmpeg.so"
+    )
+
     val config = File(context.filesDir, "go2rtc.yaml")
     val log = File(context.filesDir, "go2rtc.log")
 
-    check(binary.exists() && binary.length() > 0L) {
-  "Biner go2rtc tidak ditemukan: ${binary.absolutePath}"
-}
+    // Simpan lokasi file sebelum pemeriksaan apa pun.
+    binaryFile = binary
+    configFile = config
+    logFile = log
 
-check(binary.canExecute()) {
-  "Android tidak mengizinkan eksekusi biner go2rtc: ${binary.absolutePath}"
-}
+    config.parentFile?.mkdirs()
+    log.parentFile?.mkdirs()
 
-val ffmpeg = File(
-  context.applicationInfo.nativeLibraryDir,
-  "libffmpeg.so",
-)
+    if (!log.exists()) {
+      log.createNewFile()
+    }
 
-check(ffmpeg.exists() && ffmpeg.length() > 0L) {
-  "Biner FFmpeg tidak ditemukan di APK: ${ffmpeg.absolutePath}"
-}
+    fun failStartup(message: String): Nothing {
+      try {
+        log.appendText(
+          "\n[STARTUP ERROR] $message\n"
+        )
+      } catch (_: Exception) {
+        // Pertahankan pesan kegagalan utama.
+      }
+      throw IllegalStateException(message)
+    }
 
-check(ffmpeg.canExecute()) {
-  "Android tidak mengizinkan eksekusi FFmpeg: ${ffmpeg.absolutePath}"
-}
-    
+    // Hentikan proses sebelumnya jika masih berjalan.
+    val previous = process
+
+    if (previous != null && isAlive(previous)) {
+      previous.destroy()
+
+      if (!previous.waitFor(2, TimeUnit.SECONDS)) {
+        previous.destroyForcibly()
+        previous.waitFor(2, TimeUnit.SECONDS)
+      }
+    }
+
+    process = null
+
+    // Buat log baru untuk percobaan startup ini.
+    log.writeText(
+      "=== GO2RTC STARTUP ===\n" +
+      "Binary: ${binary.absolutePath}\n" +
+      "Config: ${config.absolutePath}\n" +
+      "FFmpeg: ${ffmpeg.absolutePath}\n"
+    )
+
+    if (!binary.exists() || binary.length() <= 0L) {
+      failStartup(
+        "Binary go2rtc tidak ditemukan atau kosong: " +
+        binary.absolutePath
+      )
+    }
+
+    if (!binary.canExecute()) {
+      failStartup(
+        "Binary go2rtc tidak dapat dieksekusi: " +
+        binary.absolutePath
+      )
+    }
+
+    if (!ffmpeg.exists() || ffmpeg.length() <= 0L) {
+      failStartup(
+        "Binary FFmpeg tidak ditemukan atau kosong: " +
+        ffmpeg.absolutePath
+      )
+    }
+
+    if (!ffmpeg.canExecute()) {
+      failStartup(
+        "Binary FFmpeg tidak dapat dieksekusi: " +
+        ffmpeg.absolutePath
+      )
+    }
+
+    if (!host.matches(Regex("[0-9a-zA-Z.:-]+"))) {
+      failStartup("Alamat kamera tidak valid.")
+    }
+
     val encodedUser = Uri.encode(
       if (username.isBlank() && password.isBlank()) {
         "admin"
@@ -122,36 +168,61 @@ check(ffmpeg.canExecute()) {
           - "ffmpeg:eyecam#video=h264"
     """.trimIndent() + "\n"
 
-    config.writeText(yaml)
+    try {
+      config.writeText(yaml)
+    } catch (e: Exception) {
+      failStartup(
+        "Gagal menulis konfigurasi: ${e.message}"
+      )
+    }
 
     val builder = ProcessBuilder(
       binary.absolutePath,
       "-config",
-      config.absolutePath,
+      config.absolutePath
     )
 
     builder.redirectErrorStream(true)
     builder.redirectOutput(log)
 
-    val started = builder.start()
+    val started = try {
+      builder.start()
+    } catch (e: Exception) {
+      log.appendText(
+        "\n[GAGAL MEMULAI PROSES]\n" +
+        "${e.javaClass.simpleName}: ${e.message}\n"
+      )
+      throw IllegalStateException(
+        "Tidak dapat menjalankan go2rtc: ${e.message}",
+        e
+      )
+    }
 
-    binaryFile = binary
-    configFile = config
-    logFile = log
+    // Simpan referensi segera agar diagnosis bisa melihatnya.
     process = started
 
     var ready = false
 
-    for (attempt in 0 until 20) {
+    for (attempt in 0 until 40) {
       if (!isAlive(started)) {
-        val details = try {
-          log.readText().takeLast(1800)
+        val exitCode = try {
+          started.exitValue()
         } catch (_: Exception) {
-          "Log go2rtc tidak dapat dibaca."
+          -1
+        }
+
+        val details = try {
+          log.readText().takeLast(5000)
+        } catch (_: Exception) {
+          "Log tidak dapat dibaca."
         }
 
         process = null
-        error("go2rtc berhenti saat mulai. Log: $details")
+
+        throw IllegalStateException(
+          "go2rtc berhenti saat startup. " +
+          "Kode keluar: $exitCode\n$details"
+        )
       }
 
       if (canConnect("127.0.0.1", 1985)) {
@@ -162,201 +233,221 @@ check(ffmpeg.canExecute()) {
       Thread.sleep(250)
     }
 
+    val rtspReady =
+      isAlive(started) &&
+      canConnect("127.0.0.1", 8556)
+
     mapOf(
       "success" to true,
       "running" to isAlive(started),
       "apiReady" to ready,
-      "message" to if (ready) {
-        "go2rtc berjalan. API lokal sudah merespons."
-      } else {
-        "Proses go2rtc berjalan, tetapi API belum siap."
-      },
-      "rtspUrl" to "rtsp://127.0.0.1:8556/eyecam_h264",
-      "logPath" to log.absolutePath,
-    )
-  }
-
-  private fun status(): Map<String, Any> = synchronized(lock) {
-    val current = process
-    val running = current != null && isAlive(current)
-    val apiReady = running && canConnect("127.0.0.1", 1985)
-    val rtspReady = running && canConnect("127.0.0.1", 8556)
-
-    mapOf(
-      "running" to running,
-      "apiReady" to apiReady,
       "rtspReady" to rtspReady,
       "message" to when {
-        !running -> "go2rtc belum berjalan."
-        !apiReady -> "go2rtc berjalan, tetapi API belum siap."
-        !rtspReady -> "API siap, tetapi port RTSP belum siap."
-        else -> "API dan port RTSP siap."
+        !isAlive(started) ->
+          "Proses go2rtc berhenti."
+        !ready ->
+          "Proses berjalan, tetapi API belum merespons. Periksa log."
+        !rtspReady ->
+          "API siap, tetapi port RTSP belum siap."
+        else ->
+          "Go2rtc dan port API/RTSP siap."
       },
-      "logPath" to (logFile?.absolutePath ?: ""),
+      "rtspUrl" to
+        "rtsp://127.0.0.1:8556/eyecam_h264",
+      "logPath" to log.absolutePath
     )
   }
 
-private fun diagnostics(): Map<String, Any> = synchronized(lock) {
-  val current = process
-  val running = current != null && isAlive(current)
-  val apiReady = running && canConnect("127.0.0.1", 1985)
-  val rtspReady = running && canConnect("127.0.0.1", 8556)
+  private fun status(): Map<String, Any> =
+    synchronized(lock) {
 
-  fun readStreamStatus(streamName: String): String {
-    return try {
-      val connection = java.net.URL(
-        "http://127.0.0.1:1985/api/streams?src=$streamName"
-      ).openConnection() as java.net.HttpURLConnection
+      val current = process
+      val running = current != null && isAlive(current)
 
-      connection.connectTimeout = 3000
-      connection.readTimeout = 5000
-      connection.requestMethod = "GET"
+      val apiReady =
+        running && canConnect("127.0.0.1", 1985)
 
-      try {
-        val code = connection.responseCode
-        val responseStream = if (code in 200..299) {
-          connection.inputStream
-        } else {
-          connection.errorStream
-        }
+      val rtspReady =
+        running && canConnect("127.0.0.1", 8556)
 
-        val body = responseStream?.bufferedReader()
-          ?.use { it.readText() }
-          ?: "(Respons API kosong)"
-
-        "=== STREAM $streamName ===\nHTTP $code\n$body"
-      } finally {
-        connection.disconnect()
-      }
-    } catch (e: Exception) {
-      "=== STREAM $streamName ===\nGagal membaca status: ${e.message}"
-    }
-  }
-
-  
-  val sourceStatus = readStreamStatus("eyecam")
-  val convertedStatus = readStreamStatus("eyecam_h264")
-
-  
-  val frameStatus = try {
-    val connection = java.net.URL(
-      "http://127.0.0.1:1985/api/frame.jpeg?src=eyecam_h264"
-    ).openConnection() as java.net.HttpURLConnection
-
-    connection.connectTimeout = 5000
-    connection.readTimeout = 15000
-    connection.requestMethod = "GET"
-
-    try {
-      val code = connection.responseCode
-      val contentType =
-        connection.getHeaderField("Content-Type") ?: "(tidak diketahui)"
-      val contentLength =
-        connection.getHeaderField("Content-Length") ?: "(tidak diketahui)"
-
-      if (code in 200..299) {
-        val bytesRead = connection.inputStream.use { input ->
-          val buffer = ByteArray(8192)
-          var total = 0L
-          var count: Int
-
-          while (input.read(buffer).also { count = it } != -1) {
-            total += count
-          }
-
-          total
-        }
-
-        "=== UJI FRAME H264 ===\n" +
-          "HTTP: $code\n" +
-          "Tipe: $contentType\n" +
-          "Ukuran header: $contentLength byte\n" +
-          "Data diterima: $bytesRead byte\n" +
-          if (
-            bytesRead > 0L &&
-            contentType.contains("image", ignoreCase = true)
-          ) {
-            "HASIL: gambar berhasil diterima."
-          } else if (bytesRead > 0L) {
-            "HASIL: data diterima, tetapi tipe konten bukan gambar."
-          } else {
-            "HASIL: respons kosong."
-          }
-      } else {
-        "=== UJI FRAME H264 ===\n" +
-          "HTTP: $code\n" +
-          "Tipe: $contentType\n" +
-          "HASIL: endpoint tidak mengembalikan gambar."
-      }
-    } finally {
-      connection.disconnect()
-    }
-  } catch (e: Exception) {
-    "=== UJI FRAME H264 ===\n" +
-      "GAGAL: ${e.javaClass.simpleName}: ${e.message}"
-  }
-
-  val localLog = try {
-    logFile?.takeIf { it.exists() }
-      ?.readText()
-      ?.takeLast(12000)
-      ?: "File log go2rtc belum tersedia."
-  } catch (e: Exception) {
-    "Gagal membaca log lokal: ${e.message}"
-  }
-
-  val configText = try {
-    configFile?.takeIf { it.exists() }
-      ?.readText()
-      ?.replace(
-        Regex("""(eseecloud://)[^@"]+@"""),
-        "$1[REDACTED]@"
+      mapOf(
+        "running" to running,
+        "apiReady" to apiReady,
+        "rtspReady" to rtspReady,
+        "message" to when {
+          !running ->
+            "go2rtc belum berjalan atau sudah berhenti."
+          !apiReady ->
+            "Proses berjalan, tetapi API belum siap."
+          !rtspReady ->
+            "API siap, tetapi port RTSP belum siap."
+          else ->
+            "API dan port RTSP siap."
+        },
+        "logPath" to (
+          logFile?.absolutePath ?: ""
+        )
       )
-      ?: "File konfigurasi belum tersedia."
-  } catch (e: Exception) {
-    "Gagal membaca konfigurasi: ${e.message}"
-  }
-
-  val diagnosticText =
-    "$sourceStatus\n\n" +
-    "$convertedStatus\n\n" +
-    "$frameStatus\n\n" +
-    "=== KONFIGURASI ===\n" +
-    "$configText\n\n" +
-    "=== LOG LOKAL ===\n" +
-    localLog
-
-  mapOf(
-    "running" to running,
-    "apiReady" to apiReady,
-    "rtspReady" to rtspReady,
-    "logPath" to (logFile?.absolutePath ?: ""),
-    "apiLog" to (
-      "$sourceStatus\n\n$convertedStatus"
-    ),
-    "localLog" to diagnosticText,
-  )
-}
-
-  private fun stop(): Map<String, Any> = synchronized(lock) {
-    val current = process
-    process = null
-
-    if (current != null) {
-      current.destroy()
-
-      if (!current.waitFor(2, TimeUnit.SECONDS)) {
-        current.destroyForcibly()
-        current.waitFor(2, TimeUnit.SECONDS)
-      }
     }
 
-    mapOf(
-      "success" to true,
-      "running" to false,
-      "message" to "go2rtc dihentikan.",
-    )
-  }
+  private fun diagnostics(): Map<String, Any> =
+    synchronized(lock) {
+
+      val context = appContext.reactContext
+
+      val config = configFile
+        ?: context?.let {
+          File(it.filesDir, "go2rtc.yaml")
+        }
+
+      val log = logFile
+        ?: context?.let {
+          File(it.filesDir, "go2rtc.log")
+        }
+
+      val binary = binaryFile
+        ?: context?.let {
+          File(
+            it.applicationInfo.nativeLibraryDir,
+            "libgo2rtc.so"
+          )
+        }
+
+      val current = process
+      val running = current != null && isAlive(current)
+
+      val apiReady =
+        running && canConnect("127.0.0.1", 1985)
+
+      val rtspReady =
+        running && canConnect("127.0.0.1", 8556)
+
+      fun readEndpoint(path: String): String {
+        var connection: HttpURLConnection? = null
+
+        return try {
+          connection = URL(
+            "http://127.0.0.1:1985$path"
+          ).openConnection() as HttpURLConnection
+
+          connection.connectTimeout = 3000
+          connection.readTimeout = 5000
+          connection.requestMethod = "GET"
+
+          val code = connection.responseCode
+          val stream = if (code in 200..299) {
+            connection.inputStream
+          } else {
+            connection.errorStream
+          }
+
+          val body = stream?.bufferedReader()
+            ?.use { it.readText() }
+            ?: "(Respons kosong)"
+
+          "HTTP $code\n$body"
+        } catch (e: Exception) {
+          "Gagal: ${e.javaClass.simpleName}: ${e.message}"
+        } finally {
+          connection?.disconnect()
+        }
+      }
+
+      val sourceStatus = readEndpoint(
+        "/api/streams?src=eyecam"
+      )
+
+      val convertedStatus = readEndpoint(
+        "/api/streams?src=eyecam_h264"
+      )
+
+      val frameStatus = readEndpoint(
+        "/api/frame.jpeg?src=eyecam_h264"
+      )
+
+      val localLog = try {
+        if (log?.exists() == true) {
+          log.readText().takeLast(12000)
+        } else {
+          "File log belum dibuat: ${log?.absolutePath ?: "(lokasi tidak diketahui)"}"
+        }
+      } catch (e: Exception) {
+        "Gagal membaca log: ${e.message}"
+      }
+
+      val configText = try {
+        if (config?.exists() == true) {
+          config.readText().replace(
+            Regex("""(eseecloud://)[^@"]+@""")
+          ) {
+            "${it.groupValues[1]}[REDACTED]@"
+          }
+        } else {
+          "File konfigurasi belum dibuat: ${config?.absolutePath ?: "(lokasi tidak diketahui)"}"
+        }
+      } catch (e: Exception) {
+        "Gagal membaca konfigurasi: ${e.message}"
+      }
+
+      val binaryStatus = buildString {
+        appendLine("Path: ${binary?.absolutePath}")
+        appendLine("Ada: ${binary?.exists() == true}")
+        appendLine("Ukuran: ${binary?.length() ?: 0} byte")
+        appendLine("Executable: ${binary?.canExecute() == true}")
+      }
+
+      val diagnosticText =
+        "=== STATUS PROSES ===\n" +
+        "Berjalan: $running\n" +
+        "API siap: $apiReady\n" +
+        "RTSP siap: $rtspReady\n\n" +
+        "=== BINARY GO2RTC ===\n" +
+        "$binaryStatus\n" +
+        "=== STREAM eyecam ===\n" +
+        "$sourceStatus\n\n" +
+        "=== STREAM eyecam_h264 ===\n" +
+        "$convertedStatus\n\n" +
+        "=== UJI FRAME H264 ===\n" +
+        "$frameStatus\n\n" +
+        "=== KONFIGURASI ===\n" +
+        "$configText\n\n" +
+        "=== LOG LOKAL ===\n" +
+        localLog
+
+      mapOf(
+        "running" to running,
+        "apiReady" to apiReady,
+        "rtspReady" to rtspReady,
+        "logPath" to (log?.absolutePath ?: ""),
+        "apiLog" to (
+          "=== STREAM eyecam ===\n$sourceStatus\n\n" +
+          "=== STREAM eyecam_h264 ===\n$convertedStatus"
+        ),
+        "localLog" to diagnosticText
+      )
+    }
+
+  private fun stop(): Map<String, Any> =
+    synchronized(lock) {
+
+      val current = process
+      process = null
+
+      if (current != null && isAlive(current)) {
+        current.destroy()
+
+        if (!current.waitFor(2, TimeUnit.SECONDS)) {
+          current.destroyForcibly()
+          current.waitFor(2, TimeUnit.SECONDS)
+        }
+      }
+
+      mapOf(
+        "success" to true,
+        "running" to false,
+        "message" to "go2rtc dihentikan."
+      )
+    }
 
   private fun isAlive(value: Process): Boolean {
     return try {
@@ -367,10 +458,16 @@ private fun diagnostics(): Map<String, Any> = synchronized(lock) {
     }
   }
 
-  private fun canConnect(host: String, port: Int): Boolean {
+  private fun canConnect(
+    host: String,
+    port: Int
+  ): Boolean {
     return try {
       Socket().use { socket ->
-        socket.connect(InetSocketAddress(host, port), 300)
+        socket.connect(
+          InetSocketAddress(host, port),
+          500
+        )
       }
       true
     } catch (_: Exception) {
