@@ -196,46 +196,50 @@ val yaml = """
     )
   }
 
-
 private fun diagnostics(): Map<String, Any> = synchronized(lock) {
   val current = process
   val running = current != null && isAlive(current)
   val apiReady = running && canConnect("127.0.0.1", 1985)
   val rtspReady = running && canConnect("127.0.0.1", 8556)
 
-  val streamInfo = try {
-    val connection = java.net.URL(
-      "http://127.0.0.1:1985/api/streams?src=eyecam"
-    ).openConnection() as java.net.HttpURLConnection
+  fun readStreamStatus(streamName: String): String {
+    return try {
+      val connection = java.net.URL(
+        "http://127.0.0.1:1985/api/streams?src=$streamName"
+      ).openConnection() as java.net.HttpURLConnection
 
-    connection.connectTimeout = 3000
-    connection.readTimeout = 5000
-    connection.requestMethod = "GET"
+      connection.connectTimeout = 3000
+      connection.readTimeout = 5000
+      connection.requestMethod = "GET"
 
-    try {
-      val code = connection.responseCode
-      val responseStream = if (code in 200..299) {
-        connection.inputStream
-      } else {
-        connection.errorStream
+      try {
+        val code = connection.responseCode
+        val responseStream = if (code in 200..299) {
+          connection.inputStream
+        } else {
+          connection.errorStream
+        }
+
+        val body = responseStream?.bufferedReader()
+          ?.use { it.readText() }
+          ?: "(Respons API kosong)"
+
+        "=== STREAM $streamName ===\nHTTP $code\n$body"
+      } finally {
+        connection.disconnect()
       }
-
-      val body = responseStream?.bufferedReader()
-        ?.use { it.readText() }
-        ?: "(Respons API kosong)"
-
-      "HTTP $code\n$body"
-    } finally {
-      connection.disconnect()
+    } catch (e: Exception) {
+      "=== STREAM $streamName ===\nGagal membaca status: ${e.message}"
     }
-  } catch (e: Exception) {
-    "Gagal membaca status stream eyecam: ${e.message}"
   }
+
+  val sourceStatus = readStreamStatus("eyecam")
+  val convertedStatus = readStreamStatus("eyecam_h264")
 
   val localLog = try {
     logFile?.takeIf { it.exists() }
       ?.readText()
-      ?.takeLast(7000)
+      ?.takeLast(12000)
       ?: "File log go2rtc belum tersedia."
   } catch (e: Exception) {
     "Gagal membaca log lokal: ${e.message}"
@@ -253,20 +257,23 @@ private fun diagnostics(): Map<String, Any> = synchronized(lock) {
     "Gagal membaca konfigurasi: ${e.message}"
   }
 
+  val diagnosticText =
+    "$sourceStatus\n\n" +
+    "$convertedStatus\n\n" +
+    "=== KONFIGURASI ===\n" +
+    "$configText\n\n" +
+    "=== LOG LOKAL ===\n" +
+    localLog
+
   mapOf(
     "running" to running,
     "apiReady" to apiReady,
     "rtspReady" to rtspReady,
     "logPath" to (logFile?.absolutePath ?: ""),
-    "apiLog" to streamInfo,
-    "localLog" to (
-      "=== STATUS STREAM EYECAM ===\n" +
-      streamInfo +
-      "\n\n=== KONFIGURASI ===\n" +
-      configText +
-      "\n\n=== LOG LOKAL ===\n" +
-      localLog
+    "apiLog" to (
+      "$sourceStatus\n\n$convertedStatus"
     ),
+    "localLog" to diagnosticText,
   )
 }
 
