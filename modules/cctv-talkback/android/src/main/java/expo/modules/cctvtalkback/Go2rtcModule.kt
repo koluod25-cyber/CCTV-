@@ -322,6 +322,7 @@ class Go2rtcModule : Module() {
       val rtspReady =
         running && canConnect("127.0.0.1", 8556)
 
+     
       fun readEndpoint(path: String): String {
         var connection: HttpURLConnection? = null
 
@@ -331,28 +332,71 @@ class Go2rtcModule : Module() {
           ).openConnection() as HttpURLConnection
 
           connection.connectTimeout = 3000
-          connection.readTimeout = 5000
+          connection.readTimeout = 8000
           connection.requestMethod = "GET"
+          connection.setRequestProperty("Accept", "*/*")
 
           val code = connection.responseCode
+          val contentType =
+            connection.contentType ?: "(Content-Type tidak ada)"
+
           val stream = if (code in 200..299) {
             connection.inputStream
           } else {
             connection.errorStream
           }
 
-          val body = stream?.bufferedReader()
-            ?.use { it.readText() }
-            ?: "(Respons kosong)"
+          if (path.startsWith("/api/frame.jpeg")) {
+            val bytes = stream?.use { input ->
+              val output = java.io.ByteArrayOutputStream()
+              val buffer = ByteArray(4096)
+              var total = 0
 
-          "HTTP $code\n$body"
+              while (total < 2_000_000) {
+                val count = input.read(
+                  buffer,
+                  0,
+                  minOf(buffer.size, 2_000_000 - total)
+                )
+
+                if (count <= 0) break
+
+                output.write(buffer, 0, count)
+                total += count
+              }
+
+              output.toByteArray()
+            } ?: ByteArray(0)
+
+            val firstBytes = bytes.take(8)
+              .joinToString(" ") {
+                "%02X".format(it.toInt() and 0xFF)
+              }
+
+            val isJpeg = bytes.size >= 3 &&
+              bytes[0] == 0xFF.toByte() &&
+              bytes[1] == 0xD8.toByte() &&
+              bytes[2] == 0xFF.toByte()
+
+            "HTTP $code\n" +
+              "Content-Type: $contentType\n" +
+              "Ukuran data gambar: ${bytes.size} byte\n" +
+              "Header awal: $firstBytes\n" +
+              "JPEG valid dari header: $isJpeg"
+          } else {
+            val body = stream?.bufferedReader()
+              ?.use { it.readText() }
+              ?: "(Respons kosong)"
+
+            "HTTP $code\nContent-Type: $contentType\n$body"
+          }
         } catch (e: Exception) {
           "Gagal: ${e.javaClass.simpleName}: ${e.message}"
         } finally {
           connection?.disconnect()
         }
       }
-
+ 
       val sourceStatus = readEndpoint(
         "/api/streams?src=eyecam"
       )
