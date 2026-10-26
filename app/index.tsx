@@ -1728,7 +1728,7 @@ const talkbackCapability =
             message,
           );
 
-          Alert.alert(
+                    Alert.alert(
             "Diagnostik Kamera EYESEC",
             message,
             [
@@ -1738,9 +1738,8 @@ const talkbackCapability =
               },
             ],
           );
-              }
-              
-                } finally {
+        }
+      } finally {
         setConnecting(null);
       }
     },
