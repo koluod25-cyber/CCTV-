@@ -344,10 +344,6 @@ if (code in 200..299) {
     "=== LOG LOKAL ===\n" +
     localLog
 
-    "$configText\n\n" +
-    "=== LOG LOKAL ===\n" +
-    localLog
-
   mapOf(
     "running" to running,
     "apiReady" to apiReady,
