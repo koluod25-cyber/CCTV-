@@ -254,18 +254,41 @@ private fun diagnostics(): Map<String, Any> = synchronized(lock) {
       val contentType = connection.contentType ?: "(tidak diketahui)"
       val contentLength = connection.contentLengthLong
 
-      if (code in 200..299 && contentType.startsWith("image/")) {
-        val bytesRead = connection.inputStream.use { input ->
-          val buffer = ByteArray(8192)
-          var total = 0L
-          var count: Int
+if (code in 200..299) {
+  val contentTypeHeader =
+    connection.getHeaderField("Content-Type") ?: "(tidak ada)"
 
-          while (input.read(buffer).also { count = it } != -1) {
-            total += count
-          }
+  val contentLengthHeader =
+    connection.getHeaderField("Content-Length") ?: "(tidak ada)"
 
-          total
-        }
+  val bytesRead = connection.inputStream.use { input ->
+    val buffer = ByteArray(8192)
+    var total = 0L
+    var count: Int
+
+    while (input.read(buffer).also { count = it } != -1) {
+      total += count
+    }
+
+    total
+  }
+
+  "=== UJI FRAME H264 ===\n" +
+    "HTTP $code\n" +
+    "Tipe: $contentTypeHeader\n" +
+    "Ukuran header: $contentLengthHeader byte\n" +
+    "Data diterima: $bytesRead byte\n" +
+    if (bytesRead > 0L) {
+      "HASIL: data berhasil diterima."
+    } else {
+      "HASIL: respons kosong."
+    }
+} else {
+  "=== UJI FRAME H264 ===\n" +
+    "HTTP $code\n" +
+    "Tipe: ${connection.contentType ?: "(tidak diketahui)"}\n" +
+    "HASIL: endpoint gagal."
+}
 
         "=== UJI FRAME H264 ===\n" +
           "HTTP $code\n" +
