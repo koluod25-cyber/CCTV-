@@ -503,9 +503,12 @@ setDiagnosticsText(
         setDiagnosticsText(
           "Gagal membaca diagnostik: " + formatError(e)
         );
-      } finally {
-        setDiagnosticsLoading(false);
-      }
+      
+        } finally {
+          setConnecting(null);
+          setTesting(false);
+        }
+
     }}
     style={{
       backgroundColor: "#2563eb",
