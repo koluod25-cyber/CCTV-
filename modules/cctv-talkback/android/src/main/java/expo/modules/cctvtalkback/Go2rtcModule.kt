@@ -107,6 +107,7 @@ val encodedPassword = Uri.encode(password)
 val credentials =
   "$encodedUser:$encodedPassword@"
     
+
 val yaml = """
   ffmpeg:
     bin: "${ffmpeg.absolutePath}"
@@ -116,11 +117,11 @@ val yaml = """
     listen: "127.0.0.1:8556"
   streams:
     eyecam:
-      - "http://admin:@${host}:80/livestream/12#header=Authorization: Basic YWRtaW46"
+      - "eseecloud://${credentials}${host}:80/livestream/12"
     eyecam_h264:
       - "ffmpeg:eyecam#video=h264"
 """.trimIndent() + "\n"
-  
+
     config.writeText(yaml)
 
     val builder = ProcessBuilder(
