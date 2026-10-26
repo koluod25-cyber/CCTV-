@@ -93,15 +93,20 @@ check(ffmpeg.exists() && ffmpeg.length() > 0L) {
 check(ffmpeg.canExecute()) {
   "Android tidak mengizinkan eksekusi FFmpeg: ${ffmpeg.absolutePath}"
 }
-
-    val encodedUser = Uri.encode(username)
-    val encodedPassword = Uri.encode(password)
-    val credentials = if (username.isBlank() && password.isBlank()) {
-      ""
-    } else {
-      "$encodedUser:$encodedPassword@"
-    }
     
+val encodedUser = Uri.encode(
+  if (username.isBlank() && password.isBlank()) {
+    "admin"
+  } else {
+    username
+  }
+)
+
+val encodedPassword = Uri.encode(password)
+
+val credentials =
+  "$encodedUser:$encodedPassword@"
+  
     val yaml = """
   ffmpeg:
     bin: "${ffmpeg.absolutePath}"
