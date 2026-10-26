@@ -499,15 +499,11 @@ setDiagnosticsText(
           "\n\n=== LOG API ===\n" +
           result.apiLog
         );
-      } catch (e) {
-        setDiagnosticsText(
-          "Gagal membaca diagnostik: " + formatError(e)
-        );
       
-        } finally {
-          setConnecting(null);
-          setTesting(false);
-        }
+              } finally {
+        setConnecting(null);
+        setTesting(false);
+      }
 
     }}
     style={{
