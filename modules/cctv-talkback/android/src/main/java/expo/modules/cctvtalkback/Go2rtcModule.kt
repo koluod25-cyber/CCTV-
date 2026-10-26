@@ -97,6 +97,7 @@ check(ffmpeg.canExecute()) {
   "Android tidak mengizinkan eksekusi FFmpeg: ${ffmpeg.absolutePath}"
 }
     
+
 val encodedUser = Uri.encode(
   if (username.isBlank() && password.isBlank()) {
     "admin"
@@ -107,9 +108,14 @@ val encodedUser = Uri.encode(
 
 val encodedPassword = Uri.encode(password)
 
-val credentials =
-  "$encodedUser:$encodedPassword@"
-    
+val actualUsername =
+  if (username.isBlank() && password.isBlank()) "admin" else username
+
+val authText = "$actualUsername:$password"
+val authHeader = android.util.Base64.encodeToString(
+  authText.toByteArray(Charsets.UTF_8),
+  android.util.Base64.NO_WRAP
+)
 
 val yaml = """
   ffmpeg:
@@ -120,7 +126,7 @@ val yaml = """
     listen: "127.0.0.1:8556"
   streams:
     eyecam:
-      - "eseecloud://${credentials}${host}:80/livestream/12"
+      - "http://${host}:80/livestream/12#header=Authorization: Basic ${authHeader}"
     eyecam_h264:
       - "ffmpeg:eyecam#video=h264"
 """.trimIndent() + "\n"
