@@ -500,9 +500,12 @@ setDiagnosticsText(
           result.apiLog
         );
       
-              } finally {
-        setConnecting(null);
-        setTesting(false);
+                    } catch (e) {
+        setDiagnosticsText(
+          "Gagal membaca diagnostik: " + formatError(e)
+        );
+      } finally {
+        setDiagnosticsLoading(false);
       }
 
     }}
@@ -1872,6 +1875,7 @@ const talkbackCapability =
           message,
         );
       } finally {
+        setConnecting(null);
         setTesting(false);
         }
         
