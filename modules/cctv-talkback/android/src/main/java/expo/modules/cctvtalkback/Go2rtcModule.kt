@@ -54,16 +54,19 @@ AsyncFunction("stopGo2rtc") {
 
     val context = appContext.reactContext
       ?: error("Konteks Android tidak tersedia.")
-
+   
     val existing = process
-    if (existing != null && isAlive(existing)) {
-      return mapOf(
-        "success" to true,
-        "running" to true,
-        "message" to "go2rtc sudah berjalan.",
+    if (existing != null) {
+      if (isAlive(existing)) {
+        existing.destroy()
 
-        "rtspUrl" to "rtsp://127.0.0.1:8556/eyecam_h264",
-      )
+        if (!existing.waitFor(2, TimeUnit.SECONDS)) {
+          existing.destroyForcibly()
+          existing.waitFor(2, TimeUnit.SECONDS)
+        }
+      }
+
+      process = null
     }
 
     val binary = File(
