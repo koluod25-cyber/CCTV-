@@ -209,12 +209,6 @@ function CameraVideo({
   const [errorDetail, setErrorDetail] =
     useState("");
 
-  const [diagnosticsText, setDiagnosticsText] =
-    useState("");
-
-  const [diagnosticsLoading, setDiagnosticsLoading] =
-    useState(false);
-
 const [buffering, setBuffering] =
   useState(false);
 
