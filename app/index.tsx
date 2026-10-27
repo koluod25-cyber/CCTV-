@@ -1125,44 +1125,46 @@ if (Array.isArray(saved.cameraIds)) {
   };
 }, []);
   
-         useEffect(() => {
-  const saveCameraState = async () => {
-    if (!savedCameraStateLoaded) return;
+useEffect(() => {
+const saveCameraState = async () => {
+if (!savedCameraStateLoaded) return;
 
-    try {
-      const state: SavedCameraState = {
-  cameraCount,
-  cameraStreams,
-  cameraIds,
-  cameraPtzConfig,
-  cameraTalkbackCredentials,
-  cameraGo2rtcHosts,
-  ownerText,
-  logoUri,
-  savedCameraStateLoaded,
-      ]);
+  try {
+    const state: SavedCameraState = {
+      cameraCount,
+      cameraStreams,
+      cameraIds,
+      cameraPtzConfig,
+      cameraTalkbackCredentials,
+      cameraGo2rtcHosts,
+      ownerText,
+      logoUri,
+    };
 
-      await AsyncStorage.setItem(
-        CAMERA_STORAGE_KEY,
-        JSON.stringify(state),
-      );
-    } catch (error) {
-      console.warn(
-        "Gagal menyimpan konfigurasi CCTV:",
-        error,
-      );
-    }
-  };
+    await AsyncStorage.setItem(
+      CAMERA_STORAGE_KEY,
+      JSON.stringify(state),
+    );
+  } catch (error) {
+    console.warn(
+      "Gagal menyimpan konfigurasi CCTV:",
+      error,
+    );
+  }
+};
 
-  void saveCameraState();
+void saveCameraState();
+
 }, [
-  cameraCount,
-  cameraStreams,
-  cameraIds,
-  cameraPtzConfig,
-  cameraTalkbackCredentials,
-  ownerText,
-  logoUri,
+cameraCount,
+cameraStreams,
+cameraIds,
+cameraPtzConfig,
+cameraTalkbackCredentials,
+cameraGo2rtcHosts,
+ownerText,
+logoUri,
+savedCameraStateLoaded,
 ]);
 
   const updateCameraStream =
