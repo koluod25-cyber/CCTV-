@@ -118,9 +118,10 @@ type SavedCameraState = {
   ownerText: string;
   logoUri: string;
   cameraTalkbackCredentials?: Array<{
-  username: string;
-  password: string;
-} | null>;
+    username: string;
+    password: string;
+  } | null>;
+  cameraGo2rtcHosts?: string[];
 };
 
 function hideCredentials(value: string) {
@@ -784,6 +785,15 @@ const [cameraIds, setCameraIds] = useState<string[]>([]);
 const [cameraConnected, setCameraConnected] = useState<boolean[]>([]);
 const [cameraPlaying, setCameraPlaying] = useState<boolean[]>([]);
 const [cameraMuted, setCameraMuted] = useState<boolean[]>([]);
+
+const [cameraGo2rtcHosts, setCameraGo2rtcHosts] =
+  useState<string[]>([]);
+
+const [savedCameraStateLoaded, setSavedCameraStateLoaded] =
+  useState(false);
+
+const go2rtcRestoreAttempted = useRef(false);
+
 const [
   cameraTalkbackCredentials,
   setCameraTalkbackCredentials,
@@ -1061,15 +1071,24 @@ if (Array.isArray(saved.cameraIds)) {
           saved.cameraPtzConfig,
         );
       }
-      if (
-  Array.isArray(
-    saved.cameraTalkbackCredentials,
-  )
-) {
-  setCameraTalkbackCredentials(
-    saved.cameraTalkbackCredentials,
-  );
+            if (
+        Array.isArray(
+          saved.cameraTalkbackCredentials,
+        )
+      ) {
+        setCameraTalkbackCredentials(
+          saved.cameraTalkbackCredentials,
+        );
       }
+
+      if (
+        Array.isArray(saved.cameraGo2rtcHosts)
+      ) {
+        setCameraGo2rtcHosts(
+          saved.cameraGo2rtcHosts,
+        );
+      }
+
       if (
         typeof saved.ownerText === "string"
       ) {
