@@ -422,7 +422,10 @@ onError={(videoError) => {
       }}
     >
       Periksa URL RTSP, codec, username/password, dan jaringan.
-    </Text>
+        </Text>
+  </View>
+) : null}
+</View>
   );
 }
 
