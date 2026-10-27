@@ -159,11 +159,15 @@ class Go2rtcModule : Module() {
         listen: "127.0.0.1:1985"
       rtsp:
         listen: "127.0.0.1:8556"
+      ffmpeg:
+        bin: "${ffmpeg.absolutePath}"
       streams:
         eyecam:
           - "eseecloud://${credentials}${host}:80/livestream/12"
+        eyecam_h264:
+          - "ffmpeg:eyecam#video=h264"
     """.trimIndent() + "\n"
-
+    
     try {
       config.writeText(yaml)
     } catch (e: Exception) {
@@ -396,15 +400,15 @@ class Go2rtcModule : Module() {
       val sourceStatus = readEndpoint(
         "/api/streams?src=eyecam"
       )
-
+    
       val convertedStatus = readEndpoint(
-  "/api/streams?src=eyecam"
-)
+        "/api/streams?src=eyecam_h264"
+      )
 
-val frameStatus = readEndpoint(
-  "/api/frame.jpeg?src=eyecam"
-)
-
+      val frameStatus = readEndpoint(
+        "/api/frame.jpeg?src=eyecam_h264"
+      )
+      
       val localLog = try {
         if (log?.exists() == true) {
           log.readText().takeLast(12000)
