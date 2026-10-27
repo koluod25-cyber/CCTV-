@@ -2277,11 +2277,19 @@ const renderCameraSlot =
                 },
           ]}
         >
-          <View style={styles.cameraCardHeader}>
-            <View style={styles.cameraHeaderTitleWrap}>
-              <Text style={styles.cardTitle}>
-                Kamera {slot + 1}
-              </Text>
+          <Text
+  style={[
+    styles.cardTitle,
+    {
+      fontSize: 11,
+      marginBottom: 0,
+      flexShrink: 1,
+    },
+  ]}
+  numberOfLines={1}
+>
+  K{slot + 1}
+</Text>
 
               <View style={styles.cameraStatusWrap}>
                 <View
