@@ -197,9 +197,46 @@ class Go2rtcModule : Module() {
         e
       )
     }
-
+    
     // Simpan referensi segera agar diagnosis bisa melihatnya.
     process = started
+
+    // Catat jika proses go2rtc berhenti.
+    Thread({
+      try {
+        val exitCode = started.waitFor()
+
+        synchronized(lock) {
+          try {
+            log.appendText(
+              "\n=== GO2RTC PROCESS EXIT ===\n" +
+              "Kode keluar: $exitCode\n" +
+              "Waktu: ${java.util.Date()}\n"
+            )
+          } catch (_: Exception) {
+            // Abaikan kegagalan pencatatan.
+          }
+
+          if (process === started) {
+            process = null
+          }
+        }
+      } catch (e: InterruptedException) {
+        Thread.currentThread().interrupt()
+      } catch (e: Exception) {
+        try {
+          log.appendText(
+            "\n[PEMANTAU PROSES ERROR] " +
+            "${e.javaClass.simpleName}: ${e.message}\n"
+          )
+        } catch (_: Exception) {
+          // Abaikan kegagalan pencatatan.
+        }
+      }
+    }, "Go2rtc-Exit-Monitor").apply {
+      isDaemon = true
+      start()
+    }
 
     var ready = false
 
