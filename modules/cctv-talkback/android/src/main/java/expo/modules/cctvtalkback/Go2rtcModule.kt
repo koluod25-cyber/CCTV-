@@ -150,10 +150,7 @@ class Go2rtcModule : Module() {
         username
       }
     )
-
-    val encodedPassword = Uri.encode(password)
-    val credentials = "$encodedUser:$encodedPassword@"
-   
+  
     val yaml = """
       api:
         listen: "127.0.0.1:1985"
@@ -161,13 +158,14 @@ class Go2rtcModule : Module() {
         listen: "127.0.0.1:8556"
       ffmpeg:
         bin: "${ffmpeg.absolutePath}"
+        h264: "-c:v libx264 -g:v 15 -profile:v high -level:v 4.1 -preset:v superfast -tune:v zerolatency -pix_fmt:v yuv420p"
       streams:
         eyecam:
           - "eseecloud://${credentials}${host}:80/livestream/12"
         eyecam_h264:
           - "ffmpeg:eyecam#video=h264"
     """.trimIndent() + "\n"
-    
+   
     try {
       config.writeText(yaml)
     } catch (e: Exception) {
