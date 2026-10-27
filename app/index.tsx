@@ -1166,6 +1166,74 @@ ownerText,
 logoUri,
 savedCameraStateLoaded,
 ]);
+  
+  useEffect(() => {
+if (!savedCameraStateLoaded) return;
+if (go2rtcRestoreAttempted.current) return;
+
+const slot = cameraGo2rtcHosts.findIndex(
+  (host) => typeof host === "string" && host.trim().length > 0,
+);
+
+if (slot < 0) return;
+
+const host = cameraGo2rtcHosts[slot];
+const credentials = cameraTalkbackCredentials[slot];
+
+if (!host || !credentials) return;
+
+go2rtcRestoreAttempted.current = true;
+let cancelled = false;
+
+const restoreEseeCloud = async () => {
+  try {
+    setStatusText(
+      `Memulihkan koneksi EYESEC Kamera ${slot + 1}...`,
+    );
+
+    const result = await startGo2rtc(
+      host,
+      credentials.username,
+      credentials.password,
+    );
+
+    if (cancelled) return;
+
+    if (!result.running || !result.rtspUrl) {
+      throw new Error(
+        result.message || "go2rtc belum siap.",
+      );
+    }
+
+    setCameraStream(slot, result.rtspUrl);
+    setActiveStream(result.rtspUrl);
+    setManualUrl(result.rtspUrl);
+    setActiveTab("live");
+
+    setStatusText(
+      `Koneksi EYESEC Kamera ${slot + 1} dipulihkan otomatis.`,
+    );
+  } catch (error) {
+    if (!cancelled) {
+      setStatusText(
+        `Pemulihan otomatis EYESEC gagal: ${formatError(error)}. Tekan Hubungkan lagi untuk mencoba ulang.`,
+      );
+    }
+  }
+};
+
+void restoreEseeCloud();
+
+return () => {
+  cancelled = true;
+};
+
+}, [
+savedCameraStateLoaded,
+cameraGo2rtcHosts,
+cameraTalkbackCredentials,
+setCameraStream,
+]);
 
   const updateCameraStream =
     useCallback(
