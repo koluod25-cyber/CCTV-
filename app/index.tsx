@@ -1210,12 +1210,23 @@ savedCameraStateLoaded,
         return;
       }
 
-      const slot = cameraGo2rtcHosts.findIndex(
-        (host) =>
-          typeof host === "string" &&
-          host.trim().length > 0,
-      );
+      
+const eyeSecHost = "192.168.1.8";
 
+const slotForEyeSec = cameraGo2rtcHosts.findIndex(
+  (host) =>
+    typeof host === "string" &&
+    host.trim() === eyeSecHost,
+);
+
+const slot = slotForEyeSec >= 0
+  ? slotForEyeSec
+  : cameraGo2rtcHosts.findIndex(
+      (host) =>
+        typeof host === "string" &&
+        host.trim().length > 0,
+    );
+      
       if (slot < 0) return;
 
       const host = cameraGo2rtcHosts[slot];
