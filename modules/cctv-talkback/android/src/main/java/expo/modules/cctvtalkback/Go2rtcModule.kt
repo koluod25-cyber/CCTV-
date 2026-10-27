@@ -398,12 +398,12 @@ class Go2rtcModule : Module() {
       )
 
       val convertedStatus = readEndpoint(
-        "/api/streams?src=eyecam_h264"
-      )
+  "/api/streams?src=eyecam"
+)
 
-      val frameStatus = readEndpoint(
-        "/api/frame.jpeg?src=eyecam_h264"
-      )
+val frameStatus = readEndpoint(
+  "/api/frame.jpeg?src=eyecam"
+)
 
       val localLog = try {
         if (log?.exists() == true) {
