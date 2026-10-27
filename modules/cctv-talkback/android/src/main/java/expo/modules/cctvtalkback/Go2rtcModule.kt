@@ -497,7 +497,7 @@ class Go2rtcModule : Module() {
             "-hide_banner",
             "-loglevel", "info",
             "-rtsp_transport", "tcp",
-            "-i", "rtsp://127.0.0.1:8556/eyecam",
+            "-i", "rtsp://127.0.0.1:8556/eyecam_h264",
             "-frames:v", "1",
             "-y",
             frameFile.absolutePath
