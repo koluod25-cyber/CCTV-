@@ -2277,19 +2277,21 @@ const renderCameraSlot =
                 },
           ]}
         >
-          <Text
-  style={[
-    styles.cardTitle,
-    {
-      fontSize: 11,
-      marginBottom: 0,
-      flexShrink: 1,
-    },
-  ]}
-  numberOfLines={1}
->
-  K{slot + 1}
-</Text>
+          <View style={styles.cameraCardHeader}>
+            <View style={styles.cameraHeaderTitleWrap}>
+              <Text
+                style={[
+                  styles.cardTitle,
+                  {
+                    fontSize: 11,
+                    marginBottom: 0,
+                    flexShrink: 1,
+                  },
+                ]}
+                numberOfLines={1}
+              >
+                K{slot + 1}
+              </Text>
 
               <View style={styles.cameraStatusWrap}>
                 <View
@@ -2298,32 +2300,33 @@ const renderCameraSlot =
                     connected && styles.statusDotOnline,
                   ]}
                 />
+                <Text
+                  style={styles.cameraStatusText}
+                  numberOfLines={1}
+                >
+                  {connected ? "LIVE" : stream ? "SIAP" : "KOSONG"}
+                </Text>
+              </View>
+            </View>
 
-<Text style={styles.cameraStatusText}>
-  {connected ? "LIVE" : stream ? "SIAP" : "KOSONG"}
-</Text>
-</View>
-</View>
+            <View style={styles.cameraPlayingStatus}>
+              <View
+                style={[
+                  styles.liveDot,
+                  !cameraPlaying[slot] && {
+                    backgroundColor: "#718092",
+                  },
+                ]}
+              />
+              <Text
+                style={styles.cameraPlayingText}
+                numberOfLines={1}
+              >
+                {cameraPlaying[slot] ? "PLAYING" : "STOP"}
+              </Text>
+            </View>
 
-<View style={styles.cameraPlayingStatus}>
-  <View
-    style={[
-      styles.liveDot,
-      !cameraPlaying[slot] && {
-        backgroundColor: "#718092",
-      },
-    ]}
-  />
-  <Text style={styles.cameraPlayingText}>
-    {cameraPlaying[slot] ? "PLAYING" : "STOP"}
-  </Text>
-</View>
-            
-<View style={styles.cameraHeaderControls}>
-  <Pressable
-    style={styles.cameraControlButton}
-    accessibilityLabel={`Full screen kamera ${slot + 1}`}
-    onPress={async () => {
+            <View style={styles.cameraHeaderControls}>
       const enteringFullscreen = fullscreenSlot !== slot;
 
       try {
