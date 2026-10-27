@@ -223,7 +223,38 @@ const [isPlaying, setIsPlaying] =
 
 const [playerGeneration, setPlayerGeneration] =
   useState(0);
+  
+const appStateRef = useRef(AppState.currentState);
 
+useEffect(() => {
+  const subscription = AppState.addEventListener(
+    "change",
+    (nextState) => {
+      const previousState = appStateRef.current;
+
+      appStateRef.current = nextState;
+
+      if (
+        nextState === "active" &&
+        previousState !== "active"
+      ) {
+        setLoaded(false);
+        setError(false);
+        setErrorDetail("");
+        setBuffering(false);
+        setIsPlaying(false);
+
+        // Paksa Android membuat ulang pemutar video.
+        setPlayerGeneration((current) => current + 1);
+      }
+    },
+  );
+
+  return () => {
+    subscription.remove();
+  };
+}, []);
+  
 useEffect(() => {
   setLoaded(false);
   setError(false);
@@ -261,7 +292,7 @@ useEffect(() => {
     <View style={styles.videoBox}>
 
   <Video
-    key={url}
+    key={`${url}-${playerGeneration}`}
     focusable
     disableFocus={true}
     useTextureView={true}
