@@ -1111,6 +1111,10 @@ if (Array.isArray(saved.cameraIds)) {
         "Gagal memuat konfigurasi CCTV:",
         error,
       );
+    } finally {
+      if (!cancelled) {
+        setSavedCameraStateLoaded(true);
+      }
     }
   };
 
@@ -1123,16 +1127,20 @@ if (Array.isArray(saved.cameraIds)) {
   
          useEffect(() => {
   const saveCameraState = async () => {
+    if (!savedCameraStateLoaded) return;
+
     try {
       const state: SavedCameraState = {
-        cameraCount,
-        cameraStreams,
-        cameraIds,
-        cameraPtzConfig,
-        cameraTalkbackCredentials,
-        ownerText,
-        logoUri,
-      };
+  cameraCount,
+  cameraStreams,
+  cameraIds,
+  cameraPtzConfig,
+  cameraTalkbackCredentials,
+  cameraGo2rtcHosts,
+  ownerText,
+  logoUri,
+  savedCameraStateLoaded,
+      ]);
 
       await AsyncStorage.setItem(
         CAMERA_STORAGE_KEY,
