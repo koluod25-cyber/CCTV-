@@ -158,11 +158,37 @@ jobs:
           SOURCE="/tmp/ffmpeg-android-build/output/arm64-v8a/ffmpeg"
           test -s "$SOURCE"
           file "$SOURCE"
+        
+TARGET="$GITHUB_WORKSPACE/ffmpeg-android-arm64"
+install -m 0755 "$SOURCE" "$TARGET"
 
-          TARGET="$GITHUB_WORKSPACE/ffmpeg-android-arm64"
-          install -m 0755 "$SOURCE" "$TARGET"
+echo "=== MEMPERBAIKI ALIGNMENT ELF ANDROID ==="
 
-          echo "FFmpeg berhasil dibangun: $TARGET"
+git clone --depth 1 \
+  https://github.com/termux/termux-elf-cleaner.git \
+  /tmp/termux-elf-cleaner
+
+cmake \
+  -S /tmp/termux-elf-cleaner \
+  -B /tmp/termux-elf-cleaner/build \
+  -DCMAKE_BUILD_TYPE=Release
+
+cmake --build \
+  /tmp/termux-elf-cleaner/build \
+  --parallel 2
+
+CLEANER="/tmp/termux-elf-cleaner/build/termux-elf-cleaner"
+
+test -x "$CLEANER"
+"$CLEANER" --api-level 28 "$TARGET"
+
+echo "=== VERIFIKASI ELF FFmpeg ==="
+readelf -l "$TARGET" | grep -A1 TLS || true
+
+test -s "$TARGET"
+chmod 0755 "$TARGET"
+
+echo "FFmpeg selesai diproses: $TARGET"
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
