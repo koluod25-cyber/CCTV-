@@ -2287,15 +2287,14 @@ const cameraAspectRatio =
       : cameraCount <= 4
         ? 1.25
         : 1.45;
-
+        
   const cameraCardWidth: DimensionValue =
     fullscreenSlot !== null
       ? "100%"
-      : isLandscape
-        ? `${100 / cameraGridColumns - 1}%`
-        : "100%";
-
-
+      : cameraCount === 1
+        ? "100%"
+        : "49%";
+        
   const cameraGridStyle = {
     flexDirection:
       "row" as const,
