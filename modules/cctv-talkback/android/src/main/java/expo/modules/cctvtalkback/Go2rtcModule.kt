@@ -433,13 +433,88 @@ class Go2rtcModule : Module() {
         "Gagal membaca konfigurasi: ${e.message}"
       }
 
-      val binaryStatus = buildString {
-        appendLine("Path: ${binary?.absolutePath}")
-        appendLine("Ada: ${binary?.exists() == true}")
-        appendLine("Ukuran: ${binary?.length() ?: 0} byte")
-        appendLine("Executable: ${binary?.canExecute() == true}")
+      
+      val ffmpeg = context?.let {
+        File(it.applicationInfo.nativeLibraryDir, "libffmpeg.so")
       }
 
+      val ffmpegProbe = try {
+        if (ffmpeg == null ||
+            !ffmpeg.exists() ||
+            !ffmpeg.canExecute()) {
+          "FFmpeg tidak ditemukan atau tidak executable."
+        } else {
+          val probeLog = File(
+            context.cacheDir,
+            "ffmpeg-probe.log"
+          )
+          val frameFile = File(
+            context.cacheDir,
+            "go2rtc-test.jpg"
+          )
+
+          frameFile.delete()
+
+          val command = listOf(
+            ffmpeg.absolutePath,
+            "-hide_banner",
+            "-loglevel", "info",
+            "-rtsp_transport", "tcp",
+            "-i", "rtsp://127.0.0.1:8556/eyecam",
+            "-frames:v", "1",
+            "-y",
+            frameFile.absolutePath
+          )
+
+          val probe = ProcessBuilder(command)
+            .redirectErrorStream(true)
+            .redirectOutput(probeLog)
+            .start()
+
+          val finished = probe.waitFor(
+            12,
+            TimeUnit.SECONDS
+          )
+
+          if (!finished) {
+            probe.destroyForcibly()
+            probe.waitFor(2, TimeUnit.SECONDS)
+            "UJI TIMEOUT: FFmpeg tidak selesai dalam 12 detik."
+          } else {
+            val output = if (probeLog.exists()) {
+              probeLog.readText().takeLast(5000)
+            } else {
+              "(output FFmpeg kosong)"
+            }
+
+            val frameResult = if (frameFile.exists()) {
+              "File frame: ${frameFile.length()} byte"
+            } else {
+              "File frame tidak terbentuk."
+            }
+
+            "Exit code: ${probe.exitValue()}\n" +
+              "$frameResult\n$output"
+          }
+        }
+      } catch (e: Exception) {
+        "Gagal menjalankan FFmpeg: " +
+          "${e.javaClass.simpleName}: ${e.message}"
+      }
+
+      val binaryStatus = buildString {
+        appendLine("Path go2rtc: ${binary?.absolutePath}")
+        appendLine("go2rtc ada: ${binary?.exists() == true}")
+        appendLine("Ukuran go2rtc: ${binary?.length() ?: 0} byte")
+        appendLine("go2rtc executable: ${binary?.canExecute() == true}")
+        appendLine("Path FFmpeg: ${ffmpeg?.absolutePath}")
+        appendLine("FFmpeg ada: ${ffmpeg?.exists() == true}")
+        appendLine("Ukuran FFmpeg: ${ffmpeg?.length() ?: 0} byte")
+        appendLine("FFmpeg executable: ${ffmpeg?.canExecute() == true}")
+        appendLine("=== UJI FFmpeg MEMBACA RTSP ===")
+        appendLine(ffmpegProbe)
+      }
+      
       val diagnosticText =
         "=== STATUS PROSES ===\n" +
         "Berjalan: $running\n" +
