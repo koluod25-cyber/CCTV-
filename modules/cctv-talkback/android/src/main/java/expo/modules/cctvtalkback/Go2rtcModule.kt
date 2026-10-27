@@ -150,6 +150,12 @@ class Go2rtcModule : Module() {
         username
       }
     )
+
+   val credentials = if (password.isBlank()) {
+      "$encodedUser@"
+    } else {
+      "$encodedUser:${Uri.encode(password)}@"
+    }
   
     val yaml = """
       api:
