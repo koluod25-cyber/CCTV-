@@ -252,8 +252,8 @@ class Go2rtcModule : Module() {
         else ->
           "Go2rtc dan port API/RTSP siap."
       },
-      "rtspUrl" to
-        "rtsp://127.0.0.1:8556/eyecam",
+       "rtspUrl" to
+       "rtsp://127.0.0.1:8556/eyecam_h264",
       "logPath" to log.absolutePath
     )
   }
