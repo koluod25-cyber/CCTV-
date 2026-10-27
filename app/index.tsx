@@ -4053,23 +4053,25 @@ const styles = StyleSheet.create({
   },
 
   cameraCardHeader: {
-    minHeight: 42,
-    paddingHorizontal: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
+  height: 52,
+  paddingHorizontal: 6,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
 
   cameraStatusWrap: {
     flexDirection: "row",
     alignItems: "center",
   },
+  
   cameraHeaderTitleWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    minWidth: 0,
-  },
+  flexDirection: "row",
+  alignItems: "center",
+  flexShrink: 1,
+  minWidth: 0,
+  marginRight: 4,
+},
 
   statusDot: {
     width: 7,
