@@ -163,7 +163,8 @@ class Go2rtcModule : Module() {
       rtsp:
         listen: "127.0.0.1:8556"
       ffmpeg:
-        bin: "${ffmpeg.absolutePath}"    
+        bin: "${ffmpeg.absolutePath}" 
+      h264: "-c:v libx264 -g:v 15 -profile:v high -level:v 4.1 -preset:v superfast -tune:v zerolatency -pix_fmt:v yuv420p"
       streams:
         eyecam:
           - "eseecloud://${credentials}${host}:80/livestream/12"
