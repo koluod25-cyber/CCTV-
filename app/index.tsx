@@ -11,6 +11,7 @@ import OnvifPlaybackPanel from "@/onvif-playback-panel";
 import {
   ActivityIndicator,
   Alert,
+  AppState,
   Animated,
   Easing,
   Image,
@@ -1168,72 +1169,113 @@ savedCameraStateLoaded,
 ]);
   
   useEffect(() => {
-if (!savedCameraStateLoaded) return;
-if (go2rtcRestoreAttempted.current) return;
+    if (!savedCameraStateLoaded) return;
 
-const slot = cameraGo2rtcHosts.findIndex(
-  (host) => typeof host === "string" && host.trim().length > 0,
-);
+    let cancelled = false;
+    let inFlight = false;
 
-if (slot < 0) return;
+    const restoreEseeCloud = async () => {
+      if (!savedCameraStateLoaded || inFlight || cancelled) {
+        return;
+      }
 
-const host = cameraGo2rtcHosts[slot];
-const credentials = cameraTalkbackCredentials[slot];
-
-if (!host || !credentials) return;
-
-go2rtcRestoreAttempted.current = true;
-let cancelled = false;
-
-const restoreEseeCloud = async () => {
-  try {
-    setStatusText(
-      `Memulihkan koneksi EYESEC Kamera ${slot + 1}...`,
-    );
-
-    const result = await startGo2rtc(
-      host,
-      credentials.username,
-      credentials.password,
-    );
-
-    if (cancelled) return;
-
-    if (!result.running || !result.rtspUrl) {
-      throw new Error(
-        result.message || "go2rtc belum siap.",
+      const slot = cameraGo2rtcHosts.findIndex(
+        (host) =>
+          typeof host === "string" &&
+          host.trim().length > 0,
       );
-    }
 
-    setCameraStream(slot, result.rtspUrl);
-    setActiveStream(result.rtspUrl);
-    setManualUrl(result.rtspUrl);
-    setActiveTab("live");
+      if (slot < 0) return;
 
-    setStatusText(
-      `Koneksi EYESEC Kamera ${slot + 1} dipulihkan otomatis.`,
+      const host = cameraGo2rtcHosts[slot];
+      const credentials = cameraTalkbackCredentials[slot];
+
+      if (!host || !credentials) {
+        setStatusText(
+          "Pemulihan EYESEC gagal: alamat atau kredensial kamera belum tersimpan.",
+        );
+        return;
+      }
+
+      inFlight = true;
+
+      try {
+        setStatusText(
+          `Memulihkan koneksi EYESEC Kamera ${slot + 1}...`,
+        );
+
+        // Kosongkan URL lama agar pemutar dibuat ulang
+        // setelah URL RTSP lokal berhasil diperoleh.
+        setCameraStream(slot, "");
+
+        setCameraConnected((current) => {
+          const next = [...current];
+          next[slot] = false;
+          return next;
+        });
+
+        setCameraPlaying((current) => {
+          const next = [...current];
+          next[slot] = false;
+          return next;
+        });
+
+        const result = await startGo2rtc(
+          host,
+          credentials.username,
+          credentials.password,
+        );
+
+        if (cancelled) return;
+
+        if (!result.running || !result.rtspUrl) {
+          throw new Error(
+            result.message || "go2rtc belum siap.",
+          );
+        }
+
+        setCameraStream(slot, result.rtspUrl);
+        setActiveStream(result.rtspUrl);
+        setManualUrl(result.rtspUrl);
+        setActiveTab("live");
+
+        setStatusText(
+          `Koneksi EYESEC Kamera ${slot + 1} dipulihkan. Menunggu pemutar menampilkan gambar...`,
+        );
+      } catch (error) {
+        if (!cancelled) {
+          setStatusText(
+            `Pemulihan otomatis EYESEC gagal: ${formatError(error)}. Buka menu CCTV lalu tekan Hubungkan untuk mencoba lagi.`,
+          );
+        }
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    // Pulihkan ketika layar utama pertama kali dimuat.
+    void restoreEseeCloud();
+
+    // Coba pulihkan kembali saat aplikasi kembali ke depan.
+    const subscription = AppState.addEventListener(
+      "change",
+      (nextState) => {
+        if (nextState === "active") {
+          void restoreEseeCloud();
+        }
+      },
     );
-  } catch (error) {
-    if (!cancelled) {
-      setStatusText(
-        `Pemulihan otomatis EYESEC gagal: ${formatError(error)}. Tekan Hubungkan lagi untuk mencoba ulang.`,
-      );
-    }
-  }
-};
 
-void restoreEseeCloud();
-
-return () => {
-  cancelled = true;
-};
-
-}, [
-savedCameraStateLoaded,
-cameraGo2rtcHosts,
-cameraTalkbackCredentials,
-setCameraStream,
-]);
+    return () => {
+      cancelled = true;
+      subscription.remove();
+    };
+  }, [
+    savedCameraStateLoaded,
+    cameraGo2rtcHosts,
+    cameraTalkbackCredentials,
+    setCameraStream,
+  ]);
 
   const updateCameraStream =
     useCallback(
