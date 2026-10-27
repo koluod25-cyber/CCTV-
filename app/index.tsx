@@ -1707,6 +1707,14 @@ const talkbackCapability =
             next[slot] = { username, password };
             return next;
           });
+          
+go2rtcRestoreAttempted.current = true;
+
+setCameraGo2rtcHosts((current) => {
+  const next = [...current];
+  next[slot] = camera.host;
+  return next;
+});
 
           setCameraPtz(slot, null);
           setActiveTab("live");
