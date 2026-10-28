@@ -2724,7 +2724,20 @@ const renderCameraSlot =
           )}
         </View>
       </View>
-
+      
+{monitorPlaybackUri ? (
+  <Pressable
+    style={styles.primaryButton}
+    onPress={() => {
+      setMonitorPlaybackUri("");
+    }}
+  >
+    <Text style={styles.primaryButtonText}>
+      Kembali ke Live
+    </Text>
+  </Pressable>
+) : null}
+      
       <View
         style={[
           styles.cameraGrid,
