@@ -618,7 +618,7 @@ internal object HevcSps {
     val maxSubLayers = br.read(3)
     br.read(1)
 
-    br.read(96)
+    br.skip(96)
 
     val profilePresent = BooleanArray(maxSubLayers)
     val levelPresent = BooleanArray(maxSubLayers)
