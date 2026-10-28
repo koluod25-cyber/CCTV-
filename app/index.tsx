@@ -2325,9 +2325,12 @@ const renderCameraSlot =
                 {cameraPlaying[slot] ? "PLAYING" : "STOP"}
               </Text>
             </View>
-
-            <View style={styles.cameraHeaderControls}>
-      const enteringFullscreen = fullscreenSlot !== slot;
+             <View style={styles.cameraHeaderControls}>
+              <Pressable
+                style={styles.cameraControlButton}
+                accessibilityLabel={`Full screen kamera ${slot + 1}`}
+                onPress={async () => {
+                  const enteringFullscreen = fullscreenSlot !== slot;
 
       try {
         if (enteringFullscreen) {
