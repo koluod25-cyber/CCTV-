@@ -3520,6 +3520,10 @@ const renderPlayback = () => (
       },
     )}
     muted={muted}
+    onPlaybackReady={(uri) => {
+     setActiveStream(uri);
+     setActiveTab("live");
+    }}
     onHistory={(url, message) =>
       addHistory(
         "connected",
