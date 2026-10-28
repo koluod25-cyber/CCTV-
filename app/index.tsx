@@ -651,6 +651,7 @@ const [cameraCount, setCameraCount] = useState(1);
 const [fullscreenSlot, setFullscreenSlot] =
 useState<number | null>(null);
 const [cameraStreams, setCameraStreams] = useState<string[]>([]);
+const [monitorPlaybackUri, setMonitorPlaybackUri] = useState("");
 const [cameraIds, setCameraIds] = useState<string[]>([]);
 const [cameraConnected, setCameraConnected] = useState<boolean[]>([]);
 const [cameraPlaying, setCameraPlaying] = useState<boolean[]>([]);
@@ -2252,7 +2253,9 @@ const renderCameraSlot =
       fullscreenSlot !== slot;
 
     const stream: string =
-      cameraStreams[slot] || "";
+  slot === 0 && monitorPlaybackUri
+    ? monitorPlaybackUri
+    : cameraStreams[slot] || "";
 
     const connected: boolean =
       cameraConnected[slot] || false;
@@ -3521,9 +3524,9 @@ const renderPlayback = () => (
     )}
     muted={muted}
     onPlaybackReady={(uri) => {
-     setActiveStream(uri);
-     setActiveTab("live");
-    }}
+  setMonitorPlaybackUri(uri);
+  setActiveTab("live");
+}}
     onHistory={(url, message) =>
       addHistory(
         "connected",
