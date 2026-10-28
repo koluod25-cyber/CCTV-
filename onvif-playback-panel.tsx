@@ -38,6 +38,7 @@ type Props = {
   cameras: PlaybackCamera[];
   muted?: boolean;
   onHistory?: (url: string, message: string) => void;
+  onPlaybackReady?: (uri: string) => void;
 };
 
 function errorMessage(error: unknown): string {
@@ -50,7 +51,9 @@ export default function OnvifPlaybackPanel({
   cameras,
   muted = false,
   onHistory,
+  onPlaybackReady,
 }: Props) {
+
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [services, setServices] = useState<OnvifReplayServices | null>(null);
   const [recordings, setRecordings] = useState<OnvifRecording[]>([]);
@@ -240,10 +243,17 @@ async function playRecording(recording: OnvifRecording) {
       }
 
       setSelectedToken(recording.token);
-      setPlaybackUri(result.uri);
-      setStatus(
-        "Video rekaman siap diputar. Gunakan kontrol pemutar di bawah.",
-      );
+setPlaybackUri(result.uri);
+setStatus("Membuka rekaman pada monitor utama...");
+
+onHistory?.(
+  result.uri,
+  "Memutar rekaman DVRIP",
+);
+
+onPlaybackReady?.(result.uri);
+
+return;
 
       onHistory?.(
         result.uri,
@@ -274,13 +284,16 @@ async function playRecording(recording: OnvifRecording) {
     }
 
     setSelectedToken(recording.token);
-    setPlaybackUri(uri);
-    setStatus("URI rekaman diterima. Pemutaran dimulai.");
+setPlaybackUri(uri);
+setStatus("Membuka rekaman pada monitor utama...");
 
-    onHistory?.(
-      uri,
-      "Memutar rekaman tersimpan ONVIF",
-    );
+onHistory?.(
+  uri,
+  "Memutar rekaman tersimpan ONVIF",
+);
+
+onPlaybackReady?.(uri);
+
   } catch (error) {
     setStatus(
       "Tidak dapat memutar rekaman: " +
