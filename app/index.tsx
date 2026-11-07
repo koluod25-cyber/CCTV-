@@ -1815,24 +1815,38 @@ setCameraGo2rtcHosts((current) => {
           const result =
             await testCameraConnection({
               id: "manual",
-              name: "Manual",
-              url: finalUrl,
-              username,
-              password,
-              vendor,
-            });
+              
+      phone,
+      items: cart.map(item => {
+        const product = products.find(entry => entry.id === item.productId)!;
 
-          /*
-           * RTSP memang dikembalikan sebagai
-           * unsupported oleh network probe.
-           * Itu bukan berarti kamera offline.
-           * Player native menjadi pengujian sebenarnya.
-           */
-          if (
-            result.status === "offline" &&
-            !/^rtsp(s?):\/\//i.test(
-              finalUrl,
-            )
+        return {
+          productId: product.id,
+          name: product.name,
+          qty: item.qty,
+          price: product.price,
+          cost: product.type === "jasa" ? 0 : product.cost,
+          type: product.type,
+          imeiSerials: serialsByProduct[item.productId] ?? [],
+          warrantyDays: (() => {
+            const match = printer.warrantyText.match(
+              /(\d+)\s*(hari|bulan|tahun)/i
+            );
+
+            if (!match) return 0;
+
+            const amount = Number(match[1]);
+            const unit = match[2].toLowerCase();
+
+            return amount * (
+              unit === "tahun" ? 365 :
+              unit === "bulan" ? 30 : 1
+            );
+          })()
+        };
+      }),
+      subtotal,
+              
           ) {
             throw new Error(
               result.message,
