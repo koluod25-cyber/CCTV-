@@ -1814,8 +1814,7 @@ setCameraGo2rtcHosts((current) => {
         try {
           const result =
             await testCameraConnection({
-              id: "manual",
-              
+              id: "manual",       
       phone,
       items: cart.map(item => {
         const product = products.find(entry => entry.id === item.productId)!;
